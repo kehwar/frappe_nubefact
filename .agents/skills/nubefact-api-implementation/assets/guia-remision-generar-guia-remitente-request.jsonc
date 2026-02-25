@@ -1,0 +1,189 @@
+{
+  // Operation type - always "generar_guia" for creating delivery guides
+  "operacion": "generar_guia",
+
+  // Document type: 7=GRE Remitente, 8=GRE Transportista
+  "tipo_de_comprobante": 7,
+
+  // Series - must start with "T" for Remitente (e.g., TTT1), exactly 4 chars
+  "serie": "TTT1",
+
+  // Sequential number without leading zeros (1-8 digits)
+  "numero": "1",
+
+  // Client document type: 6=RUC, 1=DNI, 4=Carnet Extranjería, etc.
+  "cliente_tipo_de_documento": 6,
+
+  // Client document number (1-15 chars)
+  "cliente_numero_de_documento": "20600695771",
+
+  // Client full name or business name (1-100 chars)
+  "cliente_denominacion": "NUBEFACT SA",
+
+  // Client address
+  "cliente_direccion": "MIRAFLORES LIMA",
+
+  // Client email - must be valid format
+  "cliente_email": "demo@gmail.com",
+
+  // Additional client email 1 (optional)
+  "cliente_email_1": "",
+
+  // Additional client email 2 (optional)
+  "cliente_email_2": "",
+
+  // Issue date in format DD-MM-YYYY
+  "fecha_de_emision": "18-12-2022",
+
+  // Additional observations or notes (optional)
+  "observaciones": "observaciones",
+
+  // Transfer reason code (required for Remitente): 01-18 per SUNAT catalog
+  "motivo_de_traslado": "01",
+
+  // Gross total weight (numeric string)
+  "peso_bruto_total": "1",
+
+  // Weight unit of measure: KGM (kilograms), TNE (tonnes), etc.
+  "peso_bruto_unidad_de_medida": "KGM",
+
+  // Number of packages/bundles (numeric string)
+  "numero_de_bultos": "1",
+
+  // Transport type: 01=Private, 02=Public
+  "tipo_de_transporte": "01",
+
+  // Transfer start date in format DD-MM-YYYY
+  "fecha_de_inicio_de_traslado": "21-12-2022",
+
+  // Carrier document type: 6=RUC, 1=DNI, etc.
+  "transportista_documento_tipo": "6",
+
+  // Carrier document number
+  "transportista_documento_numero": "20600695771",
+
+  // Carrier business name
+  "transportista_denominacion": "NUBEFACT SA",
+
+  // Main vehicle license plate
+  "transportista_placa_numero": "ABC444",
+
+  // Driver document type: 1=DNI, etc.
+  "conductor_documento_tipo": "1",
+
+  // Driver document number
+  "conductor_documento_numero": "XXXXXXXX",
+
+  // Driver first name
+  "conductor_nombre": "JORGE",
+
+  // Driver last name(s)
+  "conductor_apellidos": "LOPEZ",
+
+  // Driver license number
+  "conductor_numero_licencia": "QXXXXXXXX",
+
+  // Origin ubigeo code (6 digits) - see SUNAT catalog
+  "punto_de_partida_ubigeo": "151021",
+
+  // Origin full address
+  "punto_de_partida_direccion": "DIRECCION PARTIDA",
+
+  // Origin SUNAT establishment code (default "0000" if not applicable)
+  "punto_de_partida_codigo_establecimiento_sunat": "0000",
+
+  // Destination ubigeo code (6 digits) - see SUNAT catalog
+  "punto_de_llegada_ubigeo": "211101",
+
+  // Destination full address
+  "punto_de_llegada_direccion": "DIRECCION LLEGADA",
+
+  // Destination SUNAT establishment code (default "0000" if not applicable)
+  "punto_de_llegada_codigo_establecimiento_sunat": "0000",
+
+  // Auto-send PDF to client email (boolean string)
+  "enviar_automaticamente_al_cliente": "false",
+
+  // PDF format: "" (default), "A4", "A5", or "TICKET"
+  "formato_de_pdf": "",
+
+  // Array of items being transported (required, at least 1 item)
+  "items": [
+    {
+      // Unit of measure code (NIU, ZZ, etc.)
+      "unidad_de_medida": "NIU",
+
+      // Internal product code
+      "codigo": "001",
+
+      // Product description (string, required)
+      "descripcion": "DETALLE DEL PRODUCTO 1",
+
+      // Quantity (numeric string, required)
+      "cantidad": "1"
+    },
+    {
+      "unidad_de_medida": "NIU",
+      "codigo": "002",
+      "descripcion": "DETALLE DEL PRODUCTO 2",
+      "cantidad": "1"
+    }
+  ],
+
+  // Array of related documents (optional)
+  "documento_relacionado": [
+    {
+      // Document type: 01=Factura, 02=Boleta, etc.
+      "tipo": "01",
+
+      // Document series
+      "serie": "F001",
+
+      // Document number (string)
+      "numero": "1"
+    },
+    {
+      "tipo": "01",
+      "serie": "F001",
+      "numero": "2"
+    }
+  ],
+
+  // Secondary vehicles (optional, for transport type 01)
+  "vehiculos_secundarios": [
+    {
+      // Secondary vehicle license plate
+      "placa_numero": "ABC445"
+    },
+    {
+      "placa_numero": "ABC446"
+    }
+  ],
+
+  // Secondary drivers (optional)
+  "conductores_secundarios": [
+    {
+      // Driver document type
+      "documento_tipo": "1",
+
+      // Driver document number
+      "documento_numero": "06123457",
+
+      // Driver first name
+      "nombre": "LUIS",
+
+      // Driver last name(s)
+      "apellidos": "FERNANDEZ",
+
+      // Driver license number
+      "numero_licencia": "QXXXXXXXZ"
+    },
+    {
+      "documento_tipo": "1",
+      "documento_numero": "06123458",
+      "nombre": "JORGE",
+      "apellidos": "QUISPE",
+      "numero_licencia": "QXXXXXXAZ"
+    }
+  ]
+}

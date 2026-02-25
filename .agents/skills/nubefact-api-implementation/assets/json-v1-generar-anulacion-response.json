@@ -1,0 +1,13 @@
+{
+  "numero": 1,
+  "enlace": "https://www.nubefact.com/anulacion/b7fc0c001-b31a",
+  "sunat_ticket_numero": "1494358661332",
+  "aceptada_por_sunat": false,
+  "sunat_description": null,
+  "sunat_note": null,
+  "sunat_responsecode": null,
+  "sunat_soap_error": "",
+  "enlace_del_pdf": "https://www.nubefact.com/anulacion/b7fc0c001-b31a.pdf",
+  "enlace_del_xml": "https://www.nubefact.com/anulacion/b7fc0c001-b31a.xml",
+  "enlace_del_cdr": "https://www.nubefact.com/anulacion/b7fc0c001-b31a.cdr"
+}

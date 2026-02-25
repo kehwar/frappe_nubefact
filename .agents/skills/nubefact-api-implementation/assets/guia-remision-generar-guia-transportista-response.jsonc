@@ -1,0 +1,53 @@
+{
+  // IMPORTANT: GRE requires SUNAT acceptance before PDF/CDR/XML are available
+  // Use 'consultar_guia' operation to poll for acceptance status
+  "nota_importante": "Para generar el PDF en las Guías de Remisión se requiere que la Sunat la acepte primero. Usa la operación 'consultar_guia' para obtener el PDF o CDR.",
+
+  // Document type: 7=GRE Remitente, 8=GRE Transportista
+  "tipo_de_comprobante": 8,
+
+  // Document series (4 characters, "V" prefix for Transportista)
+  "serie": "VVV1",
+
+  // Document sequential number
+  "numero": 1,
+
+  // NubeFact web link to view the guide (empty until SUNAT accepts)
+  "enlace": "",
+
+  // Whether SUNAT has accepted the guide (boolean, false initially)
+  "aceptada_por_sunat": false,
+
+  // Human-readable description from SUNAT (null until processed)
+  "sunat_description": null,
+
+  // Additional SUNAT notes (null until processed)
+  "sunat_note": null,
+
+  // SUNAT response code (null until processed)
+  "sunat_responsecode": null,
+
+  // SOAP error message from SUNAT if any (null until processed)
+  "sunat_soap_error": null,
+
+  // Base64-encoded ZIP containing PDF (empty until SUNAT accepts)
+  "pdf_zip_base64": "",
+
+  // Base64-encoded ZIP containing XML (empty until SUNAT accepts)
+  "xml_zip_base64": "",
+
+  // Base64-encoded ZIP containing CDR (empty until SUNAT accepts)
+  "cdr_zip_base64": "",
+
+  // String for generating QR code (empty until SUNAT accepts)
+  "cadena_para_codigo_qr": "",
+
+  // URL to download PDF (empty until SUNAT accepts)
+  "enlace_del_pdf": "",
+
+  // URL to download XML (empty until SUNAT accepts)
+  "enlace_del_xml": "",
+
+  // URL to download CDR (empty until SUNAT accepts)
+  "enlace_del_cdr": ""
+}

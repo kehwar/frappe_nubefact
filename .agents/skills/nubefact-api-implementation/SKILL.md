@@ -26,3 +26,20 @@ Minimal skill scaffold for NubeFact API work in this repository.
 - Keep changes small and isolated.
 - Prefer explicit request and response schemas.
 - Expand this skill with references/scripts as the integration grows.
+
+## References
+
+- `references/canonical-model.md` — **Frappe DocType specifications** for NubeFact API Settings, API Log, Invoice, and Delivery Note with complete field definitions.
+- `references/json-v1-manual.md` — **JSON API v1 Manual** - Complete API documentation transcribed from PDF with operation details, field descriptions, and workflow guides.
+- `references/guia-remision-v1-manual.md` — **Guía de Remisión API Manual** - Complete delivery guide API documentation with two-step workflow, Remitente/Transportista flows, and SUNAT acceptance polling.
+
+## Example JSON assets
+
+All example JSON files in `assets/` folder:
+- `json-v1-*` — request/response examples from JSON v1 API
+- `guia-remision-*` — request/response examples from Guía de Remisión API
+
+## Original docs
+
+- API: https://docs.google.com/document/d/1GCmIJNJVmuOD3LC0itdhdTu6260nJBIEmOwFdnIu5II/
+- Guia de Remision API: https://docs.google.com/document/d/1GCmIJNJVmuOD3LC0itdhdTu6260nJBIEmOwFdnIu5II/

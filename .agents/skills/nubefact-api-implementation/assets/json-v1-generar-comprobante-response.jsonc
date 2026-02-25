@@ -1,0 +1,43 @@
+{
+  // Document type: 1=Factura, 2=Boleta, 3=Nota de Crédito, 4=Nota de Débito
+  "tipo_de_comprobante": 1,
+
+  // Document series (4 characters)
+  "serie": "FFF1",
+
+  // Document sequential number
+  "numero": 1,
+
+  // NubeFact web link to view the document
+  "enlace": "https://www.nubefact.com/cpe/d268f882-4554-a403c6712e6",
+
+  // URL to download PDF (may be empty initially, populated after SUNAT acceptance)
+  "enlace_del_pdf": "",
+
+  // URL to download XML file (may be empty initially)
+  "enlace_del_xml": "",
+
+  // URL to download CDR (Constancia de Recepción) from SUNAT (empty until accepted)
+  "enlace_del_cdr": "",
+
+  // Whether SUNAT has accepted the document (boolean)
+  "aceptada_por_sunat": true,
+
+  // Human-readable description from SUNAT
+  "sunat_description": "La Factura numero FFF1-1, ha sido aceptada",
+
+  // Additional SUNAT notes (string or null)
+  "sunat_note": null,
+
+  // SUNAT response code: "0" = accepted, other codes indicate errors
+  "sunat_responsecode": "0",
+
+  // SOAP error message from SUNAT if any (empty string if no error)
+  "sunat_soap_error": "",
+
+  // String for generating QR code (RUC | tipo | serie | numero | ...)
+  "cadena_para_codigo_qr": "20600695771 | 01 | FFF1 | 000001 | ...",
+
+  // Digital signature hash of the document
+  "codigo_hash": "xMLFMnbgp1/bHEy572RKRTE9hPY="
+}

@@ -1,0 +1,49 @@
+{
+  // Document type: 7=GRE Remitente, 8=GRE Transportista
+  "tipo_de_comprobante": 7,
+
+  // Document series (4 characters)
+  "serie": "TTT1",
+
+  // Document sequential number
+  "numero": 1,
+
+  // NubeFact web link to view the guide (populated after SUNAT acceptance)
+  "enlace": "http://www.nubefact.com/guia/564db835-fd3f-4ac0-937b-cdabb9d8a04f-5ff5525f-dc23-43a8-9f0e-bd033f7f6f0e",
+
+  // Whether SUNAT has accepted the guide (boolean, true when accepted)
+  "aceptada_por_sunat": true,
+
+  // Human-readable description from SUNAT (typically null for GRE)
+  "sunat_description": null,
+
+  // Additional SUNAT notes (null if none)
+  "sunat_note": null,
+
+  // SUNAT response code (null for successful GRE acceptance)
+  "sunat_responsecode": null,
+
+  // SOAP error message from SUNAT if any (null if no error)
+  "sunat_soap_error": null,
+
+  // Base64-encoded ZIP containing PDF (null when URLs are provided instead)
+  "pdf_zip_base64": null,
+
+  // Base64-encoded ZIP containing XML (null when URLs are provided instead)
+  "xml_zip_base64": null,
+
+  // Base64-encoded ZIP containing CDR (null when URLs are provided instead)
+  "cdr_zip_base64": null,
+
+  // SUNAT QR code URL for guide verification (available after acceptance)
+  "cadena_para_codigo_qr": "https://e-factura.sunat.gob.pe/v1/contribuyente/gre/comprobantes/descargaqr?hashqr=PB9GHszJi9h3WYsVW00fVfgqrn",
+
+  // URL to download PDF (available after SUNAT acceptance)
+  "enlace_del_pdf": "http://www.nubefact.com/guia/564db835-fd3f-4ac0-937b-cdabb9d8a04f-5ff5525f-dc23-43a8-9f0e-bd033f7f6f0e.pdf",
+
+  // URL to download XML (available after SUNAT acceptance)
+  "enlace_del_xml": "http://www.nubefact.com/guia564db835-fd3f-4ac0-937b-cdabb9d8a04f-5ff5525f-dc23-43a8-9f0e-bd033f7f6f0e.xml",
+
+  // URL to download CDR (available after SUNAT acceptance)
+  "enlace_del_cdr": "http://www.nubefact.com/guia564db835-fd3f-4ac0-937b-cdabb9d8a04f-5ff5525f-dc23-43a8-9f0e-bd033f7f6f0e.crd"
+}

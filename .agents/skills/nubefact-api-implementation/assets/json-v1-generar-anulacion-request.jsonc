@@ -1,0 +1,19 @@
+{
+  // Operation type - always "generar_anulacion" for voiding documents
+  "operacion": "generar_anulacion",
+
+  // Document type to void: 1=Factura, 2=Boleta, 3=Nota de Crédito, 4=Nota de Débito
+  "tipo_de_comprobante": 1,
+
+  // Series of document to void (4 characters exact)
+  "serie": "FFF1",
+
+  // Number of document to void (1-8 digits)
+  "numero": 1,
+
+  // Reason for voiding (string, required, max 100 chars)
+  "motivo": "ERROR DEL SISTEMA",
+
+  // Unique code for idempotency control (optional, assigned by your system)
+  "codigo_unico": ""
+}

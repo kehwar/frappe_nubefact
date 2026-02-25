@@ -1,0 +1,13 @@
+{
+  // Operation type - always "consultar_comprobante" for querying documents
+  "operacion": "consultar_comprobante",
+
+  // Document type: 1=Factura, 2=Boleta, 3=Nota de Crédito, 4=Nota de Débito
+  "tipo_de_comprobante": 1,
+
+  // Series to query (4 characters exact)
+  "serie": "FFF1",
+
+  // Sequential number to query (1-8 digits, no leading zeros)
+  "numero": 1
+}

@@ -1,0 +1,13 @@
+{
+  // Operation type - always "consultar_guia" for querying delivery guides
+  "operacion": "consultar_guia",
+
+  // Document type: 7=GRE Remitente, 8=GRE Transportista
+  "tipo_de_comprobante": 7,
+
+  // Series to query (4 characters exact, "T" prefix for Remitente, "V" for Transportista)
+  "serie": "TTT1",
+
+  // Sequential number to query (1-8 digits, string format)
+  "numero": "1"
+}
