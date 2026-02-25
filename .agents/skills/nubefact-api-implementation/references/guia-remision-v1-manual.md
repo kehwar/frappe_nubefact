@@ -1,6 +1,6 @@
 # NubeFact Guía de Remisión API v1 - API Manual
 
-**Reference**: [Google Docs - Guía de Remisión](https://docs.google.com/document/d/1vUpZrBEGJJRGpbUxFdKo2dBKSPfGRnLo2SINwgGSKoA/edit)  
+**Reference**: [Google Docs - Guía de Remisión](https://docs.google.com/document/d/1vUpZrBEGJJRGpbUxFdKo2dBKSPfGRnLo2SINwgGSKoA/edit)
 **PDF Source**: `assets/nubefact_guia_de_remision_v1.pdf`
 
 This manual documents the NubeFact Guía de Remisión API for generating electronic delivery guides (GRE - Guía de Remisión Electrónica) with SUNAT (Peru).
@@ -13,17 +13,19 @@ The Guía de Remisión API provides REST endpoints for generating and querying e
 
 ### Base URL
 ```
-https://api.nubefact.com/api/v1/<operation>
+https://api.nubefact.com/api/v1/<client-route>
 ```
 
 ### Authentication
-All requests require two authentication parameters in the request body:
-- `route`: Your assigned route identifier
-- `token`: Your API authentication token
+All requests require an authorization header:
+- `Authorization`: Your API authentication token
+
+The `<client-route>` value is part of the URL path and identifies your assigned route.
 
 ### Request Format
 - Method: `POST`
 - Content-Type: `application/json`
+- Header: `Authorization: <token>`
 - Body: JSON payload with operation-specific fields
 
 ### Response Format
@@ -49,7 +51,7 @@ All requests require two authentication parameters in the request body:
 
 **Purpose**: Generate a new electronic delivery guide (GRE).
 
-**Endpoint**: `POST /generar_guia`
+**Endpoint**: `POST /api/v1/<client-route>`
 
 #### GRE Remitente (tipo 7)
 
@@ -135,7 +137,7 @@ For **Public Transport** (`tipo_de_transporte: "02"`):
 
 **Purpose**: Query the status and retrieve artifacts of a previously generated guide.
 
-**Endpoint**: `POST /consultar_guia`
+**Endpoint**: `POST /api/v1/<client-route>`
 
 **Request Example**: See [`guia-remision-consultar-guia-request.json`](../assets/guia-remision-consultar-guia-request.json) and [`guia-remision-consultar-guia-request.jsonc`](../assets/guia-remision-consultar-guia-request.jsonc)
 
@@ -373,5 +375,5 @@ ELSE:
 
 ---
 
-**Document Version**: 1.0  
+**Document Version**: 1.0
 **Last Updated**: 2026-02-25

@@ -1,6 +1,6 @@
 # NubeFact JSON API v1 - API Manual
 
-**Reference**: [Google Docs - Guía de Integración JSON v1](https://docs.google.com/document/d/1OosuF6j0pS0nU-qsGLuhQwqKbojbkTyXLFyC7CVVV7c/edit)  
+**Reference**: [Google Docs - Guía de Integración JSON v1](https://docs.google.com/document/d/1OosuF6j0pS0nU-qsGLuhQwqKbojbkTyXLFyC7CVVV7c/edit)
 **PDF Source**: `assets/nubefact_api_json_v1.pdf`
 
 This manual documents the NubeFact JSON API v1 for electronic invoicing with SUNAT (Peru).
@@ -13,17 +13,19 @@ The NubeFact JSON API provides a REST interface for generating, querying, and vo
 
 ### Base URL
 ```
-https://api.nubefact.com/api/v1/<operation>
+https://api.nubefact.com/api/v1/<client-route>
 ```
 
 ### Authentication
-All requests require two authentication parameters in the request body:
-- `route`: Your assigned route identifier
-- `token`: Your API authentication token
+All requests require an authorization header:
+- `Authorization`: Your API authentication token
+
+The `<client-route>` value is part of the URL path and identifies your assigned route.
 
 ### Request Format
 - Method: `POST`
 - Content-Type: `application/json`
+- Header: `Authorization: <token>`
 - Body: JSON payload with operation-specific fields
 
 ### Response Format
@@ -38,7 +40,7 @@ All requests require two authentication parameters in the request body:
 
 **Purpose**: Generate a new electronic invoice, receipt, credit note, or debit note.
 
-**Endpoint**: `POST /generar_comprobante`
+**Endpoint**: `POST /api/v1/<client-route>`
 
 **Request Example**: See [`json-v1-generar-comprobante-request.json`](../assets/json-v1-generar-comprobante-request.json) and [`json-v1-generar-comprobante-request.jsonc`](../assets/json-v1-generar-comprobante-request.jsonc) for detailed field descriptions.
 
@@ -89,7 +91,7 @@ For **Related Delivery Guides**:
 
 **Purpose**: Query the status and details of a previously generated document.
 
-**Endpoint**: `POST /consultar_comprobante`
+**Endpoint**: `POST /api/v1/<client-route>`
 
 **Request Example**: See [`json-v1-consultar-comprobante-request.json`](../assets/json-v1-consultar-comprobante-request.json) and [`json-v1-consultar-comprobante-request.jsonc`](../assets/json-v1-consultar-comprobante-request.jsonc)
 
@@ -115,7 +117,7 @@ For **Related Delivery Guides**:
 
 **Purpose**: Void (annul) a previously generated document.
 
-**Endpoint**: `POST /generar_anulacion`
+**Endpoint**: `POST /api/v1/<client-route>`
 
 **Request Example**: See [`json-v1-generar-anulacion-request.json`](../assets/json-v1-generar-anulacion-request.json) and [`json-v1-generar-anulacion-request.jsonc`](../assets/json-v1-generar-anulacion-request.jsonc)
 
@@ -152,7 +154,7 @@ For **Related Delivery Guides**:
 
 **Purpose**: Check the status of a void request.
 
-**Endpoint**: `POST /consultar_anulacion`
+**Endpoint**: `POST /api/v1/<client-route>`
 
 **Request Example**: See [`json-v1-consultar-anulacion-request.json`](../assets/json-v1-consultar-anulacion-request.json) and [`json-v1-consultar-anulacion-request.jsonc`](../assets/json-v1-consultar-anulacion-request.jsonc)
 
@@ -341,5 +343,5 @@ Refer to SUNAT Catalog 03 for complete list.
 
 ---
 
-**Document Version**: 1.0  
+**Document Version**: 1.0
 **Last Updated**: 2026-02-25
