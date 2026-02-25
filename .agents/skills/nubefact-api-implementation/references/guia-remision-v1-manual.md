@@ -1,6 +1,6 @@
 # NubeFact Guía de Remisión API v1 - API Manual
 
-**Reference**: [Google Docs - Guía de Remisión](https://docs.google.com/document/d/1vUpZrBEGJJRGpbUxFdKo2dBKSPfGRnLo2SINwgGSKoA/edit)
+**Reference**: [Google Docs - Guía de Remisión](https://docs.google.com/document/d/1GCmIJNJVmuOD3LC0itdhdTu6260nJBIEmOwFdnIu5II)
 **PDF Source**: `assets/nubefact_guia_de_remision_v1.pdf`
 
 This manual documents the NubeFact Guía de Remisión API for generating electronic delivery guides (GRE - Guía de Remisión Electrónica) with SUNAT (Peru).
@@ -344,23 +344,6 @@ ELSE:
 
 ---
 
-## Integration Checklist
-
-- [ ] Implement two-step workflow (generate → poll)
-- [ ] Handle SUNAT acceptance polling with timeouts
-- [ ] Store QR code URL for guide verification
-- [ ] Validate ubigeo codes before submission
-- [ ] Distinguish between Remitente and Transportista requirements
-- [ ] Implement transport type-specific field validation
-- [ ] Link guides to source invoices via `documento_relacionado`
-- [ ] Test rejection scenarios and error handling
-- [ ] Store all artifact URLs (PDF, XML, CDR)
-- [ ] Handle series naming rules (T* vs V*)
-- [ ] Implement retry logic for network failures only
-- [ ] Log all API interactions for audit
-
----
-
 ## Comparison: Remitente vs Transportista
 
 | Aspect | GRE Remitente (tipo 7) | GRE Transportista (tipo 8) |
@@ -372,8 +355,3 @@ ELSE:
 | **Transport type** | 01 (Private) or 02 (Public) | Usually own vehicles |
 | **TUC codes** | Not required | Required for secondary vehicles |
 | **Typical scenario** | Company shipping sold goods to customer | Transport company delivering for third party |
-
----
-
-**Document Version**: 1.0
-**Last Updated**: 2026-02-25

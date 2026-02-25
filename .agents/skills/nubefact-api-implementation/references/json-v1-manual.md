@@ -1,6 +1,6 @@
 # NubeFact JSON API v1 - API Manual
 
-**Reference**: [Google Docs - Guía de Integración JSON v1](https://docs.google.com/document/d/1OosuF6j0pS0nU-qsGLuhQwqKbojbkTyXLFyC7CVVV7c/edit)
+**Reference**: [Google Docs - Guía de Integración JSON v1](https://docs.google.com/document/d/1QWWSILBbjd4MDkJl7vCkL2RZvkPh0IC7Wa67BvoYIhA)
 **PDF Source**: `assets/nubefact_api_json_v1.pdf`
 
 This manual documents the NubeFact JSON API v1 for electronic invoicing with SUNAT (Peru).
@@ -325,23 +325,3 @@ Refer to SUNAT Catalog 03 for complete list.
 - Use test credentials provided by NubeFact
 - Test all document types before production
 - Verify SUNAT acceptance in test environment
-
----
-
-## Integration Checklist
-
-- [ ] Store API credentials securely (route + token)
-- [ ] Implement request logging for audit trail
-- [ ] Handle async void processing with polling
-- [ ] Validate amounts calculation matches SUNAT rules
-- [ ] Store SUNAT response artifacts (PDF, XML, CDR URLs)
-- [ ] Implement error handling for all API calls
-- [ ] Test credit/debit note document references
-- [ ] Verify series naming conventions
-- [ ] Implement date format conversion (DD-MM-YYYY)
-- [ ] Test installment payment schedules for credit sales
-
----
-
-**Document Version**: 1.0
-**Last Updated**: 2026-02-25
