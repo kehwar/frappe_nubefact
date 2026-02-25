@@ -12,13 +12,13 @@ on:
 jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Clone and copy skills from kehwar/skills
         run: |
           git clone --depth=1 https://github.com/kehwar/skills.git /tmp/skills-repo
@@ -28,7 +28,7 @@ jobs:
 
       - name: Clone frappe .agents/skills only (sparse checkout)
         run: |
-          git clone --filter=blob:none --sparse --depth=1 https://github.com/frappe/frappe.git /tmp/frappe-repo
+          git clone --filter=blob:none --sparse --depth=1 https://github.com/kehwar/frappe.git /tmp/frappe-repo
           cd /tmp/frappe-repo
           git sparse-checkout set .agents/skills
           cd $GITHUB_WORKSPACE
