@@ -10,6 +10,12 @@ from frappe.model.document import Document
 from frappe.model.naming import append_number_if_name_exists
 from frappe.utils import cint, cstr, getdate, now_datetime
 
+from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_import import (
+    create_delivery_note_from_import_file as _create_delivery_note_from_import_file,
+)
+from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_import import (
+    create_delivery_note_from_import_json_text as _create_delivery_note_from_import_json_text,
+)
 from nubefact.utils.nubefact import make_request
 
 
@@ -314,6 +320,16 @@ def refresh_sunat_status(name: str):
     return _refresh_sunat_status_doc(doc, enforce_permission=True)
 
 
+@frappe.whitelist()
+def create_delivery_note_from_import_file(file_name: str) -> str:
+    return _create_delivery_note_from_import_file(file_name)
+
+
+@frappe.whitelist()
+def create_delivery_note_from_import_json_text(json_payload: str) -> str:
+    return _create_delivery_note_from_import_json_text(json_payload)
+
+
 def poll_pending_delivery_notes():
     pending_names = frappe.get_all(
         "Nubefact Delivery Note",
@@ -408,7 +424,7 @@ def _format_missing_fields(doc: Document, fieldnames: list[str]) -> str:
 
 def _build_delivery_note_title(document_type: Any, series: Any, number: Any) -> str:
     prefix = (
-        "R" if cstr(document_type) == "7" else "T" if cstr(document_type) == "8" else ""
+        "T" if cstr(document_type) == "7" else "V" if cstr(document_type) == "8" else ""
     )
 
     if not prefix:

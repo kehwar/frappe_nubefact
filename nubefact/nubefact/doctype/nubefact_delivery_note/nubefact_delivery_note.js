@@ -7,12 +7,6 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 			open_help_dialog(frm);
 		}, __("Actions"));
 
-		if (frm.doc.docstatus === 0) {
-			frm.add_custom_button(__("Import from JSON"), () => {
-				open_import_dialog(frm);
-			}, __("Actions"));
-		}
-
 		if (["Draft", "Error"].includes(frm.doc.status || "Draft")) {
 			frm.add_custom_button(__("Send to Nubefact"), () => {
 				open_send_dialog(frm);
@@ -37,44 +31,6 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 		}
 	},
 });
-
-function open_import_dialog(frm) {
-	const dialog = new frappe.ui.Dialog({
-		title: __("Import Delivery Note JSON"),
-		fields: [
-			{
-				fieldname: "payload",
-				fieldtype: "Code",
-				label: __("JSON Payload"),
-				options: "JSON",
-				reqd: 1,
-				description: __("Paste JSON in Nubefact example format (generar_guia)."),
-			},
-		],
-		primary_action_label: __("Import"),
-		primary_action: async (values) => {
-			let payload;
-			try {
-				payload = JSON.parse(values.payload);
-			} catch (error) {
-				frappe.throw(__("Invalid JSON format."));
-			}
-
-			if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-				frappe.throw(__("JSON payload must be an object."));
-			}
-
-			await apply_payload_to_form(frm, payload);
-			dialog.hide();
-			frappe.show_alert({
-				message: __("JSON imported to Delivery Note"),
-				indicator: "green",
-			});
-		},
-	});
-
-	dialog.show();
-}
 
 function open_send_dialog(frm) {
 	const dialog = new frappe.ui.Dialog({
