@@ -8,32 +8,38 @@
   "unit_of_measure",
   "item_code",
   "description",
-  "quantity"
+  "quantity",
+  "dam_code"
  ],
  "fields": [
   {
    "fieldname": "unit_of_measure",
    "fieldtype": "Data",
    "in_list_view": 1,
-    "label": "Unit of Measure"
+   "label": "Unit of Measure"
   },
   {
    "fieldname": "item_code",
    "fieldtype": "Data",
    "in_list_view": 1,
-    "label": "Item Code"
+   "label": "Item Code"
   },
   {
    "fieldname": "description",
    "fieldtype": "Text",
    "in_list_view": 1,
-    "label": "Description"
+   "label": "Description"
   },
   {
    "fieldname": "quantity",
    "fieldtype": "Float",
    "in_list_view": 1,
-    "label": "Quantity"
+   "label": "Quantity"
+  },
+  {
+   "fieldname": "dam_code",
+   "fieldtype": "Data",
+   "label": "DAM Code"
   }
  ],
  "grid_page_length": 50,

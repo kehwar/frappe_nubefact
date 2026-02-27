@@ -17,11 +17,14 @@ from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
     get_origin_values as get_branch_origin_values,
 )
 from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_schema import (
+    DRIVER_REQUIRED_FIELDS,
     ITEM_REQUIRED_FIELDS,
+    PUBLIC_TRANSPORT_REQUIRED_FIELDS,
     RELATED_DOCUMENT_REQUIRED_FIELDS,
+    REQUIRED_FIELDS,
     SECONDARY_DRIVER_REQUIRED_FIELDS,
     SECONDARY_VEHICLE_REQUIRED_FIELDS,
-    SUBMIT_REQUIRED_FIELDS,
+    TYPE_7_REQUIRED_FIELDS,
     TYPE_8_RECIPIENT_REQUIRED_FIELDS,
 )
 from nubefact.utils import (
@@ -119,12 +122,15 @@ class NubefactDeliveryNote(Document):
             ),
             "formato_de_pdf": cstr(self.pdf_format or ""),
             "items": [
-                {
-                    "unidad_de_medida": row.unit_of_measure,
-                    "codigo": row.item_code,
-                    "descripcion": row.description,
-                    "cantidad": cstr(row.quantity),
-                }
+                omit_empty_values(
+                    {
+                        "unidad_de_medida": row.unit_of_measure,
+                        "codigo": row.item_code,
+                        "descripcion": row.description,
+                        "cantidad": cstr(row.quantity),
+                        "codigo_dam": row.dam_code,
+                    }
+                )
                 for row in self.items
             ],
         }
@@ -137,6 +143,8 @@ class NubefactDeliveryNote(Document):
                     "cliente_email_1": self.client_email_1,
                     "cliente_email_2": self.client_email_2,
                     "observaciones": self.observations,
+                    "motivo_de_traslado_otros_descripcion": self.transfer_reason_other_description,
+                    "documento_relacionado_codigo": self.related_document_code,
                     "punto_de_partida_codigo_establecimiento_sunat": self.origin_sunat_code,
                     "punto_de_llegada_codigo_establecimiento_sunat": self.destination_sunat_code,
                     "transportista_documento_tipo": self.carrier_document_type,
@@ -191,7 +199,7 @@ class NubefactDeliveryNote(Document):
     def _validate_required_fields(self):
         require_fields(
             self,
-            SUBMIT_REQUIRED_FIELDS,
+            REQUIRED_FIELDS,
             "Required fields are missing for Delivery Note submission.",
         )
 
@@ -215,11 +223,36 @@ class NubefactDeliveryNote(Document):
             "Secondary Drivers",
         )
 
+        if cstr(self.document_type) == "7":
+            require_fields(
+                self,
+                TYPE_7_REQUIRED_FIELDS,
+                "Transfer reason, transport type and number of packages are required for GRE Remitente.",
+            )
+
+            if cstr(self.transport_type) == "01":
+                require_fields(
+                    self,
+                    PUBLIC_TRANSPORT_REQUIRED_FIELDS,
+                    "Carrier fields are required for public transport.",
+                )
+            elif cstr(self.transport_type) == "02":
+                require_fields(
+                    self,
+                    DRIVER_REQUIRED_FIELDS,
+                    "Driver fields are required for private transport.",
+                )
+
         if cstr(self.document_type) == "8":
             require_fields(
                 self,
                 TYPE_8_RECIPIENT_REQUIRED_FIELDS,
-                "Recipient fields are required for Delivery Note type 8.",
+                "Recipient fields are required for GRE Transportista.",
+            )
+            require_fields(
+                self,
+                DRIVER_REQUIRED_FIELDS,
+                "Driver fields are required for GRE Transportista.",
             )
 
     def _validate_required_child_rows(
