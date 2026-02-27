@@ -17,17 +17,24 @@ def make_request(
     operation: str | None = None,
     reference_delivery_note: str | None = None,
     timeout: int = 60,
+    silent: bool = False,
 ) -> Any:
     if not isinstance(payload, dict):
+        if silent:
+            return None
         frappe.throw("Nubefact payload must be a dict.")
 
     operation = operation or payload.get("operacion")
     if not operation:
+        if silent:
+            return None
         frappe.throw(
             "Operation is required. Pass operation=... or include 'operacion' in payload."
         )
 
     if not branch:
+        if silent:
+            return None
         frappe.throw("Branch is required to call Nubefact API.")
 
     branch_doc, url, token = get_request_config(branch)
@@ -90,6 +97,8 @@ def make_request(
         )
 
     if status == "Error":
+        if silent:
+            return None
         frappe.throw(
             error_message or "Nubefact request failed.",
             title=f"Nubefact Error (Log: {log_name})",
