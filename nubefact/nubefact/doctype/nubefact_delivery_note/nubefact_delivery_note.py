@@ -22,7 +22,30 @@ from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_imp
 from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_import import (
     create_delivery_note_from_import_json_text as _create_delivery_note_from_import_json_text,
 )
+from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_schema import (
+    ITEM_REQUIRED_FIELDS,
+    RELATED_DOCUMENT_REQUIRED_FIELDS,
+    SECONDARY_DRIVER_REQUIRED_FIELDS,
+    SECONDARY_VEHICLE_REQUIRED_FIELDS,
+    SUBMIT_REQUIRED_FIELDS,
+    TYPE_8_RECIPIENT_REQUIRED_FIELDS,
+)
 from nubefact.utils.nubefact import make_request
+
+_CLEARED_RESPONSE_VALUES: dict[str, Any] = {
+    "accepted_by_sunat": 0,
+    "last_sunat_check": None,
+    "sunat_response_code": "",
+    "sunat_response_message": "",
+    "sunat_note": "",
+    "sunat_soap_error": "",
+    "error_message": "",
+    "link_url": "",
+    "pdf_url": "",
+    "xml_url": "",
+    "cdr_url": "",
+    "qr_url": "",
+}
 
 
 class NubefactDeliveryNote(Document):
@@ -61,18 +84,15 @@ class NubefactDeliveryNote(Document):
 
     def _set_inferred_fields(self):
         origin_values = get_effective_origin_values(self)
-        origin_ubigeo = origin_values.get("origin_ubigeo")
-        origin_address = origin_values.get("origin_address")
-        origin_sunat_code = origin_values.get("origin_sunat_code")
+        inferred_origin_fields = (
+            ("origin_ubigeo", origin_values.get("origin_ubigeo")),
+            ("origin_address", origin_values.get("origin_address")),
+            ("origin_sunat_code", origin_values.get("origin_sunat_code")),
+        )
 
-        if not cstr(self.origin_ubigeo or "").strip() and origin_ubigeo:
-            self.origin_ubigeo = origin_ubigeo
-
-        if not cstr(self.origin_address or "").strip() and origin_address:
-            self.origin_address = origin_address
-
-        if not cstr(self.origin_sunat_code or "").strip() and origin_sunat_code:
-            self.origin_sunat_code = origin_sunat_code
+        for fieldname, inferred_value in inferred_origin_fields:
+            if not cstr(self.get(fieldname) or "").strip() and inferred_value:
+                self.set(fieldname, inferred_value)
 
     def _build_generate_payload(self) -> dict[str, Any]:
         origin_values = get_effective_origin_values(self)
@@ -191,20 +211,7 @@ class NubefactDeliveryNote(Document):
     def _validate_submit_payload(self):
         _require_fields(
             self,
-            [
-                "document_type",
-                "series",
-                "client_document_type",
-                "client_document_number",
-                "client_name",
-                "transfer_reason",
-                "transport_type",
-                "gross_total_weight",
-                "weight_unit",
-                "number_of_packages",
-                "destination_ubigeo",
-                "destination_address",
-            ],
+            SUBMIT_REQUIRED_FIELDS,
             "Required fields are missing for Delivery Note submission.",
         )
 
@@ -227,45 +234,35 @@ class NubefactDeliveryNote(Document):
         for index, row in enumerate(self.items, start=1):
             _require_child_fields(
                 row,
-                ["unit_of_measure", "item_code", "description", "quantity"],
+                ITEM_REQUIRED_FIELDS,
                 f"Items row #{index} has missing required fields.",
             )
 
         for index, row in enumerate(self.related_documents or [], start=1):
             _require_child_fields(
                 row,
-                ["document_type", "series", "number"],
+                RELATED_DOCUMENT_REQUIRED_FIELDS,
                 f"Related Documents row #{index} has missing required fields.",
             )
 
         for index, row in enumerate(self.secondary_vehicles or [], start=1):
             _require_child_fields(
                 row,
-                ["license_plate"],
+                SECONDARY_VEHICLE_REQUIRED_FIELDS,
                 f"Secondary Vehicles row #{index} has missing required fields.",
             )
 
         for index, row in enumerate(self.secondary_drivers or [], start=1):
             _require_child_fields(
                 row,
-                [
-                    "document_type",
-                    "document_number",
-                    "first_name",
-                    "last_name",
-                    "license_number",
-                ],
+                SECONDARY_DRIVER_REQUIRED_FIELDS,
                 f"Secondary Drivers row #{index} has missing required fields.",
             )
 
         if cstr(self.document_type) == "8":
             _require_fields(
                 self,
-                [
-                    "recipient_document_type",
-                    "recipient_document_number",
-                    "recipient_name",
-                ],
+                TYPE_8_RECIPIENT_REQUIRED_FIELDS,
                 "Recipient fields are required for Delivery Note type 8.",
             )
 
@@ -423,20 +420,7 @@ def _save_response_status(
     if not values:
         return {}
 
-    cleared_values: dict[str, Any] = {
-        "accepted_by_sunat": 0,
-        "last_sunat_check": None,
-        "sunat_response_code": "",
-        "sunat_response_message": "",
-        "sunat_note": "",
-        "sunat_soap_error": "",
-        "error_message": "",
-        "link_url": "",
-        "pdf_url": "",
-        "xml_url": "",
-        "cdr_url": "",
-        "qr_url": "",
-    }
+    cleared_values: dict[str, Any] = dict(_CLEARED_RESPONSE_VALUES)
     cleared_values.update(values)
 
     frappe.db.set_value(doc.doctype, doc.name, cleared_values, update_modified=True)
@@ -448,24 +432,14 @@ def _to_nubefact_date(value: str) -> str:
 
 
 def _require_fields(doc: Document, fields: list[str], message: str):
-    missing = [
-        fieldname
-        for fieldname in fields
-        if not doc.get(fieldname)
-        or (isinstance(doc.get(fieldname), str) and not doc.get(fieldname).strip())
-    ]
+    missing = _get_missing_fields(doc, fields)
 
     if missing:
         frappe.throw(f"{message} Missing: {_format_missing_fields(doc, missing)}")
 
 
 def _require_child_fields(row: Document, fields: list[str], message: str):
-    missing = [
-        fieldname
-        for fieldname in fields
-        if not row.get(fieldname)
-        or (isinstance(row.get(fieldname), str) and not row.get(fieldname).strip())
-    ]
+    missing = _get_missing_fields(row, fields)
 
     if missing:
         frappe.throw(f"{message} Missing: {_format_missing_fields(row, missing)}")
@@ -479,6 +453,15 @@ def _format_missing_fields(doc: Document, fieldnames: list[str]) -> str:
         labels.append(cstr(field.label).strip() if field and field.label else fieldname)
 
     return ", ".join(labels)
+
+
+def _get_missing_fields(doc: Document, fields: list[str]) -> list[str]:
+    return [
+        fieldname
+        for fieldname in fields
+        if not doc.get(fieldname)
+        or (isinstance(doc.get(fieldname), str) and not doc.get(fieldname).strip())
+    ]
 
 
 def _build_delivery_note_title(document_type: Any, series: Any, number: Any) -> str:
