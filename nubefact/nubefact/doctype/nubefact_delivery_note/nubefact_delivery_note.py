@@ -30,6 +30,8 @@ class NubefactDeliveryNote(Document):
         if not self.status:
             self.status = "Draft"
 
+        self._set_default_branch()
+
         self._set_inferred_fields()
 
         self.title = _build_delivery_note_title(
@@ -37,6 +39,18 @@ class NubefactDeliveryNote(Document):
             series=self.series,
             number=self.number,
         )
+
+    def _set_default_branch(self):
+        if cstr(self.branch or "").strip():
+            return
+
+        last_branch = _get_last_used_branch_for_user(
+            user=frappe.session.user,
+            exclude_name=self.name,
+        )
+
+        if last_branch:
+            self.branch = last_branch
 
     def _set_inferred_fields(self):
         origin_ubigeo, origin_address, origin_sunat_code = _get_origin_values(self)
@@ -431,6 +445,31 @@ def _build_delivery_note_title(document_type: Any, series: Any, number: Any) -> 
         return ""
 
     return f"{prefix}-{cstr(series or '').strip()}-{cstr(number or '').strip()}"
+
+
+def _get_last_used_branch_for_user(
+    *, user: str, exclude_name: str | None = None
+) -> str | None:
+    if not user or user == "Guest":
+        return None
+
+    filters: dict[str, Any] = {
+        "owner": user,
+        "branch": ["is", "set"],
+    }
+
+    if exclude_name:
+        filters["name"] = ["!=", exclude_name]
+
+    last_branch = frappe.get_all(
+        "Nubefact Delivery Note",
+        filters=filters,
+        pluck="branch",
+        order_by="modified desc",
+        limit=1,
+    )
+
+    return last_branch[0] if last_branch else None
 
 
 def _get_origin_values(
