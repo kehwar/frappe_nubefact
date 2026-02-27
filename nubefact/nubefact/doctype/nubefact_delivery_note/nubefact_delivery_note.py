@@ -55,6 +55,11 @@ class NubefactDeliveryNote(Document):
             "Nubefact Delivery Note", timestamp.strftime("%Y%m%d-%H%M%S-%f")
         )
 
+    def autotitle(self):
+        series = cstr(self.series or "").strip()
+        number = cstr(self.number or "").strip()
+        self.title = f"{series}-{number}" if (series or number) else ""
+
     def validate(self):
         if not self.status:
             self.status = "Draft"
@@ -75,20 +80,18 @@ class NubefactDeliveryNote(Document):
             if last_branch:
                 self.branch = last_branch
 
-        origin_values = get_effective_origin_values(self)
+        branch_origin_values = get_branch_origin_values(self.branch)
         inferred_origin_fields = (
-            ("origin_ubigeo", origin_values.get("origin_ubigeo")),
-            ("origin_address", origin_values.get("origin_address")),
-            ("origin_sunat_code", origin_values.get("origin_sunat_code")),
+            ("origin_ubigeo", branch_origin_values.get("origin_ubigeo")),
+            ("origin_address", branch_origin_values.get("origin_address")),
+            ("origin_sunat_code", branch_origin_values.get("origin_sunat_code")),
         )
 
         for fieldname, inferred_value in inferred_origin_fields:
             if not cstr(self.get(fieldname) or "").strip() and inferred_value:
                 self.set(fieldname, inferred_value)
 
-        series = cstr(self.series or "").strip()
-        number = cstr(self.number or "").strip()
-        self.title = f"{series}-{number}" if (series or number) else ""
+        self.autotitle()
 
     def _build_generate_payload(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -400,7 +403,12 @@ def _save_response_status(
     cleared_values: dict[str, Any] = dict(_CLEARED_RESPONSE_VALUES)
     cleared_values.update(values)
 
-    frappe.db.set_value(doc.doctype, doc.name, cleared_values, update_modified=True)
+    doc.update(cleared_values)
+    doc.autotitle()
+
+    doc.db_update()
+    doc.notify_update()
+
     return cleared_values
 
 
@@ -439,16 +447,3 @@ def _get_missing_fields(doc: Document, fields: list[str]) -> list[str]:
         if not doc.get(fieldname)
         or (isinstance(doc.get(fieldname), str) and not doc.get(fieldname).strip())
     ]
-
-
-def get_effective_origin_values(doc: NubefactDeliveryNote) -> dict[str, str | None]:
-    origin_values = get_branch_origin_values(doc.branch)
-
-    return {
-        "origin_ubigeo": cstr(doc.origin_ubigeo or "").strip()
-        or origin_values.get("origin_ubigeo"),
-        "origin_address": cstr(doc.origin_address or "").strip()
-        or origin_values.get("origin_address"),
-        "origin_sunat_code": cstr(doc.origin_sunat_code or "").strip()
-        or origin_values.get("origin_sunat_code"),
-    }
