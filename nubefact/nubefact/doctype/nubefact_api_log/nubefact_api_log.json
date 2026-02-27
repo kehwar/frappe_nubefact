@@ -1,0 +1,183 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-02-27 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "request_details_section",
+  "operation",
+  "branch",
+  "reference_doctype",
+  "reference_name",
+  "column_break_requests",
+  "request_timestamp",
+    "api_route",
+  "response_details_section",
+  "response_timestamp",
+  "response_status_code",
+  "duration_ms",
+  "success",
+  "column_break_response",
+  "error_code",
+  "error_message",
+  "response_payload",
+  "section_break_crau",
+  "request_payload"
+ ],
+ "fields": [
+  {
+   "fieldname": "request_details_section",
+   "fieldtype": "Section Break",
+   "label": "Request Details"
+  },
+  {
+   "fieldname": "operation",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Operation",
+   "options": "generar_comprobante\nconsultar_comprobante\ngenerar_anulacion\nconsultar_anulacion\ngenerar_guia\nconsultar_guia",
+   "read_only": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Branch",
+   "options": "Nubefact Branch",
+   "read_only": 1
+  },
+  {
+    "fieldname": "api_route",
+   "fieldtype": "Data",
+    "label": "API Route",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Reference DocType",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference Name",
+   "options": "reference_doctype",
+   "read_only": 1
+  },
+  {
+   "fieldname": "request_timestamp",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Request Timestamp",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_requests",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "request_payload",
+   "fieldtype": "Code",
+   "label": "Request Payload",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "response_details_section",
+   "fieldtype": "Section Break",
+   "label": "Response Details"
+  },
+  {
+   "fieldname": "response_timestamp",
+   "fieldtype": "Datetime",
+   "label": "Response Timestamp",
+   "read_only": 1
+  },
+  {
+   "fieldname": "response_status_code",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Response Status Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "duration_ms",
+   "fieldtype": "Int",
+   "label": "Duration (ms)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_response",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "success",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Success",
+   "read_only": 1
+  },
+  {
+   "fieldname": "response_payload",
+   "fieldtype": "Code",
+   "label": "Response Payload",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_code",
+   "fieldtype": "Data",
+   "label": "Error Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Text",
+   "label": "Error Message",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_crau",
+   "fieldtype": "Section Break",
+   "label": "Request Payload"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-26 22:14:27.528068",
+ "modified_by": "Administrator",
+ "module": "Nubefact",
+ "name": "Nubefact API Log",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager"
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "request_timestamp",
+ "sort_order": "DESC",
+ "states": []
+}
