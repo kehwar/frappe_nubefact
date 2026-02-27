@@ -14,18 +14,15 @@ from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import get_reques
 def make_request(
     payload: dict[str, Any],
     branch: str,
-    operation: str | None = None,
     reference_delivery_note: str | None = None,
     timeout: int = 60,
 ) -> Any:
     if not isinstance(payload, dict):
         frappe.throw("Nubefact payload must be a dict.")
 
-    operation = operation or payload.get("operacion")
+    operation = payload.get("operacion")
     if not operation:
-        frappe.throw(
-            "Operation is required. Pass operation=... or include 'operacion' in payload."
-        )
+        frappe.throw("Operation is required in payload field 'operacion'.")
 
     if not branch:
         frappe.throw("Branch is required to call Nubefact API.")

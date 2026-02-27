@@ -274,15 +274,10 @@ def send_to_nubefact(name: str):
     try:
         doc.run_method("validate")
 
-        payload = doc._build_generate_payload()
-
-        response = make_request(
-            payload=payload,
-            branch=doc.branch,
-            operation="generar_guia",
-            reference_delivery_note=doc.name,
+        values = _request_extract_and_save_response(
+            doc,
+            payload=doc._build_generate_payload(),
         )
-        values = doc._extract_response_values(response)
     except Exception as exc:
         frappe.db.rollback()
         error_message = cstr(exc)
@@ -293,10 +288,8 @@ def send_to_nubefact(name: str):
             "error_message": error_message,
         }
 
-    if values:
-        _save_response_status(doc, values)
-
     if values and values.get("status") == "Error":
+        _save_response_status(doc, values)
         frappe.db.commit()
 
     return values
@@ -329,20 +322,12 @@ def poll_pending_delivery_notes():
             )
 
 
-def _refresh_sunat_status_doc(doc: NubefactDeliveryNote) -> dict[str, Any]:
-
-    if not doc.number:
-        frappe.throw("Cannot refresh SUNAT status because document number is missing.")
-
+def _request_extract_and_save_response(
+    doc: NubefactDeliveryNote, payload: dict[str, Any]
+) -> dict[str, Any]:
     response = make_request(
-        payload={
-            "operacion": "consultar_guia",
-            "tipo_de_comprobante": cint(doc.document_type),
-            "serie": doc.series,
-            "numero": cstr(doc.number),
-        },
+        payload=payload,
         branch=doc.branch,
-        operation="consultar_guia",
         reference_delivery_note=doc.name,
     )
     values = doc._extract_response_values(response)
@@ -351,6 +336,22 @@ def _refresh_sunat_status_doc(doc: NubefactDeliveryNote) -> dict[str, Any]:
         _save_response_status(doc, values)
 
     return values
+
+
+def _refresh_sunat_status_doc(doc: NubefactDeliveryNote) -> dict[str, Any]:
+
+    if not doc.number:
+        frappe.throw("Cannot refresh SUNAT status because document number is missing.")
+
+    return _request_extract_and_save_response(
+        doc,
+        payload={
+            "operacion": "consultar_guia",
+            "tipo_de_comprobante": cint(doc.document_type),
+            "serie": doc.series,
+            "numero": cstr(doc.number),
+        },
+    )
 
 
 def _save_response_status(
