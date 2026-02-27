@@ -13,8 +13,7 @@
    "fieldname": "license_plate",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "License Plate",
-   "reqd": 1
+    "label": "License Plate"
   },
   {
    "fieldname": "tuc",

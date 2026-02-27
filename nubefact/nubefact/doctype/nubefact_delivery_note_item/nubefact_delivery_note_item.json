@@ -15,29 +15,25 @@
    "fieldname": "unit_of_measure",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Unit of Measure",
-   "reqd": 1
+    "label": "Unit of Measure"
   },
   {
    "fieldname": "item_code",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Item Code",
-   "reqd": 1
+    "label": "Item Code"
   },
   {
    "fieldname": "description",
    "fieldtype": "Text",
    "in_list_view": 1,
-   "label": "Description",
-   "reqd": 1
+    "label": "Description"
   },
   {
    "fieldname": "quantity",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Quantity",
-   "reqd": 1
+    "label": "Quantity"
   }
  ],
  "grid_page_length": 50,

@@ -17,36 +17,31 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Document Type",
-   "options": "1\n4\n7",
-   "reqd": 1
+    "options": "1\n4\n7"
   },
   {
    "fieldname": "document_number",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Document Number",
-   "reqd": 1
+    "label": "Document Number"
   },
   {
    "fieldname": "first_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "First Name",
-   "reqd": 1
+    "label": "First Name"
   },
   {
    "fieldname": "last_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Last Name",
-   "reqd": 1
+    "label": "Last Name"
   },
   {
    "fieldname": "license_number",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "License Number",
-   "reqd": 1
+    "label": "License Number"
   }
  ],
  "grid_page_length": 50,

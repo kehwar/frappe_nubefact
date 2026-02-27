@@ -99,22 +99,19 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Document Type",
-   "options": "7\n8",
-   "reqd": 1
+    "options": "7\n8"
   },
   {
    "fieldname": "series",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Series",
-   "reqd": 1
+    "label": "Series"
   },
   {
    "fieldname": "number",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Number",
-   "reqd": 1
+    "label": "Number"
   },
   {
    "fieldname": "column_break_document",
@@ -124,14 +121,12 @@
    "fieldname": "issue_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Issue Date",
-   "reqd": 1
+    "label": "Issue Date"
   },
   {
    "fieldname": "transfer_start_date",
    "fieldtype": "Date",
-   "label": "Transfer Start Date",
-   "reqd": 1
+    "label": "Transfer Start Date"
   },
   {
    "fieldname": "client_section",
@@ -142,20 +137,17 @@
    "fieldname": "client_document_type",
    "fieldtype": "Select",
    "label": "Client Document Type",
-   "options": "6\n1\n4\n7\nA\n0",
-   "reqd": 1
+    "options": "6\n1\n4\n7\nA\n0"
   },
   {
    "fieldname": "client_document_number",
    "fieldtype": "Data",
-   "label": "Client Document Number",
-   "reqd": 1
+    "label": "Client Document Number"
   },
   {
    "fieldname": "client_name",
    "fieldtype": "Data",
-   "label": "Client Name",
-   "reqd": 1
+    "label": "Client Name"
   },
   {
    "fieldname": "column_break_client",
@@ -164,8 +156,7 @@
   {
    "fieldname": "client_address",
    "fieldtype": "Small Text",
-   "label": "Client Address",
-   "reqd": 1
+    "label": "Client Address"
   },
   {
    "fieldname": "client_email",
@@ -212,34 +203,29 @@
    "fieldname": "transfer_reason",
    "fieldtype": "Select",
    "label": "Transfer Reason",
-   "options": "01\n02\n04\n05\n06\n07\n08\n09\n13\n14\n18\n19",
-   "reqd": 1
+    "options": "01\n02\n04\n05\n06\n07\n08\n09\n13\n14\n18\n19"
   },
   {
    "fieldname": "transport_type",
    "fieldtype": "Select",
    "label": "Transport Type",
-   "options": "01\n02",
-   "reqd": 1
+    "options": "01\n02"
   },
   {
    "fieldname": "gross_total_weight",
    "fieldtype": "Float",
-   "label": "Gross Total Weight",
-   "reqd": 1
+    "label": "Gross Total Weight"
   },
   {
    "fieldname": "weight_unit",
    "fieldtype": "Select",
    "label": "Weight Unit",
-   "options": "KGM\nTNE",
-   "reqd": 1
+    "options": "KGM\nTNE"
   },
   {
    "fieldname": "number_of_packages",
    "fieldtype": "Int",
-   "label": "Number of Packages",
-   "reqd": 1
+    "label": "Number of Packages"
   },
   {
    "fieldname": "column_break_transfer",
@@ -309,14 +295,12 @@
   {
    "fieldname": "origin_ubigeo",
    "fieldtype": "Data",
-   "label": "Origin Ubigeo",
-   "reqd": 1
+    "label": "Origin Ubigeo"
   },
   {
    "fieldname": "origin_address",
    "fieldtype": "Small Text",
-   "label": "Origin Address",
-   "reqd": 1
+    "label": "Origin Address"
   },
     {
      "fieldname": "origin_sunat_code",
@@ -330,14 +314,12 @@
   {
    "fieldname": "destination_ubigeo",
    "fieldtype": "Data",
-   "label": "Destination Ubigeo",
-   "reqd": 1
+    "label": "Destination Ubigeo"
   },
   {
    "fieldname": "destination_address",
    "fieldtype": "Small Text",
-   "label": "Destination Address",
-   "reqd": 1
+    "label": "Destination Address"
   },
     {
      "fieldname": "destination_sunat_code",
@@ -370,8 +352,7 @@
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Items",
-   "options": "Nubefact Delivery Note Item",
-   "reqd": 1
+    "options": "Nubefact Delivery Note Item"
   },
   {
    "fieldname": "related_documents_section",

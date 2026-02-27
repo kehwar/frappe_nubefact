@@ -132,6 +132,68 @@ class NubefactDeliveryNote(Document):
         return payload
 
     def _validate_submit_payload(self):
+        _require_fields(
+            self,
+            [
+                "document_type",
+                "series",
+                "number",
+                "issue_date",
+                "transfer_start_date",
+                "client_document_type",
+                "client_document_number",
+                "client_name",
+                "client_address",
+                "transfer_reason",
+                "transport_type",
+                "gross_total_weight",
+                "weight_unit",
+                "number_of_packages",
+                "origin_ubigeo",
+                "origin_address",
+                "destination_ubigeo",
+                "destination_address",
+            ],
+            "Required fields are missing for Delivery Note submission.",
+        )
+
+        if not self.items:
+            frappe.throw("At least one item is required for Delivery Note submission.")
+
+        for index, row in enumerate(self.items, start=1):
+            _require_child_fields(
+                row,
+                ["unit_of_measure", "item_code", "description", "quantity"],
+                f"Items row #{index} has missing required fields.",
+            )
+
+        for index, row in enumerate(self.related_documents or [], start=1):
+            _require_child_fields(
+                row,
+                ["document_type", "series", "number"],
+                f"Related Documents row #{index} has missing required fields.",
+            )
+
+        for index, row in enumerate(self.secondary_vehicles or [], start=1):
+            _require_child_fields(
+                row,
+                ["license_plate"],
+                f"Secondary Vehicles row #{index} has missing required fields.",
+            )
+
+        for index, row in enumerate(self.secondary_drivers or [], start=1):
+            _require_child_fields(
+                row,
+                [
+                    "document_type",
+                    "document_number",
+                    "first_name",
+                    "last_name",
+                    "license_number",
+                ],
+                f"Secondary Drivers row #{index} has missing required fields.",
+            )
+
         if cstr(self.document_type) == "8":
             _require_fields(
                 self,
@@ -242,6 +304,18 @@ def _require_fields(doc: Document, fields: list[str], message: str):
         for fieldname in fields
         if not doc.get(fieldname)
         or (isinstance(doc.get(fieldname), str) and not doc.get(fieldname).strip())
+    ]
+
+    if missing:
+        frappe.throw(message)
+
+
+def _require_child_fields(row: Document, fields: list[str], message: str):
+    missing = [
+        fieldname
+        for fieldname in fields
+        if not row.get(fieldname)
+        or (isinstance(row.get(fieldname), str) and not row.get(fieldname).strip())
     ]
 
     if missing:
