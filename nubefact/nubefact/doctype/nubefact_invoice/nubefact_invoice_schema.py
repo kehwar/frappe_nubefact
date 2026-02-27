@@ -14,16 +14,16 @@ SUBMIT_REQUIRED_FIELDS = [
 ]
 
 ITEM_REQUIRED_FIELDS = [
-    "unit_of_measure",
+    "uom",
     "item_code",
     "description",
     "quantity",
-    "unit_value",
     "unit_price",
-    "subtotal",
+    "unit_price_with_tax",
+    "line_total",
     "igv_type",
     "igv",
-    "total",
+    "line_total_with_tax",
 ]
 
 DELIVERY_REFERENCE_REQUIRED_FIELDS = ["guide_type", "guide_series_number"]
@@ -31,9 +31,9 @@ DELIVERY_REFERENCE_REQUIRED_FIELDS = ["guide_type", "guide_series_number"]
 PAYMENT_INSTALLMENT_REQUIRED_FIELDS = ["installment_number", "payment_date", "amount"]
 
 NOTE_REFERENCE_REQUIRED_FIELDS = [
-    "modifies_document_type",
-    "modifies_series",
-    "modifies_number",
+    "base_document_type",
+    "base_document_series",
+    "base_document_number",
 ]
 
 CREDIT_NOTE_REQUIRED_FIELDS = ["credit_note_reason"]

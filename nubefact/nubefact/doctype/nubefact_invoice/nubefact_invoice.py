@@ -101,23 +101,23 @@ class NubefactInvoice(Document):
             "items": [
                 omit_empty_values(
                     {
-                        "unidad_de_medida": row.unit_of_measure,
+                        "unidad_de_medida": row.uom,
                         "codigo": row.item_code,
                         "codigo_producto_sunat": row.sunat_product_code,
                         "descripcion": row.description,
                         "cantidad": cstr(row.quantity),
-                        "valor_unitario": cstr(row.unit_value),
-                        "precio_unitario": cstr(row.unit_price),
+                        "valor_unitario": cstr(row.unit_price),
+                        "precio_unitario": cstr(row.unit_price_with_tax),
                         "descuento": cstr(row.discount),
-                        "subtotal": cstr(row.subtotal),
+                        "subtotal": cstr(row.line_total),
                         "tipo_de_igv": cstr(row.igv_type),
                         "igv": cstr(row.igv),
-                        "total": cstr(row.total),
+                        "total": cstr(row.line_total_with_tax),
                         "anticipo_regularizacion": bool(
-                            cint(row.advance_regularization)
+                            cint(row.downpayment_regularization)
                         ),
-                        "anticipo_documento_serie": row.advance_document_series,
-                        "anticipo_documento_numero": row.advance_document_number,
+                        "anticipo_documento_serie": row.downpayment_document_series,
+                        "anticipo_documento_numero": row.downpayment_document_number,
                     }
                 )
                 for row in self.items
@@ -148,8 +148,8 @@ class NubefactInvoice(Document):
                     "percepcion_base_imponible": cstr(self.perception_base),
                     "total_percepcion": cstr(self.total_perception),
                     "total_incluido_percepcion": cstr(self.total_with_perception),
-                    "retencion_tipo": self.retention_type,
-                    "retencion_base_imponible": cstr(self.retention_base),
+                    "retencion_tipo": self.withholding_type,
+                    "retencion_base_imponible": cstr(self.withholding_base),
                     "total_retencion": cstr(self.total_retention),
                     "total_impuestos_bolsas": cstr(self.total_plastic_bag_tax),
                     "detraccion": bool(cint(self.subject_to_detraction)),
@@ -159,7 +159,7 @@ class NubefactInvoice(Document):
                     "medio_de_pago": self.payment_method,
                     "placa_vehiculo": self.vehicle_license_plate,
                     "orden_compra_servicio": self.purchase_order,
-                    "observaciones": self.observations,
+                    "observaciones": self.remarks,
                     "codigo_unico": self.name,
                     "generado_por_contingencia": bool(
                         cint(self.generated_by_contingency)
@@ -173,19 +173,19 @@ class NubefactInvoice(Document):
         if cstr(self.document_type) in {"3", "4"}:
             payload.update(
                 {
-                    "documento_que_se_modifica_tipo": cstr(self.modifies_document_type),
-                    "documento_que_se_modifica_serie": self.modifies_series,
-                    "documento_que_se_modifica_numero": cstr(self.modifies_number),
+                    "documento_que_se_modifica_tipo": cstr(self.base_document_type),
+                    "documento_que_se_modifica_serie": self.base_document_series,
+                    "documento_que_se_modifica_numero": cstr(self.base_document_number),
                 }
             )
 
-        if self.delivery_guides:
+        if self.delivery_references:
             payload["guias"] = [
                 {
                     "guia_tipo": cstr(row.guide_type),
                     "guia_serie_numero": row.guide_series_number,
                 }
-                for row in self.delivery_guides
+                for row in self.delivery_references
             ]
 
         if self.credit_installments:
@@ -212,7 +212,7 @@ class NubefactInvoice(Document):
 
         self._validate_required_child_rows(self.items, ITEM_REQUIRED_FIELDS, "Items")
         self._validate_required_child_rows(
-            self.delivery_guides,
+            self.delivery_references,
             DELIVERY_REFERENCE_REQUIRED_FIELDS,
             "Delivery Guides",
         )

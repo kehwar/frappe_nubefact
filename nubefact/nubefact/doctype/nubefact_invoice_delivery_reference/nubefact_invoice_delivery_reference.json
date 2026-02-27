@@ -14,7 +14,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Guide Type",
-    "options": "1\n09\n31"
+    "options": "1\n2"
   },
   {
    "fieldname": "guide_series_number",
