@@ -1,12 +1,5 @@
 {
- "actions": [
-  {
-   "action": "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.send_to_nubefact",
-   "action_type": "Server Action",
-   "group": "Actions",
-   "label": "Send to Nubefact"
-  }
- ],
+ "actions": [],
  "allow_rename": 1,
  "creation": "2026-02-27 00:00:00",
  "doctype": "DocType",
@@ -528,7 +521,7 @@
    "link_fieldname": "reference_delivery_note"
   }
  ],
- "modified": "2026-02-27 01:09:27.934220",
+ "modified": "2026-02-27 02:21:25.071174",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Delivery Note",
