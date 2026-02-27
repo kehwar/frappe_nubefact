@@ -7,12 +7,26 @@ from typing import Any
 
 import frappe
 from frappe.model.document import Document
+from frappe.model.naming import append_number_if_name_exists
 from frappe.utils import cint, cstr, getdate, now_datetime
 
 from nubefact.utils.nubefact import make_request
 
 
 class NubefactDeliveryNote(Document):
+    def autoname(self):
+        timestamp = now_datetime()
+        self.name = append_number_if_name_exists(
+            "Nubefact Delivery Note", timestamp.strftime("%Y%m%d-%H%M%S-%f")
+        )
+
+    def validate(self):
+        self.title = _build_delivery_note_title(
+            document_type=self.document_type,
+            series=self.series,
+            number=self.number,
+        )
+
     def before_submit(self):
         payload = self._build_generate_payload()
         response = make_request(
@@ -318,3 +332,14 @@ def _require_child_fields(row: Document, fields: list[str], message: str):
 
     if missing:
         frappe.throw(message)
+
+
+def _build_delivery_note_title(document_type: Any, series: Any, number: Any) -> str:
+    prefix = (
+        "R" if cstr(document_type) == "7" else "T" if cstr(document_type) == "8" else ""
+    )
+
+    if not prefix:
+        return ""
+
+    return f"{prefix}-{cstr(series or '').strip()}-{cstr(number or '').strip()}"

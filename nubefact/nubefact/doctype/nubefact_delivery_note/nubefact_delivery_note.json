@@ -1,19 +1,19 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:{series}-{number}",
  "creation": "2026-02-27 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "document_section",
-  "branch",
+  "title",
   "document_type",
   "series",
   "number",
   "column_break_document",
   "issue_date",
   "transfer_start_date",
+  "branch",
   "client_section",
   "client_document_type",
   "client_document_number",
@@ -48,11 +48,11 @@
   "origin_section",
   "origin_ubigeo",
   "origin_address",
-    "origin_sunat_code",
+  "origin_sunat_code",
   "column_break_origin",
   "destination_ubigeo",
   "destination_address",
-    "destination_sunat_code",
+  "destination_sunat_code",
   "items_section",
   "items",
   "related_documents_section",
@@ -99,19 +99,26 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Document Type",
-    "options": "7\n8"
+   "options": "7\n8"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "read_only": 1
   },
   {
    "fieldname": "series",
    "fieldtype": "Data",
    "in_list_view": 1,
-    "label": "Series"
+   "label": "Series"
   },
   {
    "fieldname": "number",
    "fieldtype": "Int",
    "in_list_view": 1,
-    "label": "Number"
+   "label": "Number"
   },
   {
    "fieldname": "column_break_document",
@@ -121,12 +128,12 @@
    "fieldname": "issue_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-    "label": "Issue Date"
+   "label": "Issue Date"
   },
   {
    "fieldname": "transfer_start_date",
    "fieldtype": "Date",
-    "label": "Transfer Start Date"
+   "label": "Transfer Start Date"
   },
   {
    "fieldname": "client_section",
@@ -137,17 +144,17 @@
    "fieldname": "client_document_type",
    "fieldtype": "Select",
    "label": "Client Document Type",
-    "options": "6\n1\n4\n7\nA\n0"
+   "options": "6\n1\n4\n7\nA\n0"
   },
   {
    "fieldname": "client_document_number",
    "fieldtype": "Data",
-    "label": "Client Document Number"
+   "label": "Client Document Number"
   },
   {
    "fieldname": "client_name",
    "fieldtype": "Data",
-    "label": "Client Name"
+   "label": "Client Name"
   },
   {
    "fieldname": "column_break_client",
@@ -156,7 +163,7 @@
   {
    "fieldname": "client_address",
    "fieldtype": "Small Text",
-    "label": "Client Address"
+   "label": "Client Address"
   },
   {
    "fieldname": "client_email",
@@ -203,29 +210,29 @@
    "fieldname": "transfer_reason",
    "fieldtype": "Select",
    "label": "Transfer Reason",
-    "options": "01\n02\n04\n05\n06\n07\n08\n09\n13\n14\n18\n19"
+   "options": "01\n02\n04\n05\n06\n07\n08\n09\n13\n14\n18\n19"
   },
   {
    "fieldname": "transport_type",
    "fieldtype": "Select",
    "label": "Transport Type",
-    "options": "01\n02"
+   "options": "01\n02"
   },
   {
    "fieldname": "gross_total_weight",
    "fieldtype": "Float",
-    "label": "Gross Total Weight"
+   "label": "Gross Total Weight"
   },
   {
    "fieldname": "weight_unit",
    "fieldtype": "Select",
    "label": "Weight Unit",
-    "options": "KGM\nTNE"
+   "options": "KGM\nTNE"
   },
   {
    "fieldname": "number_of_packages",
    "fieldtype": "Int",
-    "label": "Number of Packages"
+   "label": "Number of Packages"
   },
   {
    "fieldname": "column_break_transfer",
@@ -295,18 +302,18 @@
   {
    "fieldname": "origin_ubigeo",
    "fieldtype": "Data",
-    "label": "Origin Ubigeo"
+   "label": "Origin Ubigeo"
   },
   {
    "fieldname": "origin_address",
    "fieldtype": "Small Text",
-    "label": "Origin Address"
+   "label": "Origin Address"
   },
-    {
-     "fieldname": "origin_sunat_code",
-     "fieldtype": "Data",
-     "label": "Origin SUNAT Code"
-    },
+  {
+   "fieldname": "origin_sunat_code",
+   "fieldtype": "Data",
+   "label": "Origin SUNAT Code"
+  },
   {
    "fieldname": "column_break_origin",
    "fieldtype": "Column Break"
@@ -314,18 +321,18 @@
   {
    "fieldname": "destination_ubigeo",
    "fieldtype": "Data",
-    "label": "Destination Ubigeo"
+   "label": "Destination Ubigeo"
   },
   {
    "fieldname": "destination_address",
    "fieldtype": "Small Text",
-    "label": "Destination Address"
+   "label": "Destination Address"
   },
-    {
-     "fieldname": "destination_sunat_code",
-     "fieldtype": "Data",
-     "label": "Destination SUNAT Code"
-    },
+  {
+   "fieldname": "destination_sunat_code",
+   "fieldtype": "Data",
+   "label": "Destination SUNAT Code"
+  },
   {
    "fieldname": "automation_section",
    "fieldtype": "Section Break",
@@ -352,7 +359,7 @@
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Items",
-    "options": "Nubefact Delivery Note Item"
+   "options": "Nubefact Delivery Note Item"
   },
   {
    "fieldname": "related_documents_section",
@@ -499,11 +506,11 @@
    "link_fieldname": "reference_delivery_note"
   }
  ],
- "modified": "2026-02-26 22:59:26.652007",
+ "modified": "2026-02-27 00:08:01.756146",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Delivery Note",
- "naming_rule": "Expression",
+ "naming_rule": "By script",
  "owner": "Administrator",
  "permissions": [
   {
@@ -522,7 +529,9 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "title"
 }
