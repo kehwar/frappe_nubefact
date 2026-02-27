@@ -30,6 +30,8 @@
   "recipient_name",
   "transfer_section",
   "transfer_reason",
+  "transfer_reason_other_description",
+  "related_document_code",
   "transport_type",
   "gross_total_weight",
   "weight_unit",
@@ -224,6 +226,17 @@
    "fieldtype": "Select",
    "label": "Transfer Reason",
    "options": "01\n02\n04\n05\n06\n07\n08\n09\n13\n14\n18\n19"
+  },
+  {
+   "fieldname": "transfer_reason_other_description",
+   "fieldtype": "Data",
+   "label": "Transfer Reason Other Description"
+  },
+  {
+   "fieldname": "related_document_code",
+   "fieldtype": "Select",
+   "label": "Related Document Code",
+   "options": "\n50\n52"
   },
   {
    "fieldname": "transport_type",

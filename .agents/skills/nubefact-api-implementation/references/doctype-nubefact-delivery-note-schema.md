@@ -45,6 +45,8 @@
 | Recipient Name | `recipient_name` | `destinatario_denominacion` | Data | Yes* | Required when `document_type = 8`. |
 | **Transfer Details** | | - | Section Break | | |
 | Transfer Reason | `transfer_reason` | `motivo_de_traslado` | Select | Yes* | Required for type 7. `01` VENTA, `02` COMPRA, `03` VENTA CON ENTREGA A TERCEROS, `04` TRASLADO ENTRE ESTABLECIMIENTOS, `05` CONSIGNACION, `06` DEVOLUCION, `07` RECOJO DE BIENES TRANSFORMADOS, `08` IMPORTACION, `09` EXPORTACION, `13` OTROS, `14` VENTA SUJETA A CONFIRMACION, `17` TRASLADO BIENES PARA TRANSFORMACION, `18` TRASLADO EMISOR ITINERANTE CP |
+| Transfer Reason Other Description | `transfer_reason_other_description` | `motivo_de_traslado_otros_descripcion` | Data | No | Only for `transfer_reason = "13"` (OTROS). Alphanumeric, up to 70 chars. |
+| Related Document Code | `related_document_code` | `documento_relacionado_codigo` | Select | No | Only for import (`08`) or export (`09`) transfer reason. `50` Declaración Aduanera de Mercancías, `52` Declaración Simplificada (DS) |
 | Transport Type | `transport_type` | `tipo_de_transporte` | Select | Yes* | Required for type 7. `01` TRANSPORTE PÚBLICO, `02` TRANSPORTE PRIVADO |
 | Gross Total Weight | `gross_total_weight` | `peso_bruto_total` | Float | Yes* | Total weight in KGM or TNE |
 | Weight Unit | `weight_unit` | `peso_bruto_unidad_de_medida` | Select | Yes* | `KGM` Kilogramos, `TNE` Toneladas |
@@ -107,6 +109,7 @@
 | Item Code | `item_code` | `codigo` | Data | No | Internal product code |
 | Description | `description` | `descripcion` | Text | Yes | Product description |
 | Quantity | `quantity` | `cantidad` | Float | Yes | Item quantity |
+| DAM Code | `dam_code` | `codigo_dam` | Data | No | Only for import/export transfer reason. Format: `xxxx/xxx-xxxx-10-xxxxxx` (DAM) or `xxxx/xxx-xxxx-18-xxxxxx` (DS) |
 
 ## Child Table: Nubefact Delivery Note Related Document
 

@@ -122,12 +122,15 @@ class NubefactDeliveryNote(Document):
             ),
             "formato_de_pdf": cstr(self.pdf_format or ""),
             "items": [
-                {
-                    "unidad_de_medida": row.unit_of_measure,
-                    "codigo": row.item_code,
-                    "descripcion": row.description,
-                    "cantidad": cstr(row.quantity),
-                }
+                omit_empty_values(
+                    {
+                        "unidad_de_medida": row.unit_of_measure,
+                        "codigo": row.item_code,
+                        "descripcion": row.description,
+                        "cantidad": cstr(row.quantity),
+                        "codigo_dam": row.dam_code,
+                    }
+                )
                 for row in self.items
             ],
         }
@@ -140,6 +143,8 @@ class NubefactDeliveryNote(Document):
                     "cliente_email_1": self.client_email_1,
                     "cliente_email_2": self.client_email_2,
                     "observaciones": self.observations,
+                    "motivo_de_traslado_otros_descripcion": self.transfer_reason_other_description,
+                    "documento_relacionado_codigo": self.related_document_code,
                     "punto_de_partida_codigo_establecimiento_sunat": self.origin_sunat_code,
                     "punto_de_llegada_codigo_establecimiento_sunat": self.destination_sunat_code,
                     "transportista_documento_tipo": self.carrier_document_type,
