@@ -35,9 +35,8 @@ Minimal skill scaffold for NubeFact API work in this repository.
 - `references/doctype-nubefact-branch.md` — `Nubefact Branch` DocType specification.
 - `references/doctype-nubefact-api-log.md` — `Nubefact API Log` DocType specification.
 - `references/doctype-nubefact-delivery-note.md` — `Nubefact Delivery Note` DocType specification.
-- `references/doctype-nubefact-invoice.md` — `Nubefact Invoice` DocType specification.
-- `references/json-v1-manual.md` — **JSON API v1 Manual** - Complete API documentation transcribed from PDF with operation details, field descriptions, and workflow guides.
-- `references/guia-remision-v1-manual.md` — **Guía de Remisión API Manual** - Complete delivery guide API documentation with two-step workflow, Remitente/Transportista flows, and SUNAT acceptance polling.
+- `references/doctype-nubefact-invoice-schema.md` — `Nubefact Invoice` DocType schema/specification.
+- `references/doctype-nubefact-invoice-guide.md` — `Nubefact Invoice` workflow guide (how to fill fields correctly by scenario).
 
 ## Example assets
 

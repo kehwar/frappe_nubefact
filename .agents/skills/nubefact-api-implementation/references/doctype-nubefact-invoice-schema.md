@@ -26,7 +26,7 @@
 | Document Type | `document_type` | `tipo_de_comprobante` | Select | Yes* | `1` FACTURA, `2` BOLETA, `3` NOTA DE CRÉDITO, `4` NOTA DE DÉBITO |
 | Series | `series` | `serie` | Data | Yes* | 4-character series (F* for Factura, B* for Boleta) |
 | Number | `number` | `numero` | Int | No | Sequential document number. Optional on send; API response can assign/fill it. |
-| SUNAT Transaction Type | `sunat_transaction` | `sunat_transaction` | Select | No | Catálogo SUNAT/NubeFact de tipo de transacción (códigos `1` a `35`) |
+| SUNAT Transaction Type | `sunat_transaction` | `sunat_transaction` | Select | Yes* | Catálogo SUNAT/NubeFact de tipo de transacción (códigos `1` a `35`) |
 | | | - | Column Break | | |
 | Issue Date | `issue_date` | `fecha_de_emision` | Date | Yes* | Date of document issuance |
 | Due Date | `due_date` | `fecha_de_vencimiento` | Date | No | Payment due date |

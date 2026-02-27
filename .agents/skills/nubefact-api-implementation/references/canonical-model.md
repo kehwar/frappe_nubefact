@@ -21,7 +21,8 @@ This index describes the canonical NubeFact Frappe model and links to per-DocTyp
 1. [Nubefact Branch](./doctype-nubefact-branch.md)
 2. [Nubefact API Log](./doctype-nubefact-api-log.md)
 3. [Nubefact Delivery Note](./doctype-nubefact-delivery-note.md)
-4. [Nubefact Invoice](./doctype-nubefact-invoice.md)
+4. [Nubefact Invoice Schema](./doctype-nubefact-invoice-schema.md)
+5. [Nubefact Invoice Guide](./doctype-nubefact-invoice-guide.md)
 
 ---
 
