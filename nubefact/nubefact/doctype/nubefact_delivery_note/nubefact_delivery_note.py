@@ -332,7 +332,8 @@ def send_to_nubefact(name: str):
 @frappe.whitelist()
 def refresh_sunat_status(name: str):
     doc = frappe.get_doc("Nubefact Delivery Note", name)
-    return _refresh_sunat_status_doc(doc, enforce_permission=True)
+    doc.check_permission("read")
+    return _refresh_sunat_status_doc(doc)
 
 
 @frappe.whitelist()
@@ -357,7 +358,7 @@ def poll_pending_delivery_notes():
     for name in pending_names:
         try:
             doc = frappe.get_doc("Nubefact Delivery Note", name)
-            _refresh_sunat_status_doc(doc, enforce_permission=False)
+            _refresh_sunat_status_doc(doc)
         except Exception:
             frappe.log_error(
                 title=f"Nubefact Delivery Note SUNAT refresh failed: {name}",
@@ -376,11 +377,7 @@ def _set_if_value(payload: dict[str, Any], key: str, value: Any):
     payload[key] = value
 
 
-def _refresh_sunat_status_doc(
-    doc: NubefactDeliveryNote, *, enforce_permission: bool
-) -> dict[str, Any]:
-    if enforce_permission:
-        doc.check_permission("read")
+def _refresh_sunat_status_doc(doc: NubefactDeliveryNote) -> dict[str, Any]:
 
     if not doc.number:
         frappe.throw("Cannot refresh SUNAT status because document number is missing.")
