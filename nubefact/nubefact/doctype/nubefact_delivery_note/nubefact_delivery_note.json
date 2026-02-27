@@ -67,6 +67,7 @@
   "more_info_tab",
   "automation_section",
   "auto_send_to_client",
+    "skip_required_fields_validation",
   "pdf_format",
   "sunat_section",
   "accepted_by_sunat",
@@ -355,6 +356,12 @@
    "fieldtype": "Check",
    "label": "Auto Send to Client"
   },
+    {
+     "default": "0",
+     "fieldname": "skip_required_fields_validation",
+     "fieldtype": "Check",
+     "label": "Skip Required Fields Validation"
+    },
   {
    "fieldname": "pdf_format",
    "fieldtype": "Select",

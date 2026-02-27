@@ -62,23 +62,9 @@ function download_file_from_url(frm, fieldname, label) {
 }
 
 function open_send_dialog(frm) {
-	const dialog = new frappe.ui.Dialog({
-		title: __("Send to Nubefact"),
-		fields: [
-			{
-				fieldname: "confirmation_text",
-				fieldtype: "HTML",
-				options: `<div class="text-muted">${__("Confirm sending this Delivery Note to Nubefact.")}</div>`,
-			},
-			{
-				fieldname: "skip_required_fields_validation",
-				fieldtype: "Check",
-				label: __("Skip required fields validation"),
-				default: 0,
-			},
-		],
-		primary_action_label: __("Send"),
-		primary_action: async (values) => {
+	frappe.confirm(
+		__("Confirm sending this Delivery Note to Nubefact."),
+		async () => {
 			if (frm.is_dirty()) {
 				await frm.save();
 			}
@@ -87,22 +73,18 @@ function open_send_dialog(frm) {
 				method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.send_to_nubefact",
 				args: {
 					name: frm.doc.name,
-					skip_required_fields_validation: values.skip_required_fields_validation ? 1 : 0,
 				},
 				freeze: true,
 				freeze_message: __("Sending to Nubefact..."),
 			});
 
-			dialog.hide();
 			await frm.reload_doc();
 			frappe.show_alert({
 				message: __("Delivery Note sent to Nubefact"),
 				indicator: "green",
 			});
-		},
-	});
-
-	dialog.show();
+		}
+	);
 }
 
 function open_help_dialog(frm) {

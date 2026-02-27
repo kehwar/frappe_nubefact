@@ -64,12 +64,10 @@ class NubefactDeliveryNote(Document):
         if not cstr(self.origin_sunat_code or "").strip() and origin_sunat_code:
             self.origin_sunat_code = origin_sunat_code
 
-    def _build_generate_payload(
-        self, *, skip_required_fields_validation: bool = False
-    ) -> dict[str, Any]:
+    def _build_generate_payload(self) -> dict[str, Any]:
         origin_ubigeo, origin_address, origin_sunat_code = _get_origin_values(self)
 
-        if not skip_required_fields_validation:
+        if not cint(getattr(self, "skip_required_fields_validation", 0)):
             self._validate_submit_payload()
 
         payload: dict[str, Any] = {
@@ -296,7 +294,7 @@ class NubefactDeliveryNote(Document):
 
 
 @frappe.whitelist()
-def send_to_nubefact(name: str, skip_required_fields_validation: int | str | None = 0):
+def send_to_nubefact(name: str):
 
     doc = frappe.get_doc("Nubefact Delivery Note", name)
     doc.check_permission("write")
@@ -304,9 +302,7 @@ def send_to_nubefact(name: str, skip_required_fields_validation: int | str | Non
     if doc.status not in {"Draft", "Error"}:
         frappe.throw("Only Draft or Error delivery notes can be sent to Nubefact.")
 
-    payload = doc._build_generate_payload(
-        skip_required_fields_validation=bool(cint(skip_required_fields_validation))
-    )
+    payload = doc._build_generate_payload()
 
     try:
         response = make_request(
