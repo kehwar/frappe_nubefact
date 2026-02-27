@@ -69,7 +69,7 @@ function open_send_dialog(frm) {
 				await frm.save();
 			}
 
-			await frappe.call({
+			const { message } = await frappe.call({
 				method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.send_to_nubefact",
 				args: {
 					name: frm.doc.name,
@@ -79,9 +79,13 @@ function open_send_dialog(frm) {
 			});
 
 			await frm.reload_doc();
+
+			const has_error = message?.status === "Error";
 			frappe.show_alert({
-				message: __("Delivery Note sent to Nubefact"),
-				indicator: "green",
+				message: has_error
+					? __("Delivery Note send failed. Status updated to Error")
+					: __("Delivery Note sent to Nubefact"),
+				indicator: has_error ? "red" : "green",
 			});
 		}
 	);

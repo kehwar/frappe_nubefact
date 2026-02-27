@@ -302,24 +302,32 @@ def send_to_nubefact(name: str):
     if doc.status not in {"Draft", "Error"}:
         frappe.throw("Only Draft or Error delivery notes can be sent to Nubefact.")
 
-    payload = doc._build_generate_payload()
-
     try:
+        payload = doc._build_generate_payload()
+
         response = make_request(
             payload=payload,
             branch=doc.branch,
             operation="generar_guia",
             reference_delivery_note=doc.name,
         )
-    except Exception:
-        frappe.db.set_value(
-            doc.doctype, doc.name, "status", "Error", update_modified=True
-        )
-        raise
+        values = doc._extract_response_values(response)
+    except Exception as exc:
+        frappe.db.rollback()
+        error_message = cstr(exc)
+        values = {
+            "status": "Error",
+            "accepted_by_sunat": 0,
+            "last_sunat_check": now_datetime(),
+            "sunat_response_message": error_message,
+            "sunat_soap_error": error_message,
+        }
 
-    values = doc._extract_response_values(response)
     if values:
         frappe.db.set_value(doc.doctype, doc.name, values, update_modified=True)
+
+    if values and values.get("status") == "Error":
+        frappe.db.commit()
 
     return values
 
