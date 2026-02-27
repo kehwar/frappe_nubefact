@@ -12,6 +12,7 @@ from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_imp
 )
 
 
+@frappe.whitelist()
 def create_delivery_note_from_import_file(file_name: str) -> str:
     file_doc = frappe.get_doc("File", file_name)
     content = file_doc.get_content()
@@ -31,6 +32,7 @@ def create_delivery_note_from_import_file(file_name: str) -> str:
     return doc.name
 
 
+@frappe.whitelist()
 def create_delivery_note_from_import_json_text(json_payload: str) -> str:
     payload = parse_import_json_payload(cstr(json_payload or ""))
 

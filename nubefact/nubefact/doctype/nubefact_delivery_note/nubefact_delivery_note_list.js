@@ -38,7 +38,7 @@ function open_json_paste_dialog() {
 		primary_action: async (values) => {
 			try {
 				const { message: deliveryNoteName } = await frappe.call({
-					method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.create_delivery_note_from_import_json_text",
+					method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_import.create_delivery_note_from_import_json_text",
 					args: {
 						json_payload: values.json_payload,
 					},
@@ -79,7 +79,7 @@ async function import_delivery_note_from_file(allowedFileTypes, options = {}) {
 		on_success: async (file_doc) => {
 			try {
 				const { message: deliveryNoteName } = await frappe.call({
-					method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.create_delivery_note_from_import_file",
+					method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_import.create_delivery_note_from_import_file",
 					args: {
 						file_name: file_doc.name,
 					},

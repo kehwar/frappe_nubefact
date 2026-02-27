@@ -16,12 +16,6 @@ from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
 from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
     get_origin_values as get_branch_origin_values,
 )
-from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_import import (
-    create_delivery_note_from_import_file as _create_delivery_note_from_import_file,
-)
-from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_import import (
-    create_delivery_note_from_import_json_text as _create_delivery_note_from_import_json_text,
-)
 from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_schema import (
     ITEM_REQUIRED_FIELDS,
     RELATED_DOCUMENT_REQUIRED_FIELDS,
@@ -238,14 +232,6 @@ class NubefactDeliveryNote(Document):
                 "Recipient fields are required for Delivery Note type 8.",
             )
 
-    def _build_consult_payload(self) -> dict[str, Any]:
-        return {
-            "operacion": "consultar_guia",
-            "tipo_de_comprobante": cint(self.document_type),
-            "serie": self.series,
-            "numero": cstr(self.number),
-        }
-
     def _extract_response_values(self, response: Any) -> dict[str, Any]:
         if not isinstance(response, dict):
             return {}
@@ -322,16 +308,6 @@ def refresh_sunat_status(name: str):
     return _refresh_sunat_status_doc(doc)
 
 
-@frappe.whitelist()
-def create_delivery_note_from_import_file(file_name: str) -> str:
-    return _create_delivery_note_from_import_file(file_name)
-
-
-@frappe.whitelist()
-def create_delivery_note_from_import_json_text(json_payload: str) -> str:
-    return _create_delivery_note_from_import_json_text(json_payload)
-
-
 def poll_pending_delivery_notes():
     pending_names = frappe.get_all(
         "Nubefact Delivery Note",
@@ -358,7 +334,12 @@ def _refresh_sunat_status_doc(doc: NubefactDeliveryNote) -> dict[str, Any]:
         frappe.throw("Cannot refresh SUNAT status because document number is missing.")
 
     response = make_request(
-        payload=doc._build_consult_payload(),
+        payload={
+            "operacion": "consultar_guia",
+            "tipo_de_comprobante": cint(doc.document_type),
+            "serie": doc.series,
+            "numero": cstr(doc.number),
+        },
         branch=doc.branch,
         operation="consultar_guia",
         reference_delivery_note=doc.name,
