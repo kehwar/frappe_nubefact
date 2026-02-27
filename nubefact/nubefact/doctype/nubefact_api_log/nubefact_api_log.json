@@ -16,7 +16,7 @@
   "response_timestamp",
   "response_status_code",
   "duration_ms",
-  "success",
+    "status",
   "column_break_response",
   "error_code",
   "error_message",
@@ -137,14 +137,15 @@
    "fieldtype": "Section Break",
    "label": "Request Payload"
   },
-  {
-   "default": "0",
-   "fieldname": "success",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Success",
-   "read_only": 1
-  }
+    {
+     "default": "Success",
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "in_list_view": 1,
+     "label": "Status",
+     "options": "Success\nError",
+     "read_only": 1
+    }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
@@ -178,5 +179,14 @@
  "rows_threshold_for_grid_search": 20,
  "sort_field": "request_timestamp",
  "sort_order": "DESC",
- "states": []
+ "states": [
+  {
+   "color": "green",
+   "title": "Success"
+  },
+  {
+   "color": "red",
+   "title": "Error"
+  }
+ ]
 }
