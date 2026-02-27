@@ -320,13 +320,11 @@ def send_to_nubefact(name: str):
             "status": "Error",
             "accepted_by_sunat": 0,
             "last_sunat_check": now_datetime(),
-            "sunat_response_message": error_message,
-            "sunat_soap_error": error_message,
             "error_message": error_message,
         }
 
     if values:
-        frappe.db.set_value(doc.doctype, doc.name, values, update_modified=True)
+        _save_response_status(doc, values)
 
     if values and values.get("status") == "Error":
         frappe.db.commit()
@@ -399,9 +397,35 @@ def _refresh_sunat_status_doc(
     values = doc._extract_response_values(response)
 
     if values:
-        frappe.db.set_value(doc.doctype, doc.name, values, update_modified=True)
+        _save_response_status(doc, values)
 
     return values
+
+
+def _save_response_status(
+    doc: NubefactDeliveryNote, values: dict[str, Any]
+) -> dict[str, Any]:
+    if not values:
+        return {}
+
+    cleared_values: dict[str, Any] = {
+        "accepted_by_sunat": 0,
+        "last_sunat_check": None,
+        "sunat_response_code": "",
+        "sunat_response_message": "",
+        "sunat_note": "",
+        "sunat_soap_error": "",
+        "error_message": "",
+        "link_url": "",
+        "pdf_url": "",
+        "xml_url": "",
+        "cdr_url": "",
+        "qr_url": "",
+    }
+    cleared_values.update(values)
+
+    frappe.db.set_value(doc.doctype, doc.name, cleared_values, update_modified=True)
+    return cleared_values
 
 
 def _to_nubefact_date(value: str) -> str:
