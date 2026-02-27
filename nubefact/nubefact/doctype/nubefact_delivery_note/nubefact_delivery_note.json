@@ -479,6 +479,7 @@
    "fieldtype": "Data",
    "label": "Link URL",
    "no_copy": 1,
+   "options": "URL",
    "read_only": 1
   },
   {
@@ -486,6 +487,7 @@
    "fieldtype": "Data",
    "label": "PDF URL",
    "no_copy": 1,
+   "options": "URL",
    "read_only": 1
   },
   {
@@ -493,6 +495,7 @@
    "fieldtype": "Data",
    "label": "XML URL",
    "no_copy": 1,
+   "options": "URL",
    "read_only": 1
   },
   {
@@ -500,6 +503,7 @@
    "fieldtype": "Data",
    "label": "CDR URL",
    "no_copy": 1,
+   "options": "URL",
    "read_only": 1
   },
   {
@@ -524,7 +528,7 @@
    "link_fieldname": "reference_delivery_note"
   }
  ],
- "modified": "2026-02-27 00:59:28.051200",
+ "modified": "2026-02-27 01:09:27.934220",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Delivery Note",
