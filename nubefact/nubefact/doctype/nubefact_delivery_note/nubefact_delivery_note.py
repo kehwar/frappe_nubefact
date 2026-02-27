@@ -10,6 +10,12 @@ from frappe.model.document import Document
 from frappe.model.naming import append_number_if_name_exists
 from frappe.utils import cint, cstr, getdate, now_datetime
 
+from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
+    get_last_used_branch_for_user,
+)
+from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
+    get_origin_values as get_branch_origin_values,
+)
 from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_import import (
     create_delivery_note_from_import_file as _create_delivery_note_from_import_file,
 )
@@ -44,7 +50,8 @@ class NubefactDeliveryNote(Document):
         if cstr(self.branch or "").strip():
             return
 
-        last_branch = _get_last_used_branch_for_user(
+        last_branch = get_last_used_branch_for_user(
+            doctype=self.doctype,
             user=frappe.session.user,
             exclude_name=self.name,
         )
@@ -53,7 +60,10 @@ class NubefactDeliveryNote(Document):
             self.branch = last_branch
 
     def _set_inferred_fields(self):
-        origin_ubigeo, origin_address, origin_sunat_code = _get_origin_values(self)
+        origin_values = get_effective_origin_values(self)
+        origin_ubigeo = origin_values.get("origin_ubigeo")
+        origin_address = origin_values.get("origin_address")
+        origin_sunat_code = origin_values.get("origin_sunat_code")
 
         if not cstr(self.origin_ubigeo or "").strip() and origin_ubigeo:
             self.origin_ubigeo = origin_ubigeo
@@ -65,7 +75,10 @@ class NubefactDeliveryNote(Document):
             self.origin_sunat_code = origin_sunat_code
 
     def _build_generate_payload(self) -> dict[str, Any]:
-        origin_ubigeo, origin_address, origin_sunat_code = _get_origin_values(self)
+        origin_values = get_effective_origin_values(self)
+        origin_ubigeo = origin_values.get("origin_ubigeo")
+        origin_address = origin_values.get("origin_address")
+        origin_sunat_code = origin_values.get("origin_sunat_code")
 
         if not cint(getattr(self, "skip_required_fields_validation", 0)):
             self._validate_submit_payload()
@@ -195,7 +208,9 @@ class NubefactDeliveryNote(Document):
             "Required fields are missing for Delivery Note submission.",
         )
 
-        origin_ubigeo, origin_address, _ = _get_origin_values(self)
+        origin_values = get_effective_origin_values(self)
+        origin_ubigeo = origin_values.get("origin_ubigeo")
+        origin_address = origin_values.get("origin_address")
         if not origin_ubigeo or not cstr(origin_ubigeo).strip():
             frappe.throw(
                 "Origin Ubigeo is required in Delivery Note or in the selected Branch."
@@ -477,46 +492,14 @@ def _build_delivery_note_title(document_type: Any, series: Any, number: Any) -> 
     return f"{prefix}-{cstr(series or '').strip()}-{cstr(number or '').strip()}"
 
 
-def _get_last_used_branch_for_user(
-    *, user: str, exclude_name: str | None = None
-) -> str | None:
-    if not user or user == "Guest":
-        return None
+def get_effective_origin_values(doc: NubefactDeliveryNote) -> dict[str, str | None]:
+    origin_values = get_branch_origin_values(doc.branch)
 
-    filters: dict[str, Any] = {
-        "owner": user,
-        "branch": ["is", "set"],
+    return {
+        "origin_ubigeo": cstr(doc.origin_ubigeo or "").strip()
+        or origin_values.get("origin_ubigeo"),
+        "origin_address": cstr(doc.origin_address or "").strip()
+        or origin_values.get("origin_address"),
+        "origin_sunat_code": cstr(doc.origin_sunat_code or "").strip()
+        or origin_values.get("origin_sunat_code"),
     }
-
-    if exclude_name:
-        filters["name"] = ["!=", exclude_name]
-
-    last_branch = frappe.get_all(
-        "Nubefact Delivery Note",
-        filters=filters,
-        pluck="branch",
-        order_by="modified desc",
-        limit=1,
-    )
-
-    return last_branch[0] if last_branch else None
-
-
-def _get_origin_values(
-    doc: NubefactDeliveryNote,
-) -> tuple[str | None, str | None, str | None]:
-    branch_doc = (
-        frappe.get_cached_doc("Nubefact Branch", doc.branch) if doc.branch else None
-    )
-
-    origin_ubigeo = cstr(doc.origin_ubigeo or "").strip() or (
-        cstr(branch_doc.ubigeo).strip() if branch_doc else None
-    )
-    origin_address = cstr(doc.origin_address or "").strip() or (
-        cstr(branch_doc.address).strip() if branch_doc else None
-    )
-    origin_sunat_code = cstr(doc.origin_sunat_code or "").strip() or (
-        cstr(branch_doc.sunat_code).strip() if branch_doc else None
-    )
-
-    return origin_ubigeo, origin_address, origin_sunat_code
