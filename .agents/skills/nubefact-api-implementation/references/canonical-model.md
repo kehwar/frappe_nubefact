@@ -11,7 +11,7 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | Nubefact Branch | ✅ Implemented | Active credentials container per branch/company. Uses `api_route` + `api_token`. |
 | Nubefact API Log | ✅ Implemented | Request/response logging active. Uses `status` (`Success`/`Error`) and script-based naming from `request_timestamp`. |
 | Request API Utility (`make_request`) | ✅ Implemented | Sends POST requests, handles errors, and writes API log entries. |
-| Nubefact Delivery Note | ❌ Not Implemented | Canonical model only. |
+| Nubefact Delivery Note | 🟡 In Progress | DocType scaffold created; API mapping and submit/query flow pending. |
 | Nubefact Invoice | ❌ Not Implemented | Canonical model only. |
 
 ---
