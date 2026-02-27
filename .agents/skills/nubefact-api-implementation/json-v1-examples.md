@@ -68,3 +68,7 @@ All files use the `json-v1-nubefact-example-` prefix and kebab-case naming.
 - [json-v1-nubefact-example-ejemplo-json-generar-guia-remitente-ttt1-2-venta-transporte-privado.json](assets/json-v1-nubefact-example-ejemplo-json-generar-guia-remitente-ttt1-2-venta-transporte-privado.json)
 - [json-v1-nubefact-example-ejemplo-json-generar-guia-remitente-ttt1-3-traslado-misma-empresa-transporte-privado.json](assets/json-v1-nubefact-example-ejemplo-json-generar-guia-remitente-ttt1-3-traslado-misma-empresa-transporte-privado.json)
 - [json-v1-nubefact-example-ejemplo-json-generar-guia-transportista-vvv1-1-venta.json](assets/json-v1-nubefact-example-ejemplo-json-generar-guia-transportista-vvv1-1-venta.json)
+
+## Source
+
+- https://www.nubefact.com/downloads/EJEMPLOS-DE-ARCHIVOS-JSON
