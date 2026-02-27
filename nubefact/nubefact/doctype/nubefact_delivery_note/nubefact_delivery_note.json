@@ -536,7 +536,7 @@
    "link_fieldname": "reference_delivery_note"
   }
  ],
- "modified": "2026-02-27 11:55:37.691628",
+ "modified": "2026-02-27 12:09:20.905590",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Delivery Note",
@@ -579,5 +579,6 @@
    "title": "Error"
   }
  ],
- "title_field": "title"
+ "title_field": "title",
+ "track_changes": 1
 }

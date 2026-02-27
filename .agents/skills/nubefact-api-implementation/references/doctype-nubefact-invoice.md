@@ -138,8 +138,6 @@
 - Auto Name: `format:{series}-{number}`
 - Sort Field: `issue_date`
 - Sort Order: DESC
-- Track Changes: Yes
-- Is Submittable: Yes
 
 ## Permissions
 - Accounts Manager: Full access (create, read, write, submit, cancel)

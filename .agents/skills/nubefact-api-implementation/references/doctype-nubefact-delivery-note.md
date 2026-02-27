@@ -142,7 +142,6 @@
 - Auto Name: `By script` (timestamp-based, e.g. `20260227-123456-000001`)
 - Sort Field: `modified`
 - Sort Order: DESC
-- Track Changes: Disabled
 - Allow Rename: Yes
 
 ## Permissions
