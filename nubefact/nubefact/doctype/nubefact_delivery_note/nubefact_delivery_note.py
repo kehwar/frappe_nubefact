@@ -32,9 +32,9 @@ from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_sch
 )
 from nubefact.utils import (
     make_request,
+    omit_empty_values,
     require_child_fields,
     require_fields,
-    set_if_value,
     to_nubefact_date,
 )
 
@@ -134,40 +134,28 @@ class NubefactDeliveryNote(Document):
             ],
         }
 
-        set_if_value(payload, "numero", self.number)
-
-        set_if_value(payload, "cliente_email", self.client_email)
-        set_if_value(payload, "cliente_email_1", self.client_email_1)
-        set_if_value(payload, "cliente_email_2", self.client_email_2)
-        set_if_value(payload, "observaciones", self.observations)
-        set_if_value(
-            payload,
-            "punto_de_partida_codigo_establecimiento_sunat",
-            self.origin_sunat_code,
+        payload.update(
+            omit_empty_values(
+                {
+                    "numero": self.number,
+                    "cliente_email": self.client_email,
+                    "cliente_email_1": self.client_email_1,
+                    "cliente_email_2": self.client_email_2,
+                    "observaciones": self.observations,
+                    "punto_de_partida_codigo_establecimiento_sunat": self.origin_sunat_code,
+                    "punto_de_llegada_codigo_establecimiento_sunat": self.destination_sunat_code,
+                    "transportista_documento_tipo": self.carrier_document_type,
+                    "transportista_documento_numero": self.carrier_document_number,
+                    "transportista_denominacion": self.carrier_name,
+                    "transportista_placa_numero": self.vehicle_license_plate,
+                    "conductor_documento_tipo": self.driver_document_type,
+                    "conductor_documento_numero": self.driver_document_number,
+                    "conductor_nombre": self.driver_first_name,
+                    "conductor_apellidos": self.driver_last_name,
+                    "conductor_numero_licencia": self.driver_license_number,
+                }
+            )
         )
-        set_if_value(
-            payload,
-            "punto_de_llegada_codigo_establecimiento_sunat",
-            self.destination_sunat_code,
-        )
-
-        set_if_value(
-            payload, "transportista_documento_tipo", self.carrier_document_type
-        )
-        set_if_value(
-            payload,
-            "transportista_documento_numero",
-            self.carrier_document_number,
-        )
-        set_if_value(payload, "transportista_denominacion", self.carrier_name)
-        set_if_value(payload, "transportista_placa_numero", self.vehicle_license_plate)
-        set_if_value(payload, "conductor_documento_tipo", self.driver_document_type)
-        set_if_value(
-            payload, "conductor_documento_numero", self.driver_document_number
-        )
-        set_if_value(payload, "conductor_nombre", self.driver_first_name)
-        set_if_value(payload, "conductor_apellidos", self.driver_last_name)
-        set_if_value(payload, "conductor_numero_licencia", self.driver_license_number)
 
         if cstr(self.document_type) == "8":
             payload["destinatario_documento_tipo"] = cstr(self.recipient_document_type)
@@ -188,7 +176,7 @@ class NubefactDeliveryNote(Document):
             payload["vehiculos_secundarios"] = []
             for row in self.secondary_vehicles:
                 vehicle = {"placa_numero": row.license_plate}
-                set_if_value(vehicle, "tuc", row.tuc)
+                vehicle.update(omit_empty_values({"tuc": row.tuc}))
                 payload["vehiculos_secundarios"].append(vehicle)
 
         if self.secondary_drivers:

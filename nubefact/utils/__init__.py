@@ -24,6 +24,15 @@ def set_if_value(payload: dict[str, Any], key: str, value: Any):
     payload[key] = value
 
 
+def omit_empty_values(values: dict[str, Any]) -> dict[str, Any]:
+    cleaned: dict[str, Any] = {}
+
+    for key, value in values.items():
+        set_if_value(cleaned, key, value)
+
+    return cleaned
+
+
 def require_fields(doc: Document, fields: list[str], message: str):
     missing = get_missing_fields(doc, fields)
 
@@ -61,6 +70,7 @@ __all__ = [
     "make_request",
     "to_nubefact_date",
     "set_if_value",
+    "omit_empty_values",
     "require_fields",
     "require_child_fields",
     "format_missing_fields",
