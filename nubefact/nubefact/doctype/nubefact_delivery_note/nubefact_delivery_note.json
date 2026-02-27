@@ -349,7 +349,7 @@
   {
    "fieldname": "automation_section",
    "fieldtype": "Section Break",
-   "label": "Automation"
+   "label": "Settings"
   },
   {
    "default": "0",
@@ -536,7 +536,7 @@
    "link_fieldname": "reference_delivery_note"
   }
  ],
- "modified": "2026-02-27 11:51:34.890615",
+ "modified": "2026-02-27 11:55:37.691628",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Delivery Note",
