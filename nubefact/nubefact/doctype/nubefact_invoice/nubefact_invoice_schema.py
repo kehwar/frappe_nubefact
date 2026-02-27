@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-SUBMIT_REQUIRED_FIELDS = [
+REQUIRED_FIELDS = [
     "document_type",
     "series",
     "issue_date",
@@ -9,6 +9,7 @@ SUBMIT_REQUIRED_FIELDS = [
     "client_name",
     "client_address",
     "currency",
+    "igv_percentage",
     "total_igv",
     "total",
 ]

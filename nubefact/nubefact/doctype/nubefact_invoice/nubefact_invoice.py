@@ -20,7 +20,7 @@ from nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice_schema import (
     ITEM_REQUIRED_FIELDS,
     NOTE_REFERENCE_REQUIRED_FIELDS,
     PAYMENT_INSTALLMENT_REQUIRED_FIELDS,
-    SUBMIT_REQUIRED_FIELDS,
+    REQUIRED_FIELDS,
 )
 from nubefact.utils import (
     make_request,
@@ -203,7 +203,7 @@ class NubefactInvoice(Document):
     def _validate_required_fields(self):
         require_fields(
             self,
-            SUBMIT_REQUIRED_FIELDS,
+            REQUIRED_FIELDS,
             "Required fields are missing for Invoice submission.",
         )
 
