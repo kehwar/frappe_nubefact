@@ -21,24 +21,36 @@ class NubefactDeliveryNote(Document):
         )
 
     def validate(self):
+        if not self.status:
+            self.status = "Draft"
+
+        self._set_inferred_fields()
+
         self.title = _build_delivery_note_title(
             document_type=self.document_type,
             series=self.series,
             number=self.number,
         )
 
-    def before_submit(self):
-        payload = self._build_generate_payload()
-        response = make_request(
-            payload=payload,
-            branch=self.branch,
-            operation="generar_guia",
-            reference_delivery_note=self.name,
-        )
-        self._apply_generate_response(response)
+    def _set_inferred_fields(self):
+        origin_ubigeo, origin_address, origin_sunat_code = _get_origin_values(self)
 
-    def _build_generate_payload(self) -> dict[str, Any]:
-        self._validate_submit_payload()
+        if not cstr(self.origin_ubigeo or "").strip() and origin_ubigeo:
+            self.origin_ubigeo = origin_ubigeo
+
+        if not cstr(self.origin_address or "").strip() and origin_address:
+            self.origin_address = origin_address
+
+        if not cstr(self.origin_sunat_code or "").strip() and origin_sunat_code:
+            self.origin_sunat_code = origin_sunat_code
+
+    def _build_generate_payload(
+        self, *, skip_required_fields_validation: bool = False
+    ) -> dict[str, Any]:
+        origin_ubigeo, origin_address, origin_sunat_code = _get_origin_values(self)
+
+        if not skip_required_fields_validation:
+            self._validate_submit_payload()
 
         payload: dict[str, Any] = {
             "operacion": "generar_guia",
@@ -55,8 +67,8 @@ class NubefactDeliveryNote(Document):
             "peso_bruto_unidad_de_medida": self.weight_unit,
             "numero_de_bultos": cstr(self.number_of_packages),
             "tipo_de_transporte": cstr(self.transport_type),
-            "punto_de_partida_ubigeo": self.origin_ubigeo,
-            "punto_de_partida_direccion": self.origin_address,
+            "punto_de_partida_ubigeo": origin_ubigeo,
+            "punto_de_partida_direccion": origin_address,
             "punto_de_llegada_ubigeo": self.destination_ubigeo,
             "punto_de_llegada_direccion": self.destination_address,
             "enviar_automaticamente_al_cliente": (
@@ -83,7 +95,7 @@ class NubefactDeliveryNote(Document):
         _set_if_value(
             payload,
             "punto_de_partida_codigo_establecimiento_sunat",
-            self.origin_sunat_code,
+            origin_sunat_code,
         )
         _set_if_value(
             payload,
@@ -151,24 +163,30 @@ class NubefactDeliveryNote(Document):
             [
                 "document_type",
                 "series",
-                "issue_date",
-                "transfer_start_date",
                 "client_document_type",
                 "client_document_number",
                 "client_name",
-                "client_address",
                 "transfer_reason",
                 "transport_type",
                 "gross_total_weight",
                 "weight_unit",
                 "number_of_packages",
-                "origin_ubigeo",
-                "origin_address",
                 "destination_ubigeo",
                 "destination_address",
             ],
             "Required fields are missing for Delivery Note submission.",
         )
+
+        origin_ubigeo, origin_address, _ = _get_origin_values(self)
+        if not origin_ubigeo or not cstr(origin_ubigeo).strip():
+            frappe.throw(
+                "Origin Ubigeo is required in Delivery Note or in the selected Branch."
+            )
+
+        if not origin_address or not cstr(origin_address).strip():
+            frappe.throw(
+                "Origin Address is required in Delivery Note or in the selected Branch."
+            )
 
         if not self.items:
             frappe.throw("At least one item is required for Delivery Note submission.")
@@ -233,6 +251,8 @@ class NubefactDeliveryNote(Document):
         if not isinstance(response, dict):
             return {}
 
+        accepted_by_sunat = 1 if response.get("aceptada_por_sunat") else 0
+
         return {
             "number": response.get("numero") or self.number,
             "title": _build_delivery_note_title(
@@ -240,7 +260,8 @@ class NubefactDeliveryNote(Document):
                 series=self.series,
                 number=response.get("numero") or self.number,
             ),
-            "accepted_by_sunat": 1 if response.get("aceptada_por_sunat") else 0,
+            "status": "Accepted" if accepted_by_sunat else "Pending Response",
+            "accepted_by_sunat": accepted_by_sunat,
             "last_sunat_check": now_datetime(),
             "sunat_response_code": cstr(response.get("sunat_responsecode") or ""),
             "sunat_response_message": cstr(response.get("sunat_description") or ""),
@@ -255,6 +276,39 @@ class NubefactDeliveryNote(Document):
 
 
 @frappe.whitelist()
+def send_to_nubefact(name: str, skip_required_fields_validation: int | str | None = 0):
+
+    doc = frappe.get_doc("Nubefact Delivery Note", name)
+    doc.check_permission("write")
+
+    if doc.status not in {"Draft", "Error"}:
+        frappe.throw("Only Draft or Error delivery notes can be sent to Nubefact.")
+
+    payload = doc._build_generate_payload(
+        skip_required_fields_validation=bool(cint(skip_required_fields_validation))
+    )
+
+    try:
+        response = make_request(
+            payload=payload,
+            branch=doc.branch,
+            operation="generar_guia",
+            reference_delivery_note=doc.name,
+        )
+    except Exception:
+        frappe.db.set_value(
+            doc.doctype, doc.name, "status", "Error", update_modified=True
+        )
+        raise
+
+    values = doc._extract_response_values(response)
+    if values:
+        frappe.db.set_value(doc.doctype, doc.name, values, update_modified=True)
+
+    return values
+
+
+@frappe.whitelist()
 def refresh_sunat_status(name: str):
     doc = frappe.get_doc("Nubefact Delivery Note", name)
     return _refresh_sunat_status_doc(doc, enforce_permission=True)
@@ -263,7 +317,7 @@ def refresh_sunat_status(name: str):
 def poll_pending_delivery_notes():
     pending_names = frappe.get_all(
         "Nubefact Delivery Note",
-        filters={"docstatus": 1, "accepted_by_sunat": 0},
+        filters={"status": "Pending Response", "accepted_by_sunat": 0},
         pluck="name",
         limit=20,
         order_by="modified asc",
@@ -285,6 +339,8 @@ def _set_if_value(payload: dict[str, Any], key: str, value: Any):
         return
     if isinstance(value, str) and not value.strip():
         return
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and value == 0:
+        return
 
     payload[key] = value
 
@@ -295,8 +351,8 @@ def _refresh_sunat_status_doc(
     if enforce_permission:
         doc.check_permission("read")
 
-    if doc.docstatus != 1:
-        frappe.throw("You can refresh SUNAT status only for submitted Delivery Notes.")
+    if not doc.number:
+        frappe.throw("Cannot refresh SUNAT status because document number is missing.")
 
     response = make_request(
         payload=doc._build_consult_payload(),
@@ -325,7 +381,7 @@ def _require_fields(doc: Document, fields: list[str], message: str):
     ]
 
     if missing:
-        frappe.throw(message)
+        frappe.throw(f"{message} Missing: {_format_missing_fields(doc, missing)}")
 
 
 def _require_child_fields(row: Document, fields: list[str], message: str):
@@ -337,7 +393,17 @@ def _require_child_fields(row: Document, fields: list[str], message: str):
     ]
 
     if missing:
-        frappe.throw(message)
+        frappe.throw(f"{message} Missing: {_format_missing_fields(row, missing)}")
+
+
+def _format_missing_fields(doc: Document, fieldnames: list[str]) -> str:
+    labels: list[str] = []
+
+    for fieldname in fieldnames:
+        field = doc.meta.get_field(fieldname)
+        labels.append(cstr(field.label).strip() if field and field.label else fieldname)
+
+    return ", ".join(labels)
 
 
 def _build_delivery_note_title(document_type: Any, series: Any, number: Any) -> str:
@@ -349,3 +415,23 @@ def _build_delivery_note_title(document_type: Any, series: Any, number: Any) -> 
         return ""
 
     return f"{prefix}-{cstr(series or '').strip()}-{cstr(number or '').strip()}"
+
+
+def _get_origin_values(
+    doc: NubefactDeliveryNote,
+) -> tuple[str | None, str | None, str | None]:
+    branch_doc = (
+        frappe.get_cached_doc("Nubefact Branch", doc.branch) if doc.branch else None
+    )
+
+    origin_ubigeo = cstr(doc.origin_ubigeo or "").strip() or (
+        cstr(branch_doc.ubigeo).strip() if branch_doc else None
+    )
+    origin_address = cstr(doc.origin_address or "").strip() or (
+        cstr(branch_doc.address).strip() if branch_doc else None
+    )
+    origin_sunat_code = cstr(doc.origin_sunat_code or "").strip() or (
+        cstr(branch_doc.sunat_code).strip() if branch_doc else None
+    )
+
+    return origin_ubigeo, origin_address, origin_sunat_code

@@ -1,11 +1,19 @@
 {
- "actions": [],
+ "actions": [
+  {
+   "action": "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.send_to_nubefact",
+   "action_type": "Server Action",
+   "group": "Actions",
+   "label": "Send to Nubefact"
+  }
+ ],
  "allow_rename": 1,
  "creation": "2026-02-27 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "document_section",
+  "status",
   "title",
   "document_type",
   "series",
@@ -79,14 +87,23 @@
   "pdf_url",
   "xml_url",
   "cdr_url",
-  "qr_url",
-  "amended_from"
+  "qr_url"
  ],
  "fields": [
   {
    "fieldname": "document_section",
    "fieldtype": "Section Break",
    "label": "Document"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nPending Response\nAccepted\nError",
+   "read_only": 1
   },
   {
    "fieldname": "branch",
@@ -118,7 +135,8 @@
    "fieldname": "number",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Number"
+   "label": "Number",
+   "no_copy": 1
   },
   {
    "fieldname": "column_break_document",
@@ -414,36 +432,42 @@
    "fieldname": "accepted_by_sunat",
    "fieldtype": "Check",
    "label": "Accepted by SUNAT",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "last_sunat_check",
    "fieldtype": "Datetime",
    "label": "Last SUNAT Check",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "sunat_response_code",
    "fieldtype": "Data",
    "label": "SUNAT Response Code",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "sunat_response_message",
    "fieldtype": "Text",
    "label": "SUNAT Response Message",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "sunat_note",
    "fieldtype": "Text",
    "label": "SUNAT Note",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "sunat_soap_error",
    "fieldtype": "Text",
    "label": "SUNAT SOAP Error",
+   "no_copy": 1,
    "read_only": 1
   },
   {
@@ -454,51 +478,45 @@
    "fieldname": "link_url",
    "fieldtype": "Data",
    "label": "Link URL",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "pdf_url",
    "fieldtype": "Data",
    "label": "PDF URL",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "xml_url",
    "fieldtype": "Data",
    "label": "XML URL",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "cdr_url",
    "fieldtype": "Data",
    "label": "CDR URL",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "qr_url",
    "fieldtype": "Data",
    "label": "QR URL",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "more_info_tab",
    "fieldtype": "Tab Break",
    "label": "More Information"
-  },
-  {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Nubefact Delivery Note",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "is_submittable": 1,
  "links": [
   {
    "group": "Nubefact",
@@ -506,7 +524,7 @@
    "link_fieldname": "reference_delivery_note"
   }
  ],
- "modified": "2026-02-27 00:08:01.756146",
+ "modified": "2026-02-27 00:59:28.051200",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Delivery Note",
@@ -523,7 +541,6 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
-   "submit": 1,
    "write": 1
   }
  ],
