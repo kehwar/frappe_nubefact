@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "format:{series}-{number}",
- "creation": "2026-02-27 00:00:00.000000",
+ "creation": "2026-02-27 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -48,14 +48,11 @@
   "origin_section",
   "origin_ubigeo",
   "origin_address",
-  "origin_establishment_code",
+    "origin_sunat_code",
   "column_break_origin",
   "destination_ubigeo",
   "destination_address",
-  "destination_establishment_code",
-  "automation_section",
-  "auto_send_to_client",
-  "pdf_format",
+    "destination_sunat_code",
   "items_section",
   "items",
   "related_documents_section",
@@ -66,6 +63,10 @@
   "secondary_drivers",
   "additional_info_section",
   "observations",
+  "more_info_tab",
+  "automation_section",
+  "auto_send_to_client",
+  "pdf_format",
   "sunat_section",
   "accepted_by_sunat",
   "sunat_response_code",
@@ -77,7 +78,8 @@
   "pdf_url",
   "xml_url",
   "cdr_url",
-  "qr_url"
+  "qr_url",
+  "amended_from"
  ],
  "fields": [
   {
@@ -94,6 +96,7 @@
   {
    "fieldname": "document_type",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Document Type",
    "options": "7\n8",
    "reqd": 1
@@ -101,12 +104,14 @@
   {
    "fieldname": "series",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Series",
    "reqd": 1
   },
   {
    "fieldname": "number",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Number",
    "reqd": 1
   },
@@ -117,6 +122,7 @@
   {
    "fieldname": "issue_date",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Issue Date",
    "reqd": 1
   },
@@ -311,11 +317,11 @@
    "label": "Origin Address",
    "reqd": 1
   },
-  {
-   "fieldname": "origin_establishment_code",
-   "fieldtype": "Data",
-   "label": "Origin Establishment Code"
-  },
+    {
+     "fieldname": "origin_sunat_code",
+     "fieldtype": "Data",
+     "label": "Origin SUNAT Code"
+    },
   {
    "fieldname": "column_break_origin",
    "fieldtype": "Column Break"
@@ -332,11 +338,11 @@
    "label": "Destination Address",
    "reqd": 1
   },
-  {
-   "fieldname": "destination_establishment_code",
-   "fieldtype": "Data",
-   "label": "Destination Establishment Code"
-  },
+    {
+     "fieldname": "destination_sunat_code",
+     "fieldtype": "Data",
+     "label": "Destination SUNAT Code"
+    },
   {
    "fieldname": "automation_section",
    "fieldtype": "Section Break",
@@ -478,13 +484,28 @@
    "fieldtype": "Data",
    "label": "QR URL",
    "read_only": 1
+  },
+  {
+   "fieldname": "more_info_tab",
+   "fieldtype": "Tab Break",
+   "label": "More Information"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Nubefact Delivery Note",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-27 00:00:00.000000",
+ "modified": "2026-02-26 22:59:26.652007",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Delivery Note",
