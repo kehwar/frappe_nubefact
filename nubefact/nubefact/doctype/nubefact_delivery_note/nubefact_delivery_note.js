@@ -1,9 +1,15 @@
 // Copyright (c) 2026, Erick W.R. and contributors
 // For license information, please see license.txt
 
+const REFRESH_SUNAT_STATUS_METHOD =
+	"nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.refresh_sunat_status";
+
 frappe.ui.form.on("Nubefact Delivery Note", {
 	refresh(frm) {
-		if (frm.doc.status === "Accepted") {
+		const watcher = nubefact.get_watcher(frm, REFRESH_SUNAT_STATUS_METHOD);
+		watcher.on_refresh();
+
+		if (["Pending Response", "Accepted"].includes(frm.doc.status || "Draft")) {
 			frm.disable_form();
 		}
 
@@ -15,14 +21,11 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 
 		if (["Draft", "Pending Response", "Accepted", "Error"].includes(frm.doc.status)) {
 			frm.add_custom_button(__("Refresh SUNAT Status"), async () => {
-				await frappe.call({
-					method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.refresh_sunat_status",
-					args: { name: frm.doc.name },
+				await watcher.refresh_now_and_continue({
 					freeze: true,
 					freeze_message: __("Refreshing SUNAT status..."),
 				});
 
-				await frm.reload_doc();
 				frappe.show_alert({
 					message: __("SUNAT status refreshed"),
 					indicator: "green",
@@ -47,9 +50,10 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 		frm.add_custom_button(__("Help"), () => {
 			open_help_dialog(frm);
 		});
+
+		watcher.schedule_if_needed();
 	},
 });
-
 function download_file_from_url(frm, fieldname, label) {
 	const url = frm.doc[fieldname];
 
