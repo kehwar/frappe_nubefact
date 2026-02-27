@@ -45,7 +45,7 @@ def make_request(
     response_payload: Any = None
     error_code: str | None = None
     error_message: str | None = None
-    success = 0
+    status = "Error"
 
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=timeout)
@@ -56,8 +56,12 @@ def make_request(
         except ValueError:
             response_payload = response.text
 
-        success = int(response.ok and not _has_api_error(response_payload))
-        if not success:
+        status = (
+            "Success"
+            if response.ok and not _has_api_error(response_payload)
+            else "Error"
+        )
+        if status == "Error":
             error_code, error_message = _extract_error_details(response_payload)
             if not error_message:
                 error_message = (
@@ -66,7 +70,7 @@ def make_request(
 
     except requests.RequestException as exc:
         error_message = str(exc)
-        success = 0
+        status = "Error"
     finally:
         duration_ms = int((time.perf_counter() - start) * 1000)
         response_timestamp = now_datetime()
@@ -81,13 +85,13 @@ def make_request(
             response_timestamp=response_timestamp,
             response_status_code=response_status_code,
             response_payload=response_payload,
-            success=success,
+            status=status,
             error_code=error_code,
             error_message=error_message,
             duration_ms=duration_ms,
         )
 
-    if not success:
+    if status == "Error":
         frappe.throw(
             error_message or "Nubefact request failed.",
             title=f"Nubefact Error (Log: {log_name})",

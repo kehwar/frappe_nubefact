@@ -6,10 +6,21 @@ from typing import Any
 
 import frappe
 from frappe.model.document import Document
+from frappe.model.naming import append_number_if_name_exists
+from frappe.utils import get_datetime, now_datetime
 
 
 class NubefactAPILog(Document):
-    pass
+    def autoname(self):
+        timestamp = (
+            get_datetime(self.request_timestamp)
+            if self.request_timestamp
+            else now_datetime()
+        )
+
+        self.name = append_number_if_name_exists(
+            "Nubefact API Log", timestamp.strftime("%Y%m%d-%H%M%S-%f")
+        )
 
 
 def create_api_log(
@@ -23,7 +34,7 @@ def create_api_log(
     response_timestamp,
     response_status_code: int | None,
     response_payload: Any,
-    success: int,
+    status: str,
     error_code: str | None,
     error_message: str | None,
     duration_ms: int,
@@ -41,7 +52,7 @@ def create_api_log(
         "response_timestamp": response_timestamp,
         "response_status_code": response_status_code,
         "response_payload": _to_json(response_payload),
-        "success": success,
+        "status": status,
         "error_code": error_code,
         "error_message": error_message,
         "duration_ms": duration_ms,

@@ -1,6 +1,5 @@
 {
  "actions": [],
- "autoname": "hash",
  "creation": "2026-02-27 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -11,8 +10,8 @@
   "reference_doctype",
   "reference_name",
   "column_break_requests",
+  "api_route",
   "request_timestamp",
-    "api_route",
   "response_details_section",
   "response_timestamp",
   "response_status_code",
@@ -48,9 +47,9 @@
    "read_only": 1
   },
   {
-    "fieldname": "api_route",
+   "fieldname": "api_route",
    "fieldtype": "Data",
-    "label": "API Route",
+   "label": "API Route",
    "read_only": 1
   },
   {
@@ -114,14 +113,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
-   "fieldname": "success",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Success",
-   "read_only": 1
-  },
-  {
    "fieldname": "response_payload",
    "fieldtype": "Code",
    "label": "Response Payload",
@@ -145,16 +136,24 @@
    "fieldname": "section_break_crau",
    "fieldtype": "Section Break",
    "label": "Request Payload"
+  },
+  {
+   "default": "0",
+   "fieldname": "success",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Success",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-26 22:14:27.528068",
+ "modified": "2026-02-26 22:26:18.874998",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact API Log",
- "naming_rule": "Random",
+ "naming_rule": "By script",
  "owner": "Administrator",
  "permissions": [
   {
