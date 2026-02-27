@@ -73,7 +73,7 @@ class NubefactDeliveryNote(Document):
         self._set_inferred_values()
 
         if not cint(getattr(self, "skip_required_fields_validation", 0)):
-            self._validate_submit_payload()
+            self._validate_required_fields()
 
     def _set_inferred_values(self):
         if not cstr(self.branch or "").strip():
@@ -193,7 +193,7 @@ class NubefactDeliveryNote(Document):
 
         return payload
 
-    def _validate_submit_payload(self):
+    def _validate_required_fields(self):
         require_fields(
             self,
             SUBMIT_REQUIRED_FIELDS,
