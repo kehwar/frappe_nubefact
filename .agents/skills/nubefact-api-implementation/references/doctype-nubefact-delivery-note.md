@@ -9,10 +9,6 @@
 - `7`: GRE Remitente (series must start with `T`)
 - `8`: GRE Transportista (series must start with `V`)
 
-## Implementation Priority
-
-- ✅ First business implementation target (before `Nubefact Invoice`).
-
 ## Manual / Asset Alignment Notes
 
 - Model aligned to `generar_guia` and `consultar_guia` examples in `assets/guia-remision-*`.
