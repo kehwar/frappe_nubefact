@@ -69,6 +69,9 @@ class NubefactDeliveryNote(Document):
             number=self.number,
         )
 
+        if not cint(getattr(self, "skip_required_fields_validation", 0)):
+            self._validate_submit_payload()
+
     def _set_default_branch(self):
         if cstr(self.branch or "").strip():
             return
@@ -95,14 +98,6 @@ class NubefactDeliveryNote(Document):
                 self.set(fieldname, inferred_value)
 
     def _build_generate_payload(self) -> dict[str, Any]:
-        origin_values = get_effective_origin_values(self)
-        origin_ubigeo = origin_values.get("origin_ubigeo")
-        origin_address = origin_values.get("origin_address")
-        origin_sunat_code = origin_values.get("origin_sunat_code")
-
-        if not cint(getattr(self, "skip_required_fields_validation", 0)):
-            self._validate_submit_payload()
-
         payload: dict[str, Any] = {
             "operacion": "generar_guia",
             "tipo_de_comprobante": cint(self.document_type),
@@ -118,8 +113,8 @@ class NubefactDeliveryNote(Document):
             "peso_bruto_unidad_de_medida": self.weight_unit,
             "numero_de_bultos": cstr(self.number_of_packages),
             "tipo_de_transporte": cstr(self.transport_type),
-            "punto_de_partida_ubigeo": origin_ubigeo,
-            "punto_de_partida_direccion": origin_address,
+            "punto_de_partida_ubigeo": self.origin_ubigeo,
+            "punto_de_partida_direccion": self.origin_address,
             "punto_de_llegada_ubigeo": self.destination_ubigeo,
             "punto_de_llegada_direccion": self.destination_address,
             "enviar_automaticamente_al_cliente": (
@@ -146,7 +141,7 @@ class NubefactDeliveryNote(Document):
         _set_if_value(
             payload,
             "punto_de_partida_codigo_establecimiento_sunat",
-            origin_sunat_code,
+            self.origin_sunat_code,
         )
         _set_if_value(
             payload,
@@ -214,19 +209,6 @@ class NubefactDeliveryNote(Document):
             SUBMIT_REQUIRED_FIELDS,
             "Required fields are missing for Delivery Note submission.",
         )
-
-        origin_values = get_effective_origin_values(self)
-        origin_ubigeo = origin_values.get("origin_ubigeo")
-        origin_address = origin_values.get("origin_address")
-        if not origin_ubigeo or not cstr(origin_ubigeo).strip():
-            frappe.throw(
-                "Origin Ubigeo is required in Delivery Note or in the selected Branch."
-            )
-
-        if not origin_address or not cstr(origin_address).strip():
-            frappe.throw(
-                "Origin Address is required in Delivery Note or in the selected Branch."
-            )
 
         if not self.items:
             frappe.throw("At least one item is required for Delivery Note submission.")
@@ -316,6 +298,8 @@ def send_to_nubefact(name: str):
         frappe.throw("Only Draft or Error delivery notes can be sent to Nubefact.")
 
     try:
+        doc.run_method("validate")
+
         payload = doc._build_generate_payload()
 
         response = make_request(

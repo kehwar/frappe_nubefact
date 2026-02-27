@@ -11,6 +11,8 @@ SUBMIT_REQUIRED_FIELDS = [
     "gross_total_weight",
     "weight_unit",
     "number_of_packages",
+    "origin_ubigeo",
+    "origin_address",
     "destination_ubigeo",
     "destination_address",
 ]
