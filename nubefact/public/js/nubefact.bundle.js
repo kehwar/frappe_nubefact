@@ -120,15 +120,30 @@ nubefact.Watcher = NubefactWatcher;
 nubefact.NubefactWatcher = NubefactWatcher;
 
 nubefact.get_watcher = function(frm, api_method, options = {}) {
-	if (!frm.__nubefact_watchers) {
-		frm.__nubefact_watchers = {};
+	const doctype = frm?.doctype || frm?.doc?.doctype;
+	const docname = frm?.docname || frm?.doc?.name;
+
+	if (!doctype || !docname) {
+		return new nubefact.Watcher(frm, api_method, options);
 	}
 
-	if (!frm.__nubefact_watchers[api_method]) {
-		frm.__nubefact_watchers[api_method] = new nubefact.Watcher(frm, api_method, options);
+	if (!nubefact.__watchers_by_doc) {
+		nubefact.__watchers_by_doc = {};
 	}
 
-	return frm.__nubefact_watchers[api_method];
+	if (!nubefact.__watchers_by_doc[doctype]) {
+		nubefact.__watchers_by_doc[doctype] = {};
+	}
+
+	if (!nubefact.__watchers_by_doc[doctype][docname]) {
+		nubefact.__watchers_by_doc[doctype][docname] = new nubefact.Watcher(frm, api_method, options);
+	}
+
+	const watcher = nubefact.__watchers_by_doc[doctype][docname];
+	watcher.frm = frm;
+	watcher.api_method = api_method;
+
+	return watcher;
 };
 
 nubefact.hello = function() {

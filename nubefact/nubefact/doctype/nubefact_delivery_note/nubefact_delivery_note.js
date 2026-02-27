@@ -6,9 +6,6 @@ const REFRESH_SUNAT_STATUS_METHOD =
 
 frappe.ui.form.on("Nubefact Delivery Note", {
 	refresh(frm) {
-		const watcher = nubefact.get_watcher(frm, REFRESH_SUNAT_STATUS_METHOD);
-		watcher.on_refresh();
-
 		if (["Pending Response", "Accepted"].includes(frm.doc.status || "Draft")) {
 			frm.disable_form();
 		}
@@ -48,7 +45,11 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 			open_help_dialog(frm);
 		});
 
-		watcher.schedule_if_needed();
+		if (!frm.is_new()){
+            const watcher = nubefact.get_watcher(frm, REFRESH_SUNAT_STATUS_METHOD);
+            watcher.on_refresh();
+            watcher.schedule_if_needed();
+        }
 	},
 });
 function download_file_from_url(frm, fieldname, label) {
