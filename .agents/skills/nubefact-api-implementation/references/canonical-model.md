@@ -9,9 +9,9 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | Object | Status | Notes |
 |--------|--------|-------|
 | Nubefact Branch | ✅ Implemented | Active credentials container per branch/company. Uses `api_route` + `api_token`. |
-| Nubefact API Log | ✅ Implemented | Request/response logging active. Uses `status` (`Success`/`Error`) and script-based naming from `request_timestamp`. |
+| Nubefact API Log | ✅ Implemented | Request/response logging active. Uses `status` (`Success`/`Error`) and script-based naming from `request_timestamp`. Uses `branch` and `reference_delivery_note` links (not generic dynamic link). |
 | Request API Utility (`make_request`) | ✅ Implemented | Sends POST requests, handles errors, and writes API log entries. |
-| Nubefact Delivery Note | 🟡 In Progress | DocType scaffold created; API mapping and submit/query flow pending. |
+| Nubefact Delivery Note | ✅ Implemented | DocType with submit/query flow active. `send_to_nubefact`, `refresh_sunat_status`, and `poll_pending_delivery_notes` are fully implemented. |
 | Nubefact Invoice | ❌ Not Implemented | Canonical model only. |
 
 ---
@@ -55,20 +55,20 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 |------------|------------|------------|----------|-------------|
 | **Request Details** | | Section Break | | |
 | Operation | `operation` | Select | Yes | Options: generar_comprobante, consultar_comprobante, generar_anulacion, consultar_anulacion, generar_guia, consultar_guia |
+| Branch | `branch` | Link | No | Nubefact Branch used for this API call |
+| Reference Delivery Note | `reference_delivery_note` | Link | No | Nubefact Delivery Note this log relates to |
 | API Route | `api_route` | Data | No | Effective request route/URL used for API call |
-| Reference DocType | `reference_doctype` | Link | No | DocType name of source document |
-| Reference Name | `reference_name` | Dynamic Link | No | Name of source document |
 | Request Timestamp | `request_timestamp` | Datetime | Yes | When the request was sent |
-| Request Payload | `request_payload` | Code | No | Full JSON request payload |
 | **Response Details** | | Section Break | | |
 | Response Timestamp | `response_timestamp` | Datetime | No | When the response was received |
 | Response Status Code | `response_status_code` | Int | No | HTTP status code |
-| Response Payload | `response_payload` | Code | No | Full JSON response payload |
+| Duration (ms) | `duration_ms` | Int | No | Request duration in milliseconds |
 | Status | `status` | Select | No | Options: Success, Error |
-| **Error Details** | | Section Break | | |
 | Error Code | `error_code` | Data | No | NubeFact error code if failed |
 | Error Message | `error_message` | Text | No | Error message if failed |
-| Duration (ms) | `duration_ms` | Int | No | Request duration in milliseconds |
+| Response Payload | `response_payload` | Code | No | Full JSON response payload |
+| **Request Payload** | | Section Break (collapsible) | | |
+| Request Payload | `request_payload` | Code | No | Full JSON request payload |
 
 ### Settings
 - Auto Name: `By script` (generated from `request_timestamp`, with collision suffix when needed)
@@ -88,6 +88,7 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 ### Implementation Status
 - ✅ Implemented.
 - `create_api_log(...)` is used by `make_request(...)` to persist all API attempts.
+- Uses specific `branch` and `reference_delivery_note` links instead of a generic dynamic link.
 
 ---
 
@@ -116,13 +117,16 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 
 | Field Label | Field Name | Field Type | Required | Description |
 |------------|------------|------------|----------|-------------|
-| **Document Type** | | Section Break | | |
-| Document Type | `document_type` | Data | Yes | 7 (GRE Remitente) or 8 (GRE Transportista) |
+| **Document** | | Section Break | | |
+| Status | `status` | Select | No | Options: Draft, Pending Response, Accepted, Error. Read-only, set by code. |
+| Title | `title` | Data | No | Auto-generated read-only title. |
+| Document Type | `document_type` | Select | Yes | 7 (GRE Remitente) or 8 (GRE Transportista) |
 | Series | `series` | Data | Yes | 4-character series (`T*` for type 7, `V*` for type 8) |
-| Number | `number` | Int | Yes | Sequential document number |
+| Number | `number` | Int | Yes | Sequential document number (assigned by API on first send) |
 | | Column Break | | | |
 | Issue Date | `issue_date` | Date | Yes | Date of guide issuance |
 | Transfer Start Date | `transfer_start_date` | Date | Yes | When transport begins |
+| Branch | `branch` | Link | No | Nubefact Branch used for API calls. Auto-filled from last used. |
 | **Client/Recipient Information** | | Section Break | | |
 | Client Document Type | `client_document_type` | Select | Yes | Options: 6 (RUC), 1 (DNI), etc. |
 | Client Document Number | `client_document_number` | Data | Yes | Client's identification number |
@@ -139,58 +143,56 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | **Transfer Details** | | Section Break | | |
 | Transfer Reason | `transfer_reason` | Select | Yes | SUNAT codes 01-19 |
 | Transport Type | `transport_type` | Select | Yes | Options: 01 (Private), 02 (Public) |
-| | Column Break | | | |
 | Gross Total Weight | `gross_total_weight` | Float | Yes | Total weight |
 | Weight Unit | `weight_unit` | Select | Yes | Options: KGM, TNE, etc. |
 | Number of Packages | `number_of_packages` | Int | Yes | Total package count |
-| **Carrier Information** | | Section Break | | |
+| | Column Break | | | |
 | Carrier Document Type | `carrier_document_type` | Select | No | Required for private transport |
 | Carrier Document Number | `carrier_document_number` | Data | No | Carrier's RUC/DNI |
 | Carrier Name | `carrier_name` | Data | No | Carrier business name |
-| | Column Break | | | |
 | Vehicle License Plate | `vehicle_license_plate` | Data | No | Main vehicle plate |
-| **Driver Information** | | Section Break | | |
+| **Main Driver** | | Section Break | | |
 | Driver Document Type | `driver_document_type` | Select | No | Usually 1 (DNI) |
 | Driver Document Number | `driver_document_number` | Data | No | Driver's ID number |
 | Driver First Name | `driver_first_name` | Data | No | Driver's given name |
 | | Column Break | | | |
 | Driver Last Name | `driver_last_name` | Data | No | Driver's family name |
 | Driver License Number | `driver_license_number` | Data | No | Driver's license ID |
-| **Origin (Punto de Partida)** | | Section Break | | |
-| Origin Ubigeo | `origin_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
-| Origin Address | `origin_address` | Small Text | Yes | Full origin address |
+| **Origin / Destination** | | Section Break | | |
+| Origin Ubigeo | `origin_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code. Falls back to Branch ubigeo if blank. |
+| Origin Address | `origin_address` | Small Text | Yes | Full origin address. Falls back to Branch address if blank. |
+| Origin SUNAT Code | `origin_sunat_code` | Data | No | SUNAT establishment code. Falls back to Branch sunat_code if blank. |
 | | Column Break | | | |
-| Origin SUNAT Code | `origin_sunat_code` | Data | No | SUNAT establishment code (default "0000") |
-| **Destination (Punto de Llegada)** | | Section Break | | |
 | Destination Ubigeo | `destination_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
 | Destination Address | `destination_address` | Small Text | Yes | Full destination address |
-| | Column Break | | | |
 | Destination SUNAT Code | `destination_sunat_code` | Data | No | SUNAT establishment code (default "0000") |
+| **Items** | | Section Break | | |
+| Items | `items` | Table | Yes | Nubefact Delivery Note Item |
+| **Related Documents** | | Section Break | | |
+| Related Documents | `related_documents` | Table | No | Nubefact Delivery Note Related Document |
+| **Secondary Vehicles** | | Section Break | | |
+| Secondary Vehicles | `secondary_vehicles` | Table | No | Nubefact Delivery Note Secondary Vehicle |
+| **Secondary Drivers** | | Section Break | | |
+| Secondary Drivers | `secondary_drivers` | Table | No | Nubefact Delivery Note Secondary Driver |
+| **Additional Information** | | Section Break | | |
+| Observations | `observations` | Text | No | Additional notes |
+| **More Information** | | Tab Break | | |
 | **Automation** | | Section Break | | |
 | Auto Send to Client | `auto_send_to_client` | Check | No | Email PDF to client |
 | PDF Format | `pdf_format` | Select | No | Options: "", "A4", "A5", "TICKET" |
-| **Items** | | Section Break | | |
-| Items | `items` | Table | Yes | Nubefact Delivery Item |
-| **Related Documents** | | Section Break | | |
-| Related Documents | `related_documents` | Table | No | Nubefact Delivery Related Document |
-| **Secondary Vehicles** | | Section Break | | |
-| Secondary Vehicles | `secondary_vehicles` | Table | No | Nubefact Delivery Secondary Vehicle |
-| **Secondary Drivers** | | Section Break | | |
-| Secondary Drivers | `secondary_drivers` | Table | No | Nubefact Delivery Secondary Driver |
-| **Additional Information** | | Section Break | | |
-| Observations | `observations` | Text | No | Additional notes |
 | **SUNAT Status** | | Section Break | | |
-| Accepted by SUNAT | `accepted_by_sunat` | Check | No | Whether guide was accepted |
-| SUNAT Response Code | `sunat_response_code` | Data | No | SUNAT response code |
-| SUNAT Response Message | `sunat_response_message` | Text | No | SUNAT response message |
-| SUNAT Note | `sunat_note` | Text | No | Additional SUNAT note |
-| SUNAT SOAP Error | `sunat_soap_error` | Text | No | SOAP error from SUNAT |
+| Accepted by SUNAT | `accepted_by_sunat` | Check | No | Whether guide was accepted. Read-only. |
+| Last SUNAT Check | `last_sunat_check` | Datetime | No | Timestamp of last consultar_guia call. Read-only. |
+| SUNAT Response Code | `sunat_response_code` | Data | No | SUNAT response code. Read-only. |
+| SUNAT Response Message | `sunat_response_message` | Text | No | SUNAT response message. Read-only. |
+| SUNAT Note | `sunat_note` | Text | No | Additional SUNAT note. Read-only. |
+| SUNAT SOAP Error | `sunat_soap_error` | Text | No | SOAP error from SUNAT. Read-only. |
 | | Column Break | | | |
-| Link URL | `link_url` | Data | No | NubeFact link |
-| CDR URL | `cdr_url` | Data | No | URL to download CDR |
-| PDF URL | `pdf_url` | Data | No | URL to download PDF |
-| XML URL | `xml_url` | Data | No | URL to download XML |
-| QR URL | `qr_url` | Data | No | URL to QR code |
+| Link URL | `link_url` | Data | No | NubeFact link. Read-only. |
+| CDR URL | `cdr_url` | Data | No | URL to download CDR. Read-only. |
+| PDF URL | `pdf_url` | Data | No | URL to download PDF. Read-only. |
+| XML URL | `xml_url` | Data | No | URL to download XML. Read-only. |
+| QR URL | `qr_url` | Data | No | URL to QR code string. Read-only. |
 
 ### Child Table: Nubefact Delivery Note Item
 
@@ -227,19 +229,25 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | License Number | `license_number` | Data | Yes | Driver's license ID |
 
 ### Settings
-- Auto Name: `format:{series}-{number}`
+- Auto Name: `By script` (timestamp-based, e.g. `20260227-123456-000001`)
 - Sort Field: `issue_date`
 - Sort Order: DESC
 - Track Changes: Yes
-- Is Submittable: Yes
+- Is Submittable: No (planned for future: Yes — requires on_submit/on_cancel handlers)
+- Allow Rename: No
 
 ### Permissions
-- Stock Manager: Full access (create, read, write, submit, cancel)
-- Stock User: Create, Read, Write, Submit
+- System Manager: Full access
+- Stock Manager: Full access (create, read, write, delete)
+- Stock User: Create, Read, Write
 - Sales User: Read only
 
 ### Implementation Status
-- 🟡 In progress (DocType scaffold created).
+- ✅ Implemented.
+- `send_to_nubefact(name)` — builds the `generar_guia` payload, calls the API, updates fields from response.
+- `refresh_sunat_status(name)` — calls `consultar_guia`, updates SUNAT status fields.
+- `poll_pending_delivery_notes()` — scheduled task that polls pending delivery notes every 5 minutes.
+- Origin fields (`origin_ubigeo`, `origin_address`, `origin_sunat_code`) fall back to Branch values if blank on the document.
 
 ---
 
