@@ -69,6 +69,7 @@
   "pdf_format",
   "sunat_section",
   "accepted_by_sunat",
+  "last_sunat_check",
   "sunat_response_code",
   "sunat_response_message",
   "sunat_note",
@@ -425,6 +426,12 @@
    "fieldname": "accepted_by_sunat",
    "fieldtype": "Check",
    "label": "Accepted by SUNAT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sunat_check",
+   "fieldtype": "Datetime",
+   "label": "Last SUNAT Check",
    "read_only": 1
   },
   {
