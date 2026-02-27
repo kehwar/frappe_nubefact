@@ -120,32 +120,32 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | **Document** | | Section Break | | |
 | Status | `status` | Select | No | Options: Draft, Pending Response, Accepted, Error. Read-only, set by code. |
 | Title | `title` | Data | No | Auto-generated read-only title. |
-| Document Type | `document_type` | Select | Yes | 7 (GRE Remitente) or 8 (GRE Transportista) |
-| Series | `series` | Data | Yes | 4-character series (`T*` for type 7, `V*` for type 8) |
-| Number | `number` | Int | Yes | Sequential document number (assigned by API on first send) |
+| Document Type | `document_type` | Select | No* | 7 (GRE Remitente) or 8 (GRE Transportista). Required at send-time validation. |
+| Series | `series` | Data | No* | Series value. Required at send-time validation. |
+| Number | `number` | Int | No | Sequential document number. Optional on send; API response can assign/fill it. |
 | | Column Break | | | |
-| Issue Date | `issue_date` | Date | Yes | Date of guide issuance |
-| Transfer Start Date | `transfer_start_date` | Date | Yes | When transport begins |
+| Issue Date | `issue_date` | Date | No | Date of guide issuance |
+| Transfer Start Date | `transfer_start_date` | Date | No | When transport begins |
 | Branch | `branch` | Link | No | Nubefact Branch used for API calls. Auto-filled from last used. |
 | **Client/Recipient Information** | | Section Break | | |
-| Client Document Type | `client_document_type` | Select | Yes | Options: 6 (RUC), 1 (DNI), etc. |
-| Client Document Number | `client_document_number` | Data | Yes | Client's identification number |
-| Client Name | `client_name` | Data | Yes | Client's full name or business name |
+| Client Document Type | `client_document_type` | Select | No* | Options: 6, 1, 4, 7, A, 0. Required at send-time validation. |
+| Client Document Number | `client_document_number` | Data | No* | Client's identification number. Required at send-time validation. |
+| Client Name | `client_name` | Data | No* | Client's full name or business name. Required at send-time validation. |
 | | Column Break | | | |
-| Client Address | `client_address` | Small Text | Yes | Client's address |
+| Client Address | `client_address` | Small Text | No | Client's address |
 | Client Email | `client_email` | Data | No | Primary client email |
 | Client Email 1 | `client_email_1` | Data | No | Additional email address |
 | Client Email 2 | `client_email_2` | Data | No | Additional email address |
 | **Transportista Recipient (Type 8)** | | Section Break | | |
-| Recipient Document Type | `recipient_document_type` | Select | No | Required for GRE Transportista |
-| Recipient Document Number | `recipient_document_number` | Data | No | Required for GRE Transportista |
-| Recipient Name | `recipient_name` | Data | No | Required for GRE Transportista |
+| Recipient Document Type | `recipient_document_type` | Select | No* | Required at send-time when `document_type = 8`. |
+| Recipient Document Number | `recipient_document_number` | Data | No* | Required at send-time when `document_type = 8`. |
+| Recipient Name | `recipient_name` | Data | No* | Required at send-time when `document_type = 8`. |
 | **Transfer Details** | | Section Break | | |
-| Transfer Reason | `transfer_reason` | Select | Yes | SUNAT codes 01-19 |
-| Transport Type | `transport_type` | Select | Yes | Options: 01 (Private), 02 (Public) |
-| Gross Total Weight | `gross_total_weight` | Float | Yes | Total weight |
-| Weight Unit | `weight_unit` | Select | Yes | Options: KGM, TNE, etc. |
-| Number of Packages | `number_of_packages` | Int | Yes | Total package count |
+| Transfer Reason | `transfer_reason` | Select | No* | SUNAT codes 01, 02, 04, 05, 06, 07, 08, 09, 13, 14, 18, 19. Required at send-time validation. |
+| Transport Type | `transport_type` | Select | No* | Options: 01 (Private), 02 (Public). Required at send-time validation. |
+| Gross Total Weight | `gross_total_weight` | Float | No* | Total weight. Required at send-time validation. |
+| Weight Unit | `weight_unit` | Select | No* | Options: KGM, TNE. Required at send-time validation. |
+| Number of Packages | `number_of_packages` | Int | No* | Total package count. Required at send-time validation. |
 | | Column Break | | | |
 | Carrier Document Type | `carrier_document_type` | Select | No | Required for private transport |
 | Carrier Document Number | `carrier_document_number` | Data | No | Carrier's RUC/DNI |
@@ -159,15 +159,15 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | Driver Last Name | `driver_last_name` | Data | No | Driver's family name |
 | Driver License Number | `driver_license_number` | Data | No | Driver's license ID |
 | **Origin / Destination** | | Section Break | | |
-| Origin Ubigeo | `origin_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code. Falls back to Branch ubigeo if blank. |
-| Origin Address | `origin_address` | Small Text | Yes | Full origin address. Falls back to Branch address if blank. |
+| Origin Ubigeo | `origin_ubigeo` | Data | No* | 6-digit SUNAT ubigeo code. Falls back to Branch ubigeo if blank. Required at send-time validation. |
+| Origin Address | `origin_address` | Small Text | No* | Full origin address. Falls back to Branch address if blank. Required at send-time validation. |
 | Origin SUNAT Code | `origin_sunat_code` | Data | No | SUNAT establishment code. Falls back to Branch sunat_code if blank. |
 | | Column Break | | | |
-| Destination Ubigeo | `destination_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
-| Destination Address | `destination_address` | Small Text | Yes | Full destination address |
+| Destination Ubigeo | `destination_ubigeo` | Data | No* | 6-digit SUNAT ubigeo code. Required at send-time validation. |
+| Destination Address | `destination_address` | Small Text | No* | Full destination address. Required at send-time validation. |
 | Destination SUNAT Code | `destination_sunat_code` | Data | No | SUNAT establishment code (default "0000") |
 | **Items** | | Section Break | | |
-| Items | `items` | Table | Yes | Nubefact Delivery Note Item |
+| Items | `items` | Table | No* | Nubefact Delivery Note Item. At least one row required at send-time validation. |
 | **Related Documents** | | Section Break | | |
 | Related Documents | `related_documents` | Table | No | Nubefact Delivery Note Related Document |
 | **Secondary Vehicles** | | Section Break | | |
@@ -179,6 +179,7 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | **More Information** | | Tab Break | | |
 | **Automation** | | Section Break | | |
 | Auto Send to Client | `auto_send_to_client` | Check | No | Email PDF to client |
+| Skip Required Fields Validation | `skip_required_fields_validation` | Check | No | If enabled, bypasses server-side send payload field validation in `validate()`. |
 | PDF Format | `pdf_format` | Select | No | Options: "", "A4", "A5", "TICKET" |
 | **SUNAT Status** | | Section Break | | |
 | Accepted by SUNAT | `accepted_by_sunat` | Check | No | Whether guide was accepted. Read-only. |
@@ -187,6 +188,7 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | SUNAT Response Message | `sunat_response_message` | Text | No | SUNAT response message. Read-only. |
 | SUNAT Note | `sunat_note` | Text | No | Additional SUNAT note. Read-only. |
 | SUNAT SOAP Error | `sunat_soap_error` | Text | No | SOAP error from SUNAT. Read-only. |
+| Error Message | `error_message` | Text | No | Last integration/send error summary. Read-only. |
 | | Column Break | | | |
 | Link URL | `link_url` | Data | No | NubeFact link. Read-only. |
 | CDR URL | `cdr_url` | Data | No | URL to download CDR. Read-only. |
@@ -228,25 +230,25 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | Last Name | `last_name` | Data | Yes | Driver's family name |
 | License Number | `license_number` | Data | Yes | Driver's license ID |
 
+\* `Required = No*` means the field is not marked mandatory in DocType schema, but is required by runtime send validation (`_validate_submit_payload`) unless `skip_required_fields_validation` is enabled.
+
 ### Settings
 - Auto Name: `By script` (timestamp-based, e.g. `20260227-123456-000001`)
-- Sort Field: `issue_date`
+- Sort Field: `modified`
 - Sort Order: DESC
-- Track Changes: Yes
-- Is Submittable: No (planned for future: Yes — requires on_submit/on_cancel handlers)
-- Allow Rename: No
+- Track Changes: Disabled
+- Allow Rename: Yes
 
 ### Permissions
 - System Manager: Full access
-- Stock Manager: Full access (create, read, write, delete)
-- Stock User: Create, Read, Write
-- Sales User: Read only
 
 ### Implementation Status
 - ✅ Implemented.
 - `send_to_nubefact(name)` — builds the `generar_guia` payload, calls the API, updates fields from response.
 - `refresh_sunat_status(name)` — calls `consultar_guia`, updates SUNAT status fields.
 - `poll_pending_delivery_notes()` — scheduled task that polls pending delivery notes every 5 minutes.
+- `create_delivery_note_from_import_file(file_name)` — creates delivery note from uploaded file (JSON/XML input flows).
+- `create_delivery_note_from_import_json_text(json_payload)` — creates delivery note directly from raw JSON payload.
 - Origin fields (`origin_ubigeo`, `origin_address`, `origin_sunat_code`) fall back to Branch values if blank on the document.
 
 ---
