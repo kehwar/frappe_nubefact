@@ -170,7 +170,8 @@ app_include_js = "nubefact.bundle.js"
 scheduler_events = {
     "cron": {
         "*/5 * * * *": [
-            "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.poll_pending_delivery_notes"
+            "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.poll_pending_delivery_notes",
+            "nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice.poll_pending_invoices",
         ]
     }
 }

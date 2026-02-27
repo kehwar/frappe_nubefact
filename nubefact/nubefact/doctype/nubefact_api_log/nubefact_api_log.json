@@ -8,6 +8,7 @@
   "operation",
   "branch",
   "reference_delivery_note",
+  "reference_invoice",
   "column_break_requests",
   "api_route",
   "request_timestamp",
@@ -56,6 +57,13 @@
    "fieldtype": "Link",
    "label": "Reference Delivery Note",
    "options": "Nubefact Delivery Note",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_invoice",
+   "fieldtype": "Link",
+   "label": "Reference Invoice",
+   "options": "Nubefact Invoice",
    "read_only": 1
   },
   {
