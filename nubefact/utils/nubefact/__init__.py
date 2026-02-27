@@ -128,3 +128,6 @@ def _extract_error_details(response_payload: Any) -> tuple[str | None, str | Non
         error_message = str(error_message)
 
     return error_code, error_message
+
+
+__all__ = ["make_request"]
