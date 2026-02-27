@@ -27,11 +27,36 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 			});
 		}
 
+		if (frm.doc.status === "Accepted") {
+			frm.add_custom_button(__("PDF"), () => {
+				download_file_from_url(frm, "pdf_url", "PDF");
+			}, "Download");
+
+			frm.add_custom_button(__("XML"), () => {
+				download_file_from_url(frm, "xml_url", "XML");
+			}, "Download");
+
+			frm.add_custom_button(__("CDR"), () => {
+				download_file_from_url(frm, "cdr_url", "CDR");
+			}, "Download");
+		}
+
 		frm.add_custom_button(__("Help"), () => {
 			open_help_dialog(frm);
 		});
 	},
 });
+
+function download_file_from_url(frm, fieldname, label) {
+	const url = frm.doc[fieldname];
+
+	if (!url) {
+		frappe.msgprint(__("{0} URL is not available yet.", [label]));
+		return;
+	}
+
+	window.open(url, "_blank");
+}
 
 function open_send_dialog(frm) {
 	const dialog = new frappe.ui.Dialog({
