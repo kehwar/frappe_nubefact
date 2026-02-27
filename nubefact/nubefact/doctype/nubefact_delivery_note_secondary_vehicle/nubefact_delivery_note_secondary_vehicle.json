@@ -6,7 +6,8 @@
  "engine": "InnoDB",
  "field_order": [
   "license_plate",
-  "tuc"
+  "tuc",
+  "raw"
  ],
  "fields": [
   {
@@ -20,6 +21,11 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "TUC"
+  },
+  {
+   "fieldname": "raw",
+   "fieldtype": "JSON",
+   "label": "Raw"
   }
  ],
  "grid_page_length": 50,

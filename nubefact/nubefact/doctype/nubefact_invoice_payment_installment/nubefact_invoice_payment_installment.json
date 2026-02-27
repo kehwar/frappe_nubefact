@@ -7,12 +7,14 @@
  "field_order": [
   "installment_number",
   "payment_date",
-  "amount"
+    "amount",
+    "raw"
  ],
  "fields": [
   {"fieldname": "installment_number", "fieldtype": "Int", "in_list_view": 1, "label": "Installment Number"},
   {"fieldname": "payment_date", "fieldtype": "Date", "in_list_view": 1, "label": "Payment Date"},
-  {"fieldname": "amount", "fieldtype": "Currency", "in_list_view": 1, "label": "Amount"}
+    {"fieldname": "amount", "fieldtype": "Currency", "in_list_view": 1, "label": "Amount"},
+    {"fieldname": "raw", "fieldtype": "JSON", "label": "Raw"}
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,

@@ -9,7 +9,8 @@
   "item_code",
   "description",
   "quantity",
-  "dam_code"
+    "dam_code",
+    "raw"
  ],
  "fields": [
   {
@@ -40,6 +41,11 @@
    "fieldname": "dam_code",
    "fieldtype": "Data",
    "label": "DAM Code"
+    },
+    {
+     "fieldname": "raw",
+     "fieldtype": "JSON",
+     "label": "Raw"
   }
  ],
  "grid_page_length": 50,

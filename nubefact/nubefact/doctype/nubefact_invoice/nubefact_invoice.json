@@ -105,6 +105,7 @@
   "credit_installments",
   "additional_info_section",
   "remarks",
+  "raw",
   "more_info_tab",
   "settings_section",
   "auto_send_to_sunat",
@@ -660,6 +661,11 @@
     "fieldname": "remarks",
    "fieldtype": "Text",
     "label": "Remarks"
+  },
+  {
+   "fieldname": "raw",
+   "fieldtype": "JSON",
+   "label": "Raw"
   },
   {
    "fieldname": "more_info_tab",

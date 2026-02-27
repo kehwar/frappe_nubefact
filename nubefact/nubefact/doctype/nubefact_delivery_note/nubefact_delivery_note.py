@@ -28,6 +28,7 @@ from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_sch
     TYPE_8_RECIPIENT_REQUIRED_FIELDS,
 )
 from nubefact.utils import (
+    apply_raw_payload_overrides,
     make_request,
     omit_empty_values,
     require_child_fields,
@@ -98,6 +99,23 @@ class NubefactDeliveryNote(Document):
         return f"{series}-{number_text}" if (series or number_text) else ""
 
     def _build_generate_payload(self) -> dict[str, Any]:
+        items_payload = [
+            apply_raw_payload_overrides(
+                omit_empty_values(
+                    {
+                        "unidad_de_medida": row.unit_of_measure,
+                        "codigo": row.item_code,
+                        "descripcion": row.description,
+                        "cantidad": cstr(row.quantity),
+                        "codigo_dam": row.dam_code,
+                    }
+                ),
+                row.raw,
+                f"items row #{row.idx}",
+            )
+            for row in self.items
+        ]
+
         payload: dict[str, Any] = {
             "operacion": "generar_guia",
             "tipo_de_comprobante": cint(self.document_type),
@@ -121,18 +139,7 @@ class NubefactDeliveryNote(Document):
                 "true" if cint(self.auto_send_to_client) else "false"
             ),
             "formato_de_pdf": cstr(self.pdf_format or ""),
-            "items": [
-                omit_empty_values(
-                    {
-                        "unidad_de_medida": row.unit_of_measure,
-                        "codigo": row.item_code,
-                        "descripcion": row.description,
-                        "cantidad": cstr(row.quantity),
-                        "codigo_dam": row.dam_code,
-                    }
-                )
-                for row in self.items
-            ],
+            "items": items_payload,
         }
 
         payload.update(
@@ -167,11 +174,15 @@ class NubefactDeliveryNote(Document):
 
         if self.related_documents:
             payload["documento_relacionado"] = [
-                {
-                    "tipo": cstr(row.document_type),
-                    "serie": row.series,
-                    "numero": cstr(row.number),
-                }
+                apply_raw_payload_overrides(
+                    {
+                        "tipo": cstr(row.document_type),
+                        "serie": row.series,
+                        "numero": cstr(row.number),
+                    },
+                    row.raw,
+                    f"related documents row #{row.idx}",
+                )
                 for row in self.related_documents
             ]
 
@@ -180,21 +191,31 @@ class NubefactDeliveryNote(Document):
             for row in self.secondary_vehicles:
                 vehicle = {"placa_numero": row.license_plate}
                 vehicle.update(omit_empty_values({"tuc": row.tuc}))
-                payload["vehiculos_secundarios"].append(vehicle)
+                payload["vehiculos_secundarios"].append(
+                    apply_raw_payload_overrides(
+                        vehicle,
+                        row.raw,
+                        f"secondary vehicles row #{row.idx}",
+                    )
+                )
 
         if self.secondary_drivers:
             payload["conductores_secundarios"] = [
-                {
-                    "documento_tipo": cstr(row.document_type),
-                    "documento_numero": row.document_number,
-                    "nombre": row.first_name,
-                    "apellidos": row.last_name,
-                    "numero_licencia": row.license_number,
-                }
+                apply_raw_payload_overrides(
+                    {
+                        "documento_tipo": cstr(row.document_type),
+                        "documento_numero": row.document_number,
+                        "nombre": row.first_name,
+                        "apellidos": row.last_name,
+                        "numero_licencia": row.license_number,
+                    },
+                    row.raw,
+                    f"secondary drivers row #{row.idx}",
+                )
                 for row in self.secondary_drivers
             ]
 
-        return payload
+        return apply_raw_payload_overrides(payload, self.raw, "delivery note")
 
     def _validate_required_fields(self):
         require_fields(

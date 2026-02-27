@@ -23,6 +23,7 @@ from nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice_schema import (
     REQUIRED_FIELDS,
 )
 from nubefact.utils import (
+    apply_raw_payload_overrides,
     make_request,
     omit_empty_values,
     require_child_fields,
@@ -82,23 +83,8 @@ class NubefactInvoice(Document):
         return f"{series}-{number_text}" if (series or number_text) else ""
 
     def _build_generate_payload(self) -> dict[str, Any]:
-        payload: dict[str, Any] = {
-            "operacion": "generar_comprobante",
-            "tipo_de_comprobante": cint(self.document_type),
-            "serie": self.series,
-            "cliente_tipo_de_documento": cstr(self.client_document_type),
-            "cliente_numero_de_documento": self.client_document_number,
-            "cliente_denominacion": self.client_name,
-            "cliente_direccion": self.client_address,
-            "fecha_de_emision": to_nubefact_date(self.issue_date),
-            "moneda": cstr(self.currency),
-            "porcentaje_de_igv": cstr(self.igv_percentage),
-            "total_igv": cstr(self.total_igv),
-            "total": cstr(self.total),
-            "enviar_automaticamente_a_la_sunat": bool(cint(self.auto_send_to_sunat)),
-            "enviar_automaticamente_al_cliente": bool(cint(self.auto_send_to_client)),
-            "formato_de_pdf": cstr(self.pdf_format or ""),
-            "items": [
+        items_payload = [
+            apply_raw_payload_overrides(
                 omit_empty_values(
                     {
                         "unidad_de_medida": row.uom,
@@ -119,9 +105,30 @@ class NubefactInvoice(Document):
                         "anticipo_documento_serie": row.downpayment_document_series,
                         "anticipo_documento_numero": row.downpayment_document_number,
                     }
-                )
-                for row in self.items
-            ],
+                ),
+                row.raw,
+                f"items row #{row.idx}",
+            )
+            for row in self.items
+        ]
+
+        payload: dict[str, Any] = {
+            "operacion": "generar_comprobante",
+            "tipo_de_comprobante": cint(self.document_type),
+            "serie": self.series,
+            "cliente_tipo_de_documento": cstr(self.client_document_type),
+            "cliente_numero_de_documento": self.client_document_number,
+            "cliente_denominacion": self.client_name,
+            "cliente_direccion": self.client_address,
+            "fecha_de_emision": to_nubefact_date(self.issue_date),
+            "moneda": cstr(self.currency),
+            "porcentaje_de_igv": cstr(self.igv_percentage),
+            "total_igv": cstr(self.total_igv),
+            "total": cstr(self.total),
+            "enviar_automaticamente_a_la_sunat": bool(cint(self.auto_send_to_sunat)),
+            "enviar_automaticamente_al_cliente": bool(cint(self.auto_send_to_client)),
+            "formato_de_pdf": cstr(self.pdf_format or ""),
+            "items": items_payload,
         }
 
         payload.update(
@@ -181,24 +188,32 @@ class NubefactInvoice(Document):
 
         if self.delivery_references:
             payload["guias"] = [
-                {
-                    "guia_tipo": cstr(row.guide_type),
-                    "guia_serie_numero": row.guide_series_number,
-                }
+                apply_raw_payload_overrides(
+                    {
+                        "guia_tipo": cstr(row.guide_type),
+                        "guia_serie_numero": row.guide_series_number,
+                    },
+                    row.raw,
+                    f"delivery references row #{row.idx}",
+                )
                 for row in self.delivery_references
             ]
 
         if self.credit_installments:
             payload["venta_al_credito"] = [
-                {
-                    "cuota": cstr(row.installment_number),
-                    "fecha_de_pago": to_nubefact_date(row.payment_date),
-                    "importe": cstr(row.amount),
-                }
+                apply_raw_payload_overrides(
+                    {
+                        "cuota": cstr(row.installment_number),
+                        "fecha_de_pago": to_nubefact_date(row.payment_date),
+                        "importe": cstr(row.amount),
+                    },
+                    row.raw,
+                    f"credit installments row #{row.idx}",
+                )
                 for row in self.credit_installments
             ]
 
-        return payload
+        return apply_raw_payload_overrides(payload, self.raw, "invoice")
 
     def _validate_required_fields(self):
         require_fields(

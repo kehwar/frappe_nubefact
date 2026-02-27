@@ -23,7 +23,8 @@
   "downpayment_document_series",
     "downpayment_document_number",
     "isc_type",
-    "isc"
+    "isc",
+    "raw"
  ],
  "fields": [
   {"fieldname": "uom", "fieldtype": "Data", "in_list_view": 1, "label": "UOM"},
@@ -44,7 +45,8 @@
   {"fieldname": "downpayment_document_series", "fieldtype": "Data", "in_list_view": 1, "label": "Downpayment Document Series"},
     {"fieldname": "downpayment_document_number", "fieldtype": "Data", "in_list_view": 1, "label": "Downpayment Document Number"},
     {"fieldname": "isc_type", "fieldtype": "Select", "in_list_view": 1, "label": "ISC Type", "options": "\n1\n2\n3"},
-    {"fieldname": "isc", "fieldtype": "Currency", "in_list_view": 1, "label": "ISC"}
+    {"fieldname": "isc", "fieldtype": "Currency", "in_list_view": 1, "label": "ISC"},
+    {"fieldname": "raw", "fieldtype": "JSON", "label": "Raw"}
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,

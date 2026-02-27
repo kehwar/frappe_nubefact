@@ -66,6 +66,7 @@
   "secondary_drivers",
   "additional_info_section",
   "observations",
+    "raw",
   "more_info_tab",
   "automation_section",
   "auto_send_to_client",
@@ -436,6 +437,11 @@
    "fieldtype": "Text",
    "label": "Observations"
   },
+    {
+     "fieldname": "raw",
+     "fieldtype": "JSON",
+     "label": "Raw"
+    },
   {
    "fieldname": "sunat_section",
    "fieldtype": "Section Break",

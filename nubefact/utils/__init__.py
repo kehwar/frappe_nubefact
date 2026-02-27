@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from frappe import throw
@@ -66,6 +67,38 @@ def get_missing_fields(doc: Document, fields: list[str]) -> list[str]:
     ]
 
 
+def apply_raw_payload_overrides(
+    payload: dict[str, Any], raw_value: Any, context: str
+) -> dict[str, Any]:
+    raw_payload = parse_raw_payload(raw_value, context)
+    if not raw_payload:
+        return payload
+
+    merged_payload = dict(payload)
+    merged_payload.update(raw_payload)
+    return merged_payload
+
+
+def parse_raw_payload(raw_value: Any, context: str) -> dict[str, Any]:
+    if raw_value in (None, ""):
+        return {}
+
+    if isinstance(raw_value, dict):
+        return raw_value
+
+    if isinstance(raw_value, str):
+        try:
+            parsed = json.loads(raw_value)
+        except json.JSONDecodeError as exc:
+            throw(f"Invalid raw JSON for {context}: {exc.msg}")
+
+        if isinstance(parsed, dict):
+            return parsed
+
+    throw(f"Raw payload for {context} must be a JSON object.")
+    return {}
+
+
 __all__ = [
     "make_request",
     "to_nubefact_date",
@@ -75,4 +108,6 @@ __all__ = [
     "require_child_fields",
     "format_missing_fields",
     "get_missing_fields",
+    "apply_raw_payload_overrides",
+    "parse_raw_payload",
 ]

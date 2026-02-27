@@ -6,7 +6,8 @@
  "engine": "InnoDB",
  "field_order": [
   "guide_type",
-  "guide_series_number"
+  "guide_series_number",
+  "raw"
  ],
  "fields": [
   {
@@ -21,6 +22,11 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Guide Series and Number"
+  },
+  {
+   "fieldname": "raw",
+   "fieldtype": "JSON",
+   "label": "Raw"
   }
  ],
  "grid_page_length": 50,
