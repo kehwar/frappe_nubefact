@@ -8,7 +8,7 @@ from typing import Any
 import frappe
 from frappe.model.document import Document
 from frappe.model.naming import append_number_if_name_exists
-from frappe.utils import cint, cstr, getdate, now_datetime
+from frappe.utils import cint, cstr, now_datetime
 
 from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
     get_last_used_branch_for_user,
@@ -30,7 +30,12 @@ from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_sch
     SUBMIT_REQUIRED_FIELDS,
     TYPE_8_RECIPIENT_REQUIRED_FIELDS,
 )
-from nubefact.utils.nubefact import make_request
+from nubefact.utils import (
+    make_request,
+    require_child_fields,
+    require_fields,
+    to_nubefact_date,
+)
 
 _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
     "accepted_by_sunat": 0,
@@ -102,8 +107,8 @@ class NubefactDeliveryNote(Document):
             "cliente_numero_de_documento": self.client_document_number,
             "cliente_denominacion": self.client_name,
             "cliente_direccion": self.client_address,
-            "fecha_de_emision": _to_nubefact_date(self.issue_date),
-            "fecha_de_inicio_de_traslado": _to_nubefact_date(self.transfer_start_date),
+            "fecha_de_emision": to_nubefact_date(self.issue_date),
+            "fecha_de_inicio_de_traslado": to_nubefact_date(self.transfer_start_date),
             "motivo_de_traslado": cstr(self.transfer_reason),
             "peso_bruto_total": cstr(self.gross_total_weight),
             "peso_bruto_unidad_de_medida": self.weight_unit,
@@ -200,7 +205,7 @@ class NubefactDeliveryNote(Document):
         return payload
 
     def _validate_submit_payload(self):
-        _require_fields(
+        require_fields(
             self,
             SUBMIT_REQUIRED_FIELDS,
             "Required fields are missing for Delivery Note submission.",
@@ -210,35 +215,35 @@ class NubefactDeliveryNote(Document):
             frappe.throw("At least one item is required for Delivery Note submission.")
 
         for index, row in enumerate(self.items, start=1):
-            _require_child_fields(
+            require_child_fields(
                 row,
                 ITEM_REQUIRED_FIELDS,
                 f"Items row #{index} has missing required fields.",
             )
 
         for index, row in enumerate(self.related_documents or [], start=1):
-            _require_child_fields(
+            require_child_fields(
                 row,
                 RELATED_DOCUMENT_REQUIRED_FIELDS,
                 f"Related Documents row #{index} has missing required fields.",
             )
 
         for index, row in enumerate(self.secondary_vehicles or [], start=1):
-            _require_child_fields(
+            require_child_fields(
                 row,
                 SECONDARY_VEHICLE_REQUIRED_FIELDS,
                 f"Secondary Vehicles row #{index} has missing required fields.",
             )
 
         for index, row in enumerate(self.secondary_drivers or [], start=1):
-            _require_child_fields(
+            require_child_fields(
                 row,
                 SECONDARY_DRIVER_REQUIRED_FIELDS,
                 f"Secondary Drivers row #{index} has missing required fields.",
             )
 
         if cstr(self.document_type) == "8":
-            _require_fields(
+            require_fields(
                 self,
                 TYPE_8_RECIPIENT_REQUIRED_FIELDS,
                 "Recipient fields are required for Delivery Note type 8.",
@@ -410,40 +415,3 @@ def _save_response_status(
     doc.notify_update()
 
     return cleared_values
-
-
-def _to_nubefact_date(value: str) -> str:
-    return getdate(value).strftime("%d-%m-%Y")
-
-
-def _require_fields(doc: Document, fields: list[str], message: str):
-    missing = _get_missing_fields(doc, fields)
-
-    if missing:
-        frappe.throw(f"{message} Missing: {_format_missing_fields(doc, missing)}")
-
-
-def _require_child_fields(row: Document, fields: list[str], message: str):
-    missing = _get_missing_fields(row, fields)
-
-    if missing:
-        frappe.throw(f"{message} Missing: {_format_missing_fields(row, missing)}")
-
-
-def _format_missing_fields(doc: Document, fieldnames: list[str]) -> str:
-    labels: list[str] = []
-
-    for fieldname in fieldnames:
-        field = doc.meta.get_field(fieldname)
-        labels.append(cstr(field.label).strip() if field and field.label else fieldname)
-
-    return ", ".join(labels)
-
-
-def _get_missing_fields(doc: Document, fields: list[str]) -> list[str]:
-    return [
-        fieldname
-        for fieldname in fields
-        if not doc.get(fieldname)
-        or (isinstance(doc.get(fieldname), str) and not doc.get(fieldname).strip())
-    ]
