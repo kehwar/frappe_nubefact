@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_rename": 1,
  "creation": "2026-02-27 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -538,39 +539,12 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Stock Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "email": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Stock User",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "report": 1,
-   "role": "Sales User"
   }
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
  "show_title_field_in_link": 1,
- "track_changes": 1,
- "sort_field": "issue_date",
+ "sort_field": "modified",
  "sort_order": "DESC",
  "states": [
   {
