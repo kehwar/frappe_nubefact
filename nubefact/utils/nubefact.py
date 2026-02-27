@@ -15,8 +15,7 @@ def make_request(
     payload: dict[str, Any],
     branch: str,
     operation: str | None = None,
-    reference_doctype: str | None = None,
-    reference_name: str | None = None,
+    reference_delivery_note: str | None = None,
     timeout: int = 60,
 ) -> Any:
     if not isinstance(payload, dict):
@@ -78,8 +77,7 @@ def make_request(
             operation=operation,
             branch=branch_doc.name,
             api_route=url,
-            reference_doctype=reference_doctype,
-            reference_name=reference_name,
+            reference_delivery_note=reference_delivery_note,
             request_timestamp=request_timestamp,
             request_payload=payload,
             response_timestamp=response_timestamp,

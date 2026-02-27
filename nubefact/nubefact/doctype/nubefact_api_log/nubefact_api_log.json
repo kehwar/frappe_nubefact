@@ -7,8 +7,7 @@
   "request_details_section",
   "operation",
   "branch",
-  "reference_doctype",
-  "reference_name",
+  "reference_delivery_note",
   "column_break_requests",
   "api_route",
   "request_timestamp",
@@ -53,17 +52,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "reference_doctype",
+   "fieldname": "reference_delivery_note",
    "fieldtype": "Link",
-   "label": "Reference DocType",
-   "options": "DocType",
-   "read_only": 1
-  },
-  {
-   "fieldname": "reference_name",
-   "fieldtype": "Dynamic Link",
-   "label": "Reference Name",
-   "options": "reference_doctype",
+   "label": "Reference Delivery Note",
+   "options": "Nubefact Delivery Note",
    "read_only": 1
   },
   {

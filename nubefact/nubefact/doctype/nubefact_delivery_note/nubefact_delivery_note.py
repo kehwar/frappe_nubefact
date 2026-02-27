@@ -19,8 +19,7 @@ class NubefactDeliveryNote(Document):
             payload=payload,
             branch=self.branch,
             operation="generar_guia",
-            reference_doctype=self.doctype,
-            reference_name=self.name,
+            reference_delivery_note=self.name,
         )
         self._apply_generate_response(response)
 
@@ -283,8 +282,7 @@ def _refresh_sunat_status_doc(
         payload=doc._build_consult_payload(),
         branch=doc.branch,
         operation="consultar_guia",
-        reference_doctype=doc.doctype,
-        reference_name=doc.name,
+        reference_delivery_note=doc.name,
     )
     values = doc._extract_response_values(response)
 
