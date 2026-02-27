@@ -29,7 +29,11 @@ Minimal skill scaffold for NubeFact API work in this repository.
 
 ## References
 
-- `references/canonical-model.md` — **Frappe DocType specifications** for NubeFact API Settings, API Log, Invoice, and Delivery Note with complete field definitions.
+- `references/canonical-model.md` — Canonical model index and shared implementation notes.
+- `references/doctype-nubefact-branch.md` — `Nubefact Branch` DocType specification.
+- `references/doctype-nubefact-api-log.md` — `Nubefact API Log` DocType specification.
+- `references/doctype-nubefact-delivery-note.md` — `Nubefact Delivery Note` DocType specification.
+- `references/doctype-nubefact-invoice.md` — `Nubefact Invoice` DocType specification.
 - `references/json-v1-manual.md` — **JSON API v1 Manual** - Complete API documentation transcribed from PDF with operation details, field descriptions, and workflow guides.
 - `references/guia-remision-v1-manual.md` — **Guía de Remisión API Manual** - Complete delivery guide API documentation with two-step workflow, Remitente/Transportista flows, and SUNAT acceptance polling.
 
