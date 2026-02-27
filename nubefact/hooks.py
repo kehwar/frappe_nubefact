@@ -5,6 +5,7 @@ app_description = "Integration with Nubefact API"
 app_email = "erickkwr@gmail.com"
 app_license = "mit"
 
+safe_exec_globals = ["nubefact.utils.safe_exec.safe_exec_globals"]
 # Apps
 # ------------------
 
