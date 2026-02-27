@@ -22,15 +22,15 @@
 | Field Label | Field Name | NubeFact Field | Field Type | Required | Description |
 |------------|------------|----------------|------------|----------|-------------|
 | **Document Type** | | - | Section Break | | |
-| Document Type | `document_type` | `tipo_de_comprobante` | Select | Yes* | Options: 1 (Factura), 2 (Boleta), 3 (Nota de Crédito), 4 (Nota de Débito) |
+| Document Type | `document_type` | `tipo_de_comprobante` | Select | Yes* | `1` FACTURA, `2` BOLETA, `3` NOTA DE CRÉDITO, `4` NOTA DE DÉBITO |
 | Series | `series` | `serie` | Data | Yes* | 4-character series (F* for Factura, B* for Boleta) |
 | Number | `number` | `numero` | Int | Yes* | Sequential document number |
-| SUNAT Transaction Type | `sunat_transaction` | `sunat_transaction` | Select | No | SUNAT transaction code (1-35, including detraction/perception/tax-free codes) |
+| SUNAT Transaction Type | `sunat_transaction` | `sunat_transaction` | Select | No | Catálogo SUNAT/NubeFact de tipo de transacción (códigos `1` a `35`) |
 | | | - | Column Break | | |
 | Issue Date | `issue_date` | `fecha_de_emision` | Date | Yes* | Date of document issuance |
 | Due Date | `due_date` | `fecha_de_vencimiento` | Date | No | Payment due date |
 | **Client Information** | | - | Section Break | | |
-| Client Document Type | `client_document_type` | `cliente_tipo_de_documento` | Select | Yes* | Options include 6 (RUC), 1 (DNI), -, 4, 7, A, B, 0, G |
+| Client Document Type | `client_document_type` | `cliente_tipo_de_documento` | Select | Yes* | Catálogo tipo de documento del cliente (códigos `6`, `1`, `-`, `4`, `7`, `A`, `B`, `0`, `G`) |
 | Client Document Number | `client_document_number` | `cliente_numero_de_documento` | Data | Yes* | Client's identification number |
 | Client Name | `client_name` | `cliente_denominacion` | Data | Yes* | Client's full name or business name |
 | | | - | Column Break | | |
@@ -39,7 +39,7 @@
 | Client Email 1 | `client_email_1` | `cliente_email_1` | Data | No | Additional email address |
 | Client Email 2 | `client_email_2` | `cliente_email_2` | Data | No | Additional email address |
 | **Currency and Exchange** | | - | Section Break | | |
-| Currency | `currency` | `moneda` | Select | Yes* | API code: 1=PEN, 2=USD, 3=EUR, 4=GBP |
+| Currency | `currency` | `moneda` | Select | Yes* | `1` SOLES, `2` DÓLARES, `3` EUROS, `4` LIBRA ESTERLINA |
 | Exchange Rate | `exchange_rate` | `tipo_de_cambio` | Float | No | Required if currency = USD |
 | | | - | Column Break | | |
 | IGV Percentage | `igv_percentage` | `porcentaje_de_igv` | Float | Yes* | Default: 18.00 |
@@ -58,21 +58,21 @@
 | | | - | Column Break | | |
 | Total | `total` | `total` | Currency | Yes* | Final total including taxes |
 | **Perception and Retention** | | - | Section Break | | |
-| Perception Type | `perception_type` | `percepcion_tipo` | Data | No | SUNAT perception type code |
+| Perception Type | `perception_type` | `percepcion_tipo` | Data | No | Catálogo de percepción SUNAT/NubeFact (códigos `1`, `2`, `3`) |
 | Perception Base | `perception_base` | `percepcion_base_imponible` | Currency | No | Taxable base for perception |
 | Total Perception | `total_perception` | `total_percepcion` | Currency | No | Perception amount |
 | Total with Perception | `total_with_perception` | `total_incluido_percepcion` | Currency | No | Grand total with perception |
 | | | - | Column Break | | |
-| Withholding Type | `withholding_type` | `retencion_tipo` | Data | No | SUNAT withholding type code |
+| Withholding Type | `withholding_type` | `retencion_tipo` | Data | No | `1` TASA 3%, `2` TASA 6% |
 | Withholding Base | `withholding_base` | `retencion_base_imponible` | Currency | No | Taxable base for withholding |
 | Total Retention | `total_retention` | `total_retencion` | Currency | No | Retention amount |
 | Total Plastic Bag Tax | `total_plastic_bag_tax` | `total_impuestos_bolsas` | Currency | No | Plastic bag tax (ICBPER) |
 | **Detraction** | | - | Section Break | | |
 | Subject to Detraction | `subject_to_detraction` | `detraccion` | Check | No | Whether detraction applies |
-| Detraction Type | `detraction_type` | `detraccion_tipo` | Select | No | SUNAT detraction type code (001...099) |
+| Detraction Type | `detraction_type` | `detraccion_tipo` | Select | No | Catálogo SUNAT de detracción (códigos `001` a `099`, según catálogo habilitado) |
 | Detraction Total | `detraction_total` | `detraccion_total` | Currency | No | Total detraction amount |
 | Detraction Percentage | `detraction_percentage` | `detraccion_porcentaje` | Float | No | Detraction percentage |
-| Detraction Payment Method | `detraction_payment_method` | `medio_de_pago_detraccion` | Select | No | Detraction payment method code (001...999) |
+| Detraction Payment Method | `detraction_payment_method` | `medio_de_pago_detraccion` | Select | No | Catálogo SUNAT de medio de pago de detracción (códigos `001` a `999`, según catálogo habilitado) |
 | Origin Ubigeo | `origin_ubigeo` | `ubigeo_origen` | Data | No | Origin ubigeo (transport detraction) |
 | Origin Address | `origin_address` | `direccion_origen` | Data | No | Origin address |
 | Destination Ubigeo | `destination_ubigeo` | `ubigeo_destino` | Data | No | Destination ubigeo |
@@ -97,12 +97,12 @@
 | Sold Species Quantity | `sold_species_quantity` | `cantidad_especie_vendida` | Float | No | Species quantity |
 | Unloading Date | `unloading_date` | `fecha_de_descarga` | Date | No | Unloading date |
 | **Credit/Debit Note References** | | - | Section Break | | |
-| Base Document Type | `base_document_type` | `documento_que_se_modifica_tipo` | Select | No | Type of document being modified (1-4) |
+| Base Document Type | `base_document_type` | `documento_que_se_modifica_tipo` | Select | No | `1` FACTURAS ELECTRÓNICAS, `2` BOLETAS DE VENTA ELECTRÓNICAS |
 | Base Document Series | `base_document_series` | `documento_que_se_modifica_serie` | Data | No | Series of document being modified |
 | Base Document Number | `base_document_number` | `documento_que_se_modifica_numero` | Int | No | Number of document being modified |
 | | | - | Column Break | | |
-| Credit Note Reason | `credit_note_reason` | `tipo_de_nota_de_credito` | Select | No | SUNAT credit note reason (1-13) |
-| Debit Note Reason | `debit_note_reason` | `tipo_de_nota_de_debito` | Select | No | SUNAT debit note reason (1-5) |
+| Credit Note Reason | `credit_note_reason` | `tipo_de_nota_de_credito` | Select | No | Catálogo motivo de nota de crédito (códigos `1` a `13`) |
+| Debit Note Reason | `debit_note_reason` | `tipo_de_nota_de_debito` | Select | No | Catálogo motivo de nota de débito (códigos `1` a `5`) |
 | **Payment and Delivery** | | - | Section Break | | |
 | Payment Terms | `payment_terms` | `condiciones_de_pago` | Small Text | No | Payment conditions description |
 | Payment Method | `payment_method` | `medio_de_pago` | Data | No | Payment method description |
@@ -121,13 +121,13 @@
 | **Settings** | | - | Section Break | | |
 | Auto Send to SUNAT | `auto_send_to_sunat` | `enviar_automaticamente_a_la_sunat` | Check | No | Send immediately to SUNAT |
 | Auto Send to Client | `auto_send_to_client` | `enviar_automaticamente_al_cliente` | Check | No | Email PDF to client |
-| PDF Format | `pdf_format` | `formato_de_pdf` | Select | No | Options: "", "A4", "A5", "TICKET" |
+| PDF Format | `pdf_format` | `formato_de_pdf` | Select | No | `A4` FORMATO A4, `A5` FORMATO A5, `TICKET` FORMATO TICKET, `""` FORMATO POR DEFECTO |
 | Generated by Contingency | `generated_by_contingency` | `generado_por_contingencia` | Check | No | Contingency issuance flag |
 | Goods from Jungle | `goods_from_jungle` | `bienes_region_selva` | Check | No | Goods from jungle region |
 | Services from Jungle | `services_from_jungle` | `servicios_region_selva` | Check | No | Services from jungle region |
 | Nubecont Sale Type Code | `nubecont_sale_type_code` | `nubecont_tipo_de_venta_codigo` | Data | No | NubeCont sale type code (`nubecont_tipo_de_venta_codigo`) |
 | **SUNAT Status** | | - | Section Break | | |
-| Status | `status` | - | Select | No | Internal document lifecycle: Draft, Pending Response, Accepted, Voided, Error |
+| Status | `status` | - | Select | No | `Draft`, `Pending Response`, `Accepted`, `Voided`, `Error` |
 | Accepted by SUNAT | `accepted_by_sunat` | `aceptada_por_sunat` | Check | No | Last known SUNAT acceptance flag |
 | Last SUNAT Check | `last_sunat_check` | - | Datetime | No | Last status refresh timestamp |
 | SUNAT Response Code | `sunat_response_code` | `sunat_responsecode` | Data | No | SUNAT response code |
@@ -146,7 +146,7 @@
 | Void Date | `void_date` | - | Date | No | Date of void |
 | Void Reason | `void_reason` | `motivo` | Small Text | No | Reason for voiding |
 | | | - | Column Break | | |
-| Void Status | `void_status` | - | Select | No | Options: Pending, Accepted, Rejected |
+| Void Status | `void_status` | - | Select | No | `Pending`, `Accepted`, `Rejected` |
 | Void Ticket | `void_ticket` | `sunat_ticket_numero` | Data | No | SUNAT void ticket number |
 
 ## Child Table: Nubefact Invoice Item
@@ -162,22 +162,22 @@
 | Unit Price with Tax | `unit_price_with_tax` | `precio_unitario` | Currency | Yes* | Unit price including taxes |
 | Discount | `discount` | `descuento` | Currency | No | Discount per item |
 | Line Total | `line_total` | `subtotal` | Currency | Yes* | Line subtotal without taxes |
-| IGV Type | `igv_type` | `tipo_de_igv` | Select | Yes* | Includes 1-17 and 20 per NubeFact catalog |
-| IVAP Type | `ivap_type` | `tipo_de_ivap` | Select | No | 17=IVAP gravado, 101=IVAP gratuito |
+| IGV Type | `igv_type` | `tipo_de_igv` | Select | Yes* | Catálogo de tipo de IGV (códigos `1` a `17` y `20`) |
+| IVAP Type | `ivap_type` | `tipo_de_ivap` | Select | No | `17` IVAP Gravado, `101` IVAP Gratuito |
 | IGV | `igv` | `igv` | Currency | Yes* | IGV amount for this line |
 | Plastic Bag Tax | `plastic_bag_tax` | `impuesto_bolsas` | Currency | No | ICBPER amount for the line |
 | Line Total with Tax | `line_total_with_tax` | `total` | Currency | Yes* | Line total including taxes |
 | Downpayment Regularization | `downpayment_regularization` | `anticipo_regularizacion` | Check | No | Is downpayment regularization |
 | Downpayment Document Series | `downpayment_document_series` | `anticipo_documento_serie` | Data | No | Downpayment document series |
 | Downpayment Document Number | `downpayment_document_number` | `anticipo_documento_numero` | Data | No | Downpayment document number |
-| ISC Type | `isc_type` | `tipo_de_isc` | Select | No | ISC type code (1, 2, 3) |
+| ISC Type | `isc_type` | `tipo_de_isc` | Select | No | `1` Sistema al valor, `2` Sistema específico, `3` Sistema de precios de venta al público |
 | ISC | `isc` | `isc` | Currency | No | ISC amount for the line |
 
 ## Child Table: Nubefact Invoice Delivery Reference
 
 | Field Label | Field Name | NubeFact Field | Field Type | Required | Description |
 |------------|------------|----------------|------------|----------|-------------|
-| Guide Type | `guide_type` | `guia_tipo` | Select | Yes* | 1=Guía remitente, 2=Guía transportista |
+| Guide Type | `guide_type` | `guia_tipo` | Select | Yes* | `1` GUÍA DE REMISIÓN REMITENTE, `2` GUÍA DE REMISIÓN TRANSPORTISTA |
 | Guide Series and Number | `guide_series_number` | `guia_serie_numero` | Data | Yes* | Format: "0001-23" |
 
 ## Child Table: Nubefact Invoice Payment Installment
