@@ -1,8 +1,0 @@
-{
-  // Error message describing what went wrong
-  "errors": "El archivo enviado no cumple con el formato establecido",
-
-  // Error code number for programmatic error handling
-  // Common codes: 20 = format error, 21 = validation error, etc.
-  "codigo": 20
-}
