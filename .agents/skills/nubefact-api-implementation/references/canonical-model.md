@@ -12,7 +12,7 @@ This index describes the canonical NubeFact Frappe model and links to per-DocTyp
 | Nubefact API Log | ✅ Implemented | Request/response logging active. Uses `status` (`Success`/`Error`) and script-based naming from `request_timestamp`. Uses `branch` and `reference_delivery_note` links (not generic dynamic link). |
 | Request API Utility (`make_request`) | ✅ Implemented | Sends POST requests, handles errors, and writes API log entries. |
 | Nubefact Delivery Note | ✅ Implemented | DocType with submit/query flow active. `send_to_nubefact`, `refresh_sunat_status`, and `poll_pending_delivery_notes` are fully implemented. |
-| Nubefact Invoice | ❌ Not Implemented | Canonical model only. |
+| Nubefact Invoice | ✅ Implemented | Submit/query/void flow active. `send_to_nubefact`, `refresh_sunat_status`, `void_in_nubefact`, and `poll_pending_invoices` are implemented. |
 
 ---
 

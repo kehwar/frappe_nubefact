@@ -237,5 +237,5 @@
 - Sales User: Read only
 
 ## Implementation Status
-- ✅ Schema implemented in DocType JSON files.
-- 🚧 Runtime API methods (`send_to_nubefact`, `refresh_sunat_status`, `void_in_nubefact`) remain application-level implementation work.
+- ✅ Implemented.
+- Runtime methods are active: `send_to_nubefact`, `refresh_sunat_status`, `void_in_nubefact`, and `poll_pending_invoices`.

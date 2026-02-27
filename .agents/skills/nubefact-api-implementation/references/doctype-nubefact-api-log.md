@@ -12,6 +12,7 @@
 | Operation | `operation` | Select | Yes | Options: generar_comprobante, consultar_comprobante, generar_anulacion, consultar_anulacion, generar_guia, consultar_guia |
 | Branch | `branch` | Link | No | Nubefact Branch used for this API call |
 | Reference Delivery Note | `reference_delivery_note` | Link | No | Nubefact Delivery Note this log relates to |
+| Reference Invoice | `reference_invoice` | Link | No | Nubefact Invoice this log relates to |
 | API Route | `api_route` | Data | No | Effective request route/URL used for API call |
 | Request Timestamp | `request_timestamp` | Datetime | Yes | When the request was sent |
 | **Response Details** | | Section Break | | |
@@ -43,4 +44,4 @@
 ## Implementation Status
 - ✅ Implemented.
 - `create_api_log(...)` is used by `make_request(...)` to persist all API attempts.
-- Uses specific `branch` and `reference_delivery_note` links instead of a generic dynamic link.
+- Uses specific `branch`, `reference_delivery_note`, and `reference_invoice` links instead of a generic dynamic link.

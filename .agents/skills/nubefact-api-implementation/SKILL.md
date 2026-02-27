@@ -43,8 +43,8 @@ Minimal skill scaffold for NubeFact API work in this repository.
 All example files in `assets/` folder:
 - `cpe-example-*.json` — CPE request/response examples (see `references/cpe-examples.md`)
 - `gre-example-*.json` — GRE request/response examples (see `references/gre-examples.md`)
-- `gre-xml.xml` — sample SUNAT XML generated for GRE
-- `gre-cdr.xml` — sample SUNAT CDR (Constancia de Recepción) XML response
+- `gre-example-xml.xml` — sample SUNAT XML generated for GRE
+- `gre-example-cdr.xml` — sample SUNAT CDR (Constancia de Recepción) XML response
 - `cpe-manual-google-doc.{md,pdf}` — JSON API v1 source material
 - `gre-manual-google-doc.{md,pdf}` — Guía de Remisión API source material
 
