@@ -104,7 +104,11 @@
   "void_ticket"
  ],
  "fields": [
-  {"fieldname": "document_section", "fieldtype": "Section Break", "label": "Document Type"},
+  {
+   "fieldname": "document_section",
+   "fieldtype": "Section Break",
+   "label": "Document Type"
+  },
   {
    "fieldname": "title",
    "fieldtype": "Data",
@@ -119,8 +123,19 @@
    "label": "Document Type",
    "options": "1\n2\n3\n4"
   },
-  {"fieldname": "series", "fieldtype": "Data", "in_list_view": 1, "label": "Series"},
-  {"fieldname": "number", "fieldtype": "Int", "in_list_view": 1, "label": "Number", "no_copy": 1},
+  {
+   "fieldname": "series",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Series"
+  },
+  {
+   "fieldname": "number",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Number",
+   "no_copy": 1
+  },
   {
    "default": "Draft",
    "fieldname": "status",
@@ -131,116 +146,510 @@
    "options": "Draft\nPending Response\nAccepted\nVoided\nError",
    "read_only": 1
   },
-  {"fieldname": "column_break_document", "fieldtype": "Column Break"},
-  {"fieldname": "issue_date", "fieldtype": "Date", "in_list_view": 1, "label": "Issue Date"},
-  {"fieldname": "due_date", "fieldtype": "Date", "label": "Due Date"},
+  {
+   "fieldname": "column_break_document",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Issue Date"
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date"
+  },
   {
    "fieldname": "sunat_transaction",
    "fieldtype": "Select",
    "label": "SUNAT Transaction Type",
    "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30"
   },
-  {"fieldname": "branch", "fieldtype": "Link", "label": "Branch", "options": "Nubefact Branch"},
-
-  {"fieldname": "client_section", "fieldtype": "Section Break", "label": "Client Information"},
-  {"fieldname": "client_document_type", "fieldtype": "Select", "label": "Client Document Type", "options": "6\n1\n4\n7\nA\n0"},
-  {"fieldname": "client_document_number", "fieldtype": "Data", "label": "Client Document Number"},
-  {"fieldname": "client_name", "fieldtype": "Data", "label": "Client Name"},
-  {"fieldname": "column_break_client", "fieldtype": "Column Break"},
-  {"fieldname": "client_address", "fieldtype": "Small Text", "label": "Client Address"},
-  {"fieldname": "client_email", "fieldtype": "Data", "label": "Client Email"},
-  {"fieldname": "client_email_1", "fieldtype": "Data", "label": "Client Email 1"},
-  {"fieldname": "client_email_2", "fieldtype": "Data", "label": "Client Email 2"},
-
-  {"fieldname": "currency_section", "fieldtype": "Section Break", "label": "Currency and Exchange"},
-  {"fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency"},
-  {"fieldname": "exchange_rate", "fieldtype": "Float", "label": "Exchange Rate"},
-  {"default": "18", "fieldname": "igv_percentage", "fieldtype": "Float", "label": "IGV Percentage"},
-
-  {"fieldname": "amounts_section", "fieldtype": "Section Break", "label": "Amounts"},
-  {"fieldname": "total_taxable", "fieldtype": "Currency", "label": "Total Taxable"},
-  {"fieldname": "total_unaffected", "fieldtype": "Currency", "label": "Total Unaffected"},
-  {"fieldname": "total_exempt", "fieldtype": "Currency", "label": "Total Exempt"},
-  {"fieldname": "total_igv", "fieldtype": "Currency", "label": "Total IGV"},
-  {"fieldname": "column_break_amounts", "fieldtype": "Column Break"},
-  {"fieldname": "global_discount", "fieldtype": "Currency", "label": "Global Discount"},
-  {"fieldname": "total_discount", "fieldtype": "Currency", "label": "Total Discount"},
-  {"fieldname": "total_advance", "fieldtype": "Currency", "label": "Total Advance"},
-  {"fieldname": "total_free", "fieldtype": "Currency", "label": "Total Free"},
-  {"fieldname": "total_other_charges", "fieldtype": "Currency", "label": "Total Other Charges"},
-  {"fieldname": "total", "fieldtype": "Currency", "label": "Total"},
-
-  {"fieldname": "perception_section", "fieldtype": "Section Break", "label": "Perception and Retention"},
-  {"fieldname": "perception_type", "fieldtype": "Data", "label": "Perception Type"},
-  {"fieldname": "perception_base", "fieldtype": "Currency", "label": "Perception Base"},
-  {"fieldname": "total_perception", "fieldtype": "Currency", "label": "Total Perception"},
-  {"fieldname": "total_with_perception", "fieldtype": "Currency", "label": "Total with Perception"},
-  {"fieldname": "column_break_perception", "fieldtype": "Column Break"},
-  {"fieldname": "retention_type", "fieldtype": "Data", "label": "Retention Type"},
-  {"fieldname": "retention_base", "fieldtype": "Currency", "label": "Retention Base"},
-  {"fieldname": "total_retention", "fieldtype": "Currency", "label": "Total Retention"},
-  {"fieldname": "total_plastic_bag_tax", "fieldtype": "Currency", "label": "Total Plastic Bag Tax"},
-
-  {"fieldname": "detraction_section", "fieldtype": "Section Break", "label": "Detraction"},
-  {"default": "0", "fieldname": "subject_to_detraction", "fieldtype": "Check", "label": "Subject to Detraction"},
-
-  {"fieldname": "note_reference_section", "fieldtype": "Section Break", "label": "Credit/Debit Note References"},
-  {"fieldname": "modifies_document_type", "fieldtype": "Select", "label": "Modifies Document Type", "options": "1\n2\n3\n4"},
-  {"fieldname": "modifies_series", "fieldtype": "Data", "label": "Modifies Series"},
-  {"fieldname": "modifies_number", "fieldtype": "Int", "label": "Modifies Number"},
-  {"fieldname": "column_break_note_reference", "fieldtype": "Column Break"},
-  {"fieldname": "credit_note_reason", "fieldtype": "Select", "label": "Credit Note Reason", "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13"},
-  {"fieldname": "debit_note_reason", "fieldtype": "Select", "label": "Debit Note Reason", "options": "\n1\n2\n3"},
-
-  {"fieldname": "payment_section", "fieldtype": "Section Break", "label": "Payment and Delivery"},
-  {"fieldname": "payment_terms", "fieldtype": "Small Text", "label": "Payment Terms"},
-  {"fieldname": "payment_method", "fieldtype": "Data", "label": "Payment Method"},
-  {"fieldname": "vehicle_license_plate", "fieldtype": "Data", "label": "Vehicle License Plate"},
-  {"fieldname": "purchase_order", "fieldtype": "Data", "label": "Purchase Order"},
-
-  {"fieldname": "items_section", "fieldtype": "Section Break", "label": "Items"},
-  {"fieldname": "items", "fieldtype": "Table", "label": "Items", "options": "Nubefact Invoice Item"},
-
-  {"fieldname": "guides_section", "fieldtype": "Section Break", "label": "Related Guides"},
-  {"fieldname": "delivery_guides", "fieldtype": "Table", "label": "Delivery Guides", "options": "Nubefact Invoice Delivery Reference"},
-
-  {"fieldname": "credit_sale_section", "fieldtype": "Section Break", "label": "Credit Sale"},
-  {"fieldname": "credit_installments", "fieldtype": "Table", "label": "Credit Sale Installments", "options": "Nubefact Invoice Payment Installment"},
-
-  {"fieldname": "additional_info_section", "fieldtype": "Section Break", "label": "Additional Information"},
-  {"fieldname": "observations", "fieldtype": "Text", "label": "Observations"},
-
-  {"fieldname": "more_info_tab", "fieldtype": "Tab Break", "label": "More Information"},
-  {"fieldname": "settings_section", "fieldtype": "Section Break", "label": "Settings"},
-  {"default": "1", "fieldname": "auto_send_to_sunat", "fieldtype": "Check", "label": "Auto Send to SUNAT"},
-  {"default": "0", "fieldname": "auto_send_to_client", "fieldtype": "Check", "label": "Auto Send to Client"},
-  {"default": "0", "fieldname": "skip_required_fields_validation", "fieldtype": "Check", "label": "Skip Required Fields Validation"},
-  {"fieldname": "pdf_format", "fieldtype": "Select", "label": "PDF Format", "options": "\nA4\nA5\nTICKET"},
-  {"default": "0", "fieldname": "generated_by_contingency", "fieldtype": "Check", "label": "Generated by Contingency"},
-  {"default": "0", "fieldname": "goods_from_jungle", "fieldtype": "Check", "label": "Goods from Jungle"},
-  {"default": "0", "fieldname": "services_from_jungle", "fieldtype": "Check", "label": "Services from Jungle"},
-
-  {"fieldname": "sunat_section", "fieldtype": "Section Break", "label": "SUNAT Status"},
-  {"default": "0", "fieldname": "accepted_by_sunat", "fieldtype": "Check", "label": "Accepted by SUNAT", "no_copy": 1, "read_only": 1},
-  {"fieldname": "last_sunat_check", "fieldtype": "Datetime", "label": "Last SUNAT Check", "no_copy": 1, "read_only": 1},
-  {"fieldname": "sunat_response_code", "fieldtype": "Data", "label": "SUNAT Response Code", "no_copy": 1, "read_only": 1},
-  {"fieldname": "sunat_response_message", "fieldtype": "Text", "label": "SUNAT Response Message", "no_copy": 1, "read_only": 1},
-  {"fieldname": "sunat_note", "fieldtype": "Text", "label": "SUNAT Note", "no_copy": 1, "read_only": 1},
-  {"fieldname": "sunat_soap_error", "fieldtype": "Text", "label": "SUNAT SOAP Error", "no_copy": 1, "read_only": 1},
-  {"fieldname": "error_message", "fieldtype": "Text", "label": "Error Message", "no_copy": 1, "read_only": 1},
-  {"fieldname": "column_break_sunat", "fieldtype": "Column Break"},
-  {"fieldname": "link_url", "fieldtype": "Data", "label": "Link URL", "no_copy": 1, "options": "URL", "read_only": 1},
-  {"fieldname": "pdf_url", "fieldtype": "Data", "label": "PDF URL", "no_copy": 1, "options": "URL", "read_only": 1},
-  {"fieldname": "xml_url", "fieldtype": "Data", "label": "XML URL", "no_copy": 1, "options": "URL", "read_only": 1},
-  {"fieldname": "cdr_url", "fieldtype": "Data", "label": "CDR URL", "no_copy": 1, "options": "URL", "read_only": 1},
-  {"fieldname": "qr_url", "fieldtype": "Data", "label": "QR URL", "no_copy": 1, "read_only": 1},
-
-  {"fieldname": "void_section", "fieldtype": "Section Break", "label": "Void Information"},
-  {"default": "0", "fieldname": "voided", "fieldtype": "Check", "label": "Voided", "read_only": 1},
-  {"fieldname": "void_date", "fieldtype": "Date", "label": "Void Date", "read_only": 1},
-  {"fieldname": "void_reason", "fieldtype": "Small Text", "label": "Void Reason", "read_only": 1},
-  {"fieldname": "void_status", "fieldtype": "Select", "label": "Void Status", "options": "\nPending\nAccepted\nRejected", "read_only": 1},
-  {"fieldname": "void_ticket", "fieldtype": "Data", "label": "Void Ticket", "read_only": 1}
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Nubefact Branch"
+  },
+  {
+   "fieldname": "client_section",
+   "fieldtype": "Section Break",
+   "label": "Client Information"
+  },
+  {
+   "fieldname": "client_document_type",
+   "fieldtype": "Select",
+   "label": "Client Document Type",
+   "options": "6\n1\n4\n7\nA\n0"
+  },
+  {
+   "fieldname": "client_document_number",
+   "fieldtype": "Data",
+   "label": "Client Document Number"
+  },
+  {
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "label": "Client Name"
+  },
+  {
+   "fieldname": "column_break_client",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "client_address",
+   "fieldtype": "Small Text",
+   "label": "Client Address"
+  },
+  {
+   "fieldname": "client_email",
+   "fieldtype": "Data",
+   "label": "Client Email"
+  },
+  {
+   "fieldname": "client_email_1",
+   "fieldtype": "Data",
+   "label": "Client Email 1"
+  },
+  {
+   "fieldname": "client_email_2",
+   "fieldtype": "Data",
+   "label": "Client Email 2"
+  },
+  {
+   "fieldname": "currency_section",
+   "fieldtype": "Section Break",
+   "label": "Currency and Exchange"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Data",
+   "label": "Currency"
+  },
+  {
+   "fieldname": "exchange_rate",
+   "fieldtype": "Float",
+   "label": "Exchange Rate"
+  },
+  {
+   "default": "18",
+   "fieldname": "igv_percentage",
+   "fieldtype": "Float",
+   "label": "IGV Percentage"
+  },
+  {
+   "fieldname": "amounts_section",
+   "fieldtype": "Section Break",
+   "label": "Amounts"
+  },
+  {
+   "fieldname": "total_taxable",
+   "fieldtype": "Currency",
+   "label": "Total Taxable"
+  },
+  {
+   "fieldname": "total_unaffected",
+   "fieldtype": "Currency",
+   "label": "Total Unaffected"
+  },
+  {
+   "fieldname": "total_exempt",
+   "fieldtype": "Currency",
+   "label": "Total Exempt"
+  },
+  {
+   "fieldname": "total_igv",
+   "fieldtype": "Currency",
+   "label": "Total IGV"
+  },
+  {
+   "fieldname": "column_break_amounts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "global_discount",
+   "fieldtype": "Currency",
+   "label": "Global Discount"
+  },
+  {
+   "fieldname": "total_discount",
+   "fieldtype": "Currency",
+   "label": "Total Discount"
+  },
+  {
+   "fieldname": "total_advance",
+   "fieldtype": "Currency",
+   "label": "Total Advance"
+  },
+  {
+   "fieldname": "total_free",
+   "fieldtype": "Currency",
+   "label": "Total Free"
+  },
+  {
+   "fieldname": "total_other_charges",
+   "fieldtype": "Currency",
+   "label": "Total Other Charges"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total"
+  },
+  {
+   "fieldname": "perception_section",
+   "fieldtype": "Section Break",
+   "label": "Perception and Retention"
+  },
+  {
+   "fieldname": "perception_type",
+   "fieldtype": "Data",
+   "label": "Perception Type"
+  },
+  {
+   "fieldname": "perception_base",
+   "fieldtype": "Currency",
+   "label": "Perception Base"
+  },
+  {
+   "fieldname": "total_perception",
+   "fieldtype": "Currency",
+   "label": "Total Perception"
+  },
+  {
+   "fieldname": "total_with_perception",
+   "fieldtype": "Currency",
+   "label": "Total with Perception"
+  },
+  {
+   "fieldname": "column_break_perception",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "retention_type",
+   "fieldtype": "Data",
+   "label": "Retention Type"
+  },
+  {
+   "fieldname": "retention_base",
+   "fieldtype": "Currency",
+   "label": "Retention Base"
+  },
+  {
+   "fieldname": "total_retention",
+   "fieldtype": "Currency",
+   "label": "Total Retention"
+  },
+  {
+   "fieldname": "total_plastic_bag_tax",
+   "fieldtype": "Currency",
+   "label": "Total Plastic Bag Tax"
+  },
+  {
+   "fieldname": "detraction_section",
+   "fieldtype": "Section Break",
+   "label": "Detraction"
+  },
+  {
+   "default": "0",
+   "fieldname": "subject_to_detraction",
+   "fieldtype": "Check",
+   "label": "Subject to Detraction"
+  },
+  {
+   "fieldname": "note_reference_section",
+   "fieldtype": "Section Break",
+   "label": "Credit/Debit Note References"
+  },
+  {
+   "fieldname": "modifies_document_type",
+   "fieldtype": "Select",
+   "label": "Modifies Document Type",
+   "options": "1\n2\n3\n4"
+  },
+  {
+   "fieldname": "modifies_series",
+   "fieldtype": "Data",
+   "label": "Modifies Series"
+  },
+  {
+   "fieldname": "modifies_number",
+   "fieldtype": "Int",
+   "label": "Modifies Number"
+  },
+  {
+   "fieldname": "column_break_note_reference",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "credit_note_reason",
+   "fieldtype": "Select",
+   "label": "Credit Note Reason",
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13"
+  },
+  {
+   "fieldname": "debit_note_reason",
+   "fieldtype": "Select",
+   "label": "Debit Note Reason",
+   "options": "\n1\n2\n3"
+  },
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment and Delivery"
+  },
+  {
+   "fieldname": "payment_terms",
+   "fieldtype": "Small Text",
+   "label": "Payment Terms"
+  },
+  {
+   "fieldname": "payment_method",
+   "fieldtype": "Data",
+   "label": "Payment Method"
+  },
+  {
+   "fieldname": "vehicle_license_plate",
+   "fieldtype": "Data",
+   "label": "Vehicle License Plate"
+  },
+  {
+   "fieldname": "purchase_order",
+   "fieldtype": "Data",
+   "label": "Purchase Order"
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Nubefact Invoice Item"
+  },
+  {
+   "fieldname": "guides_section",
+   "fieldtype": "Section Break",
+   "label": "Related Guides"
+  },
+  {
+   "fieldname": "delivery_guides",
+   "fieldtype": "Table",
+   "label": "Delivery Guides",
+   "options": "Nubefact Invoice Delivery Reference"
+  },
+  {
+   "fieldname": "credit_sale_section",
+   "fieldtype": "Section Break",
+   "label": "Credit Sale"
+  },
+  {
+   "fieldname": "credit_installments",
+   "fieldtype": "Table",
+   "label": "Credit Sale Installments",
+   "options": "Nubefact Invoice Payment Installment"
+  },
+  {
+   "fieldname": "additional_info_section",
+   "fieldtype": "Section Break",
+   "label": "Additional Information"
+  },
+  {
+   "fieldname": "observations",
+   "fieldtype": "Text",
+   "label": "Observations"
+  },
+  {
+   "fieldname": "more_info_tab",
+   "fieldtype": "Tab Break",
+   "label": "More Information"
+  },
+  {
+   "fieldname": "settings_section",
+   "fieldtype": "Section Break",
+   "label": "Settings"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_send_to_sunat",
+   "fieldtype": "Check",
+   "label": "Auto Send to SUNAT"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_send_to_client",
+   "fieldtype": "Check",
+   "label": "Auto Send to Client"
+  },
+  {
+   "default": "0",
+   "fieldname": "skip_required_fields_validation",
+   "fieldtype": "Check",
+   "label": "Skip Required Fields Validation"
+  },
+  {
+   "fieldname": "pdf_format",
+   "fieldtype": "Select",
+   "label": "PDF Format",
+   "options": "\nA4\nA5\nTICKET"
+  },
+  {
+   "default": "0",
+   "fieldname": "generated_by_contingency",
+   "fieldtype": "Check",
+   "label": "Generated by Contingency"
+  },
+  {
+   "default": "0",
+   "fieldname": "goods_from_jungle",
+   "fieldtype": "Check",
+   "label": "Goods from Jungle"
+  },
+  {
+   "default": "0",
+   "fieldname": "services_from_jungle",
+   "fieldtype": "Check",
+   "label": "Services from Jungle"
+  },
+  {
+   "fieldname": "sunat_section",
+   "fieldtype": "Section Break",
+   "label": "SUNAT Status"
+  },
+  {
+   "default": "0",
+   "fieldname": "accepted_by_sunat",
+   "fieldtype": "Check",
+   "label": "Accepted by SUNAT",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sunat_check",
+   "fieldtype": "Datetime",
+   "label": "Last SUNAT Check",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_response_code",
+   "fieldtype": "Data",
+   "label": "SUNAT Response Code",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_response_message",
+   "fieldtype": "Text",
+   "label": "SUNAT Response Message",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_note",
+   "fieldtype": "Text",
+   "label": "SUNAT Note",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_soap_error",
+   "fieldtype": "Text",
+   "label": "SUNAT SOAP Error",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Text",
+   "label": "Error Message",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sunat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "link_url",
+   "fieldtype": "Data",
+   "label": "Link URL",
+   "no_copy": 1,
+   "options": "URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pdf_url",
+   "fieldtype": "Data",
+   "label": "PDF URL",
+   "no_copy": 1,
+   "options": "URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "xml_url",
+   "fieldtype": "Data",
+   "label": "XML URL",
+   "no_copy": 1,
+   "options": "URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cdr_url",
+   "fieldtype": "Data",
+   "label": "CDR URL",
+   "no_copy": 1,
+   "options": "URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qr_url",
+   "fieldtype": "Data",
+   "label": "QR URL",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "void_section",
+   "fieldtype": "Section Break",
+   "label": "Void Information"
+  },
+  {
+   "default": "0",
+   "fieldname": "voided",
+   "fieldtype": "Check",
+   "label": "Voided",
+   "read_only": 1
+  },
+  {
+   "fieldname": "void_date",
+   "fieldtype": "Date",
+   "label": "Void Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "void_reason",
+   "fieldtype": "Small Text",
+   "label": "Void Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "void_status",
+   "fieldtype": "Select",
+   "label": "Void Status",
+   "options": "\nPending\nAccepted\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "void_ticket",
+   "fieldtype": "Data",
+   "label": "Void Ticket",
+   "read_only": 1
+  }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
@@ -251,7 +660,7 @@
    "link_fieldname": "reference_invoice"
   }
  ],
- "modified": "2026-02-27 00:00:00",
+ "modified": "2026-02-27 13:50:32.415049",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Invoice",
@@ -288,11 +697,26 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [
-  {"color": "Blue", "title": "Draft"},
-  {"color": "Orange", "title": "Pending Response"},
-  {"color": "Green", "title": "Accepted"},
-  {"color": "Gray", "title": "Voided"},
-  {"color": "Red", "title": "Error"}
+  {
+   "color": "Blue",
+   "title": "Draft"
+  },
+  {
+   "color": "Orange",
+   "title": "Pending Response"
+  },
+  {
+   "color": "Green",
+   "title": "Accepted"
+  },
+  {
+   "color": "Gray",
+   "title": "Voided"
+  },
+  {
+   "color": "Red",
+   "title": "Error"
+  }
  ],
  "title_field": "title",
  "track_changes": 1

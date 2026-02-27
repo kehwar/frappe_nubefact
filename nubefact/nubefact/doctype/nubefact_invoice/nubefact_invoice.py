@@ -95,12 +95,8 @@ class NubefactInvoice(Document):
             "porcentaje_de_igv": cstr(self.igv_percentage),
             "total_igv": cstr(self.total_igv),
             "total": cstr(self.total),
-            "enviar_automaticamente_a_la_sunat": (
-                "true" if cint(self.auto_send_to_sunat) else "false"
-            ),
-            "enviar_automaticamente_al_cliente": (
-                "true" if cint(self.auto_send_to_client) else "false"
-            ),
+            "enviar_automaticamente_a_la_sunat": bool(cint(self.auto_send_to_sunat)),
+            "enviar_automaticamente_al_cliente": bool(cint(self.auto_send_to_client)),
             "formato_de_pdf": cstr(self.pdf_format or ""),
             "items": [
                 omit_empty_values(
@@ -117,8 +113,8 @@ class NubefactInvoice(Document):
                         "tipo_de_igv": cstr(row.igv_type),
                         "igv": cstr(row.igv),
                         "total": cstr(row.total),
-                        "anticipo_regularizacion": (
-                            "true" if cint(row.advance_regularization) else "false"
+                        "anticipo_regularizacion": bool(
+                            cint(row.advance_regularization)
                         ),
                         "anticipo_documento_serie": row.advance_document_series,
                         "anticipo_documento_numero": row.advance_document_number,
@@ -132,7 +128,7 @@ class NubefactInvoice(Document):
             omit_empty_values(
                 {
                     "numero": self.number,
-                    "tipo_de_operacion": cstr(self.sunat_transaction),
+                    "sunat_transaction": cstr(self.sunat_transaction),
                     "fecha_de_vencimiento": (
                         to_nubefact_date(self.due_date) if self.due_date else None
                     ),
@@ -155,10 +151,8 @@ class NubefactInvoice(Document):
                     "retencion_tipo": self.retention_type,
                     "retencion_base_imponible": cstr(self.retention_base),
                     "total_retencion": cstr(self.total_retention),
-                    "impuesto_bolsa_plastica": cstr(self.total_plastic_bag_tax),
-                    "detraccion": (
-                        "true" if cint(self.subject_to_detraction) else "false"
-                    ),
+                    "total_impuestos_bolsas": cstr(self.total_plastic_bag_tax),
+                    "detraccion": bool(cint(self.subject_to_detraction)),
                     "tipo_de_nota_de_credito": cstr(self.credit_note_reason),
                     "tipo_de_nota_de_debito": cstr(self.debit_note_reason),
                     "condiciones_de_pago": self.payment_terms,
@@ -167,15 +161,11 @@ class NubefactInvoice(Document):
                     "orden_compra_servicio": self.purchase_order,
                     "observaciones": self.observations,
                     "codigo_unico": self.name,
-                    "generado_por_contingencia": (
-                        "true" if cint(self.generated_by_contingency) else "false"
+                    "generado_por_contingencia": bool(
+                        cint(self.generated_by_contingency)
                     ),
-                    "bienes_region_selva": (
-                        "true" if cint(self.goods_from_jungle) else "false"
-                    ),
-                    "servicios_region_selva": (
-                        "true" if cint(self.services_from_jungle) else "false"
-                    ),
+                    "bienes_region_selva": bool(cint(self.goods_from_jungle)),
+                    "servicios_region_selva": bool(cint(self.services_from_jungle)),
                 }
             )
         )
@@ -183,9 +173,9 @@ class NubefactInvoice(Document):
         if cstr(self.document_type) in {"3", "4"}:
             payload.update(
                 {
-                    "tipo_de_comprobante_modificado": cstr(self.modifies_document_type),
-                    "serie_comprobante_modificado": self.modifies_series,
-                    "numero_comprobante_modificado": cstr(self.modifies_number),
+                    "documento_que_se_modifica_tipo": cstr(self.modifies_document_type),
+                    "documento_que_se_modifica_serie": self.modifies_series,
+                    "documento_que_se_modifica_numero": cstr(self.modifies_number),
                 }
             )
 

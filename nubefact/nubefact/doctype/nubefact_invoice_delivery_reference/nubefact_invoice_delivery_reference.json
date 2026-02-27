@@ -1,6 +1,6 @@
 {
  "actions": [],
- "creation": "2026-02-27 00:00:00.000000",
+ "creation": "2026-02-27 00:00:00",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -9,14 +9,25 @@
   "guide_series_number"
  ],
  "fields": [
-  {"fieldname": "guide_type", "fieldtype": "Select", "in_list_view": 1, "label": "Guide Type", "options": "09\n31"},
-  {"fieldname": "guide_series_number", "fieldtype": "Data", "in_list_view": 1, "label": "Guide Series and Number"}
+  {
+   "fieldname": "guide_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Guide Type",
+    "options": "1\n09\n31"
+  },
+  {
+   "fieldname": "guide_series_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Guide Series and Number"
+  }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-02-27 00:00:00.000000",
+ "modified": "2026-02-27 13:54:35.853305",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Invoice Delivery Reference",
