@@ -34,7 +34,7 @@ Minimal skill scaffold for NubeFact API work in this repository.
 - `references/gre-examples.md` — GRE examples index grouped by document/operation.
 - `references/doctype-nubefact-branch.md` — `Nubefact Branch` DocType specification.
 - `references/doctype-nubefact-api-log.md` — `Nubefact API Log` DocType specification.
-- `references/doctype-nubefact-delivery-note.md` — `Nubefact Delivery Note` DocType specification.
+- `references/doctype-nubefact-delivery-note-schema.md` — `Nubefact Delivery Note` DocType schema/specification.
 - `references/doctype-nubefact-invoice-schema.md` — `Nubefact Invoice` DocType schema/specification.
 - `references/doctype-nubefact-invoice-guide.md` — `Nubefact Invoice` workflow guide (how to fill fields correctly by scenario).
 
