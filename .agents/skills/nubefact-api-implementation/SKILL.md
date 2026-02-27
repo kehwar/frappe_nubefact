@@ -30,6 +30,8 @@ Minimal skill scaffold for NubeFact API work in this repository.
 ## References
 
 - `references/canonical-model.md` — Canonical model index and shared implementation notes.
+- `references/cpe-examples.md` — CPE examples index grouped by document/operation.
+- `references/gre-examples.md` — GRE examples index grouped by document/operation.
 - `references/doctype-nubefact-branch.md` — `Nubefact Branch` DocType specification.
 - `references/doctype-nubefact-api-log.md` — `Nubefact API Log` DocType specification.
 - `references/doctype-nubefact-delivery-note.md` — `Nubefact Delivery Note` DocType specification.
@@ -40,12 +42,15 @@ Minimal skill scaffold for NubeFact API work in this repository.
 ## Example assets
 
 All example files in `assets/` folder:
-- `json-v1-*` — request/response examples from JSON v1 API
-- `guia-remision-*` — request/response examples from Guía de Remisión API
-- `guia-remision-xml.xml` — sample SUNAT XML generated for Guía de Remisión
-- `guia-remision-cdr.xml` — sample SUNAT CDR (Constancia de Recepción) XML response
+- `cpe-example-*.json` — CPE request/response examples (see `references/cpe-examples.md`)
+- `gre-example-*.json` — GRE request/response examples (see `references/gre-examples.md`)
+- `gre-xml.xml` — sample SUNAT XML generated for GRE
+- `gre-cdr.xml` — sample SUNAT CDR (Constancia de Recepción) XML response
+- `cpe-manual-google-doc.{md,pdf}` — JSON API v1 source material
+- `gre-manual-google-doc.{md,pdf}` — Guía de Remisión API source material
 
 ## Original docs
 
 - API (JSON v1): https://docs.google.com/document/d/1QWWSILBbjd4MDkJl7vCkL2RZvkPh0IC7Wa67BvoYIhA
 - Guia de Remision API: https://docs.google.com/document/d/1GCmIJNJVmuOD3LC0itdhdTu6260nJBIEmOwFdnIu5II
+- Ejemplos JSON: https://www.nubefact.com/downloads/EJEMPLOS-DE-ARCHIVOS-JSON

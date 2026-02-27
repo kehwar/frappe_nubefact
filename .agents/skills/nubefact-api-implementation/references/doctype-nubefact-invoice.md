@@ -13,7 +13,7 @@
 
 ## Manual / Asset Alignment Notes
 
-- Model aligned to `generar_comprobante`, `consultar_comprobante`, and `generar_anulacion` examples in `assets/json-v1-*`.
+- Model aligned to `generar_comprobante`, `consultar_comprobante`, and `generar_anulacion` examples in `assets/cpe-example-*.json` (indexed in `references/cpe-examples.md`).
 - Includes credit/debit note reference fields and credit-sale installments.
 - Includes SUNAT response and void/anulacion tracking fields.
 

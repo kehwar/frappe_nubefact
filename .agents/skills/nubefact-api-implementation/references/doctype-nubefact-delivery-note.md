@@ -11,7 +11,7 @@
 
 ## Manual / Asset Alignment Notes
 
-- Model aligned to `generar_guia` and `consultar_guia` examples in `assets/guia-remision-*`.
+- Model aligned to `generar_guia` and `consultar_guia` examples in `assets/gre-example-*.json` (indexed in `references/gre-examples.md`).
 - Includes transport-specific arrays (`vehiculos_secundarios`, `conductores_secundarios`) and related documents (`documento_relacionado`).
 - Includes post-acceptance output fields (`enlace_del_pdf`, `enlace_del_xml`, `enlace_del_cdr`, `cadena_para_codigo_qr`).
 
