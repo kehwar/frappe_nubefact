@@ -11,8 +11,8 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | Nubefact Branch | ✅ Implemented | Active credentials container per branch/company. Uses `api_route` + `api_token`. |
 | Nubefact API Log | ✅ Implemented | Request/response logging active. Uses `status` (`Success`/`Error`) and script-based naming from `request_timestamp`. |
 | Request API Utility (`make_request`) | ✅ Implemented | Sends POST requests, handles errors, and writes API log entries. |
-| Nubefact Invoice | ❌ Not Implemented | Canonical model only. |
 | Nubefact Delivery Note | ❌ Not Implemented | Canonical model only. |
+| Nubefact Invoice | ❌ Not Implemented | Canonical model only. |
 
 ---
 
@@ -85,7 +85,159 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 
 ---
 
-## 3. Nubefact Invoice
+## 3. Nubefact Delivery Note
+
+**DocType Name**: `Nubefact Delivery Note`
+**Type**: Standard DocType
+**Purpose**: Manages electronic delivery guides via NubeFact Guía de Remisión API.
+
+### Supported Guide Types
+
+- `7`: GRE Remitente (series must start with `T`)
+- `8`: GRE Transportista (series must start with `V`)
+
+### Implementation Priority
+
+- ✅ First business implementation target (before `Nubefact Invoice`).
+
+### Manual / Asset Alignment Notes
+
+- Model aligned to `generar_guia` and `consultar_guia` examples in `assets/guia-remision-*`.
+- Includes transport-specific arrays (`vehiculos_secundarios`, `conductores_secundarios`) and related documents (`documento_relacionado`).
+- Includes post-acceptance output fields (`enlace_del_pdf`, `enlace_del_xml`, `enlace_del_cdr`, `cadena_para_codigo_qr`).
+
+### Main Fields
+
+| Field Label | Field Name | Field Type | Required | Description |
+|------------|------------|------------|----------|-------------|
+| **Document Type** | | Section Break | | |
+| Document Type | `document_type` | Data | Yes | 7 (GRE Remitente) or 8 (GRE Transportista) |
+| Series | `series` | Data | Yes | 4-character series (`T*` for type 7, `V*` for type 8) |
+| Number | `number` | Int | Yes | Sequential document number |
+| | Column Break | | | |
+| Issue Date | `issue_date` | Date | Yes | Date of guide issuance |
+| Transfer Start Date | `transfer_start_date` | Date | Yes | When transport begins |
+| **Client/Recipient Information** | | Section Break | | |
+| Client Document Type | `client_document_type` | Select | Yes | Options: 6 (RUC), 1 (DNI), etc. |
+| Client Document Number | `client_document_number` | Data | Yes | Client's identification number |
+| Client Name | `client_name` | Data | Yes | Client's full name or business name |
+| | Column Break | | | |
+| Client Address | `client_address` | Small Text | Yes | Client's address |
+| Client Email | `client_email` | Data | No | Primary client email |
+| Client Email 1 | `client_email_1` | Data | No | Additional email address |
+| Client Email 2 | `client_email_2` | Data | No | Additional email address |
+| **Transportista Recipient (Type 8)** | | Section Break | | |
+| Recipient Document Type | `recipient_document_type` | Select | No | Required for GRE Transportista |
+| Recipient Document Number | `recipient_document_number` | Data | No | Required for GRE Transportista |
+| Recipient Name | `recipient_name` | Data | No | Required for GRE Transportista |
+| **Transfer Details** | | Section Break | | |
+| Transfer Reason | `transfer_reason` | Select | Yes | SUNAT codes 01-19 |
+| Transport Type | `transport_type` | Select | Yes | Options: 01 (Private), 02 (Public) |
+| | Column Break | | | |
+| Gross Total Weight | `gross_total_weight` | Float | Yes | Total weight |
+| Weight Unit | `weight_unit` | Select | Yes | Options: KGM, TNE, etc. |
+| Number of Packages | `number_of_packages` | Int | Yes | Total package count |
+| **Carrier Information** | | Section Break | | |
+| Carrier Document Type | `carrier_document_type` | Select | No | Required for private transport |
+| Carrier Document Number | `carrier_document_number` | Data | No | Carrier's RUC/DNI |
+| Carrier Name | `carrier_name` | Data | No | Carrier business name |
+| | Column Break | | | |
+| Vehicle License Plate | `vehicle_license_plate` | Data | No | Main vehicle plate |
+| **Driver Information** | | Section Break | | |
+| Driver Document Type | `driver_document_type` | Select | No | Usually 1 (DNI) |
+| Driver Document Number | `driver_document_number` | Data | No | Driver's ID number |
+| Driver First Name | `driver_first_name` | Data | No | Driver's given name |
+| | Column Break | | | |
+| Driver Last Name | `driver_last_name` | Data | No | Driver's family name |
+| Driver License Number | `driver_license_number` | Data | No | Driver's license ID |
+| **Origin (Punto de Partida)** | | Section Break | | |
+| Origin Ubigeo | `origin_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
+| Origin Address | `origin_address` | Small Text | Yes | Full origin address |
+| | Column Break | | | |
+| Origin Establishment Code | `origin_establishment_code` | Data | No | SUNAT establishment code (default "0000") |
+| **Destination (Punto de Llegada)** | | Section Break | | |
+| Destination Ubigeo | `destination_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
+| Destination Address | `destination_address` | Small Text | Yes | Full destination address |
+| | Column Break | | | |
+| Destination Establishment Code | `destination_establishment_code` | Data | No | SUNAT establishment code (default "0000") |
+| **Automation** | | Section Break | | |
+| Auto Send to Client | `auto_send_to_client` | Check | No | Email PDF to client |
+| PDF Format | `pdf_format` | Select | No | Options: "", "A4", "A5", "TICKET" |
+| **Items** | | Section Break | | |
+| Items | `items` | Table | Yes | Nubefact Delivery Item |
+| **Related Documents** | | Section Break | | |
+| Related Documents | `related_documents` | Table | No | Nubefact Delivery Related Document |
+| **Secondary Vehicles** | | Section Break | | |
+| Secondary Vehicles | `secondary_vehicles` | Table | No | Nubefact Delivery Secondary Vehicle |
+| **Secondary Drivers** | | Section Break | | |
+| Secondary Drivers | `secondary_drivers` | Table | No | Nubefact Delivery Secondary Driver |
+| **Additional Information** | | Section Break | | |
+| Observations | `observations` | Text | No | Additional notes |
+| **SUNAT Status** | | Section Break | | |
+| Accepted by SUNAT | `accepted_by_sunat` | Check | No | Whether guide was accepted |
+| SUNAT Response Code | `sunat_response_code` | Data | No | SUNAT response code |
+| SUNAT Response Message | `sunat_response_message` | Text | No | SUNAT response message |
+| SUNAT Note | `sunat_note` | Text | No | Additional SUNAT note |
+| SUNAT SOAP Error | `sunat_soap_error` | Text | No | SOAP error from SUNAT |
+| | Column Break | | | |
+| Link URL | `link_url` | Data | No | NubeFact link |
+| CDR URL | `cdr_url` | Data | No | URL to download CDR |
+| PDF URL | `pdf_url` | Data | No | URL to download PDF |
+| XML URL | `xml_url` | Data | No | URL to download XML |
+| QR URL | `qr_url` | Data | No | URL to QR code |
+
+### Child Table: Nubefact Delivery Note Item
+
+| Field Label | Field Name | Field Type | Required | Description |
+|------------|------------|------------|----------|-------------|
+| Unit of Measure | `unit_of_measure` | Data | Yes | Unit code (e.g., NIU) |
+| Item Code | `item_code` | Data | Yes | Internal product code |
+| Description | `description` | Text | Yes | Product description |
+| Quantity | `quantity` | Float | Yes | Item quantity |
+
+### Child Table: Nubefact Delivery Note Related Document
+
+| Field Label | Field Name | Field Type | Required | Description |
+|------------|------------|------------|----------|-------------|
+| Document Type | `document_type` | Select | Yes | 01=Factura, 02=Boleta, etc. |
+| Series | `series` | Data | Yes | Document series |
+| Number | `number` | Data | Yes | Document number |
+
+### Child Table: Nubefact Delivery Note Secondary Vehicle
+
+| Field Label | Field Name | Field Type | Required | Description |
+|------------|------------|------------|----------|-------------|
+| License Plate | `license_plate` | Data | Yes | Vehicle license plate number |
+| TUC | `tuc` | Data | No | Required for Transportista use cases |
+
+### Child Table: Nubefact Delivery Note Secondary Driver
+
+| Field Label | Field Name | Field Type | Required | Description |
+|------------|------------|------------|----------|-------------|
+| Document Type | `document_type` | Select | Yes | Usually 1 (DNI) |
+| Document Number | `document_number` | Data | Yes | Driver's ID number |
+| First Name | `first_name` | Data | Yes | Driver's given name |
+| Last Name | `last_name` | Data | Yes | Driver's family name |
+| License Number | `license_number` | Data | Yes | Driver's license ID |
+
+### Settings
+- Auto Name: `format:{series}-{number}`
+- Sort Field: `issue_date`
+- Sort Order: DESC
+- Track Changes: Yes
+- Is Submittable: Yes
+
+### Permissions
+- Stock Manager: Full access (create, read, write, submit, cancel)
+- Stock User: Create, Read, Write, Submit
+- Sales User: Read only
+
+### Implementation Status
+- 🟡 In progress (DocType scaffold created).
+
+---
+
+## 4. Nubefact Invoice
 
 **DocType Name**: `Nubefact Invoice`
 **Type**: Standard DocType
@@ -231,135 +383,6 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 ### Permissions
 - Accounts Manager: Full access (create, read, write, submit, cancel)
 - Accounts User: Create, Read, Write, Submit
-- Sales User: Read only
-
-### Implementation Status
-- ❌ Not implemented in codebase yet (canonical target only).
-
----
-
-## 4. Nubefact Delivery Note
-
-**DocType Name**: `Nubefact Delivery Note`
-**Type**: Standard DocType
-**Purpose**: Manages electronic delivery guides (GRE Remitente - tipo 7) via NubeFact Guía de Remisión API.
-
-### Main Fields
-
-| Field Label | Field Name | Field Type | Required | Description |
-|------------|------------|------------|----------|-------------|
-| **Document Type** | | Section Break | | |
-| Document Type | `document_type` | Data | Yes | Always "7" for GRE Remitente (read-only) |
-| Series | `series` | Data | Yes | 4-character series starting with "T" |
-| Number | `number` | Int | Yes | Sequential document number |
-| | Column Break | | | |
-| Issue Date | `issue_date` | Date | Yes | Date of guide issuance |
-| Transfer Start Date | `transfer_start_date` | Date | Yes | When transport begins |
-| **Client/Recipient Information** | | Section Break | | |
-| Client Document Type | `client_document_type` | Select | Yes | Options: 6 (RUC), 1 (DNI), etc. |
-| Client Document Number | `client_document_number` | Data | Yes | Client's identification number |
-| Client Name | `client_name` | Data | Yes | Client's full name or business name |
-| | Column Break | | | |
-| Client Address | `client_address` | Small Text | Yes | Client's address |
-| Client Email | `client_email` | Data | No | Primary client email |
-| Client Email 1 | `client_email_1` | Data | No | Additional email address |
-| Client Email 2 | `client_email_2` | Data | No | Additional email address |
-| **Transfer Details** | | Section Break | | |
-| Transfer Reason | `transfer_reason` | Select | Yes | SUNAT codes 01-18 (sale, consignment, etc.) |
-| Transport Type | `transport_type` | Select | Yes | Options: 01 (Private), 02 (Public) |
-| | Column Break | | | |
-| Gross Total Weight | `gross_total_weight` | Float | Yes | Total weight |
-| Weight Unit | `weight_unit` | Select | Yes | Options: KGM (kg), TNE (tonnes), etc. |
-| Number of Packages | `number_of_packages` | Int | Yes | Total package count |
-| **Carrier Information** | | Section Break | | |
-| Carrier Document Type | `carrier_document_type` | Select | No | Required for private transport |
-| Carrier Document Number | `carrier_document_number` | Data | No | Carrier's RUC/DNI |
-| Carrier Name | `carrier_name` | Data | No | Carrier business name |
-| | Column Break | | | |
-| Vehicle License Plate | `vehicle_license_plate` | Data | No | Main vehicle plate |
-| **Driver Information** | | Section Break | | |
-| Driver Document Type | `driver_document_type` | Select | No | Usually 1 (DNI) |
-| Driver Document Number | `driver_document_number` | Data | No | Driver's ID number |
-| Driver First Name | `driver_first_name` | Data | No | Driver's given name |
-| | Column Break | | | |
-| Driver Last Name | `driver_last_name` | Data | No | Driver's family name |
-| Driver License Number | `driver_license_number` | Data | No | Driver's license ID |
-| **Origin (Punto de Partida)** | | Section Break | | |
-| Origin Ubigeo | `origin_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
-| Origin Address | `origin_address` | Small Text | Yes | Full origin address |
-| | Column Break | | | |
-| Origin Establishment Code | `origin_establishment_code` | Data | No | SUNAT establishment code (default "0000") |
-| **Destination (Punto de Llegada)** | | Section Break | | |
-| Destination Ubigeo | `destination_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
-| Destination Address | `destination_address` | Small Text | Yes | Full destination address |
-| | Column Break | | | |
-| Destination Establishment Code | `destination_establishment_code` | Data | No | SUNAT establishment code (default "0000") |
-| **Automation** | | Section Break | | |
-| Auto Send to Client | `auto_send_to_client` | Check | No | Email PDF to client |
-| PDF Format | `pdf_format` | Select | No | Options: "", "A4", "A5", "TICKET" |
-| **Items** | | Section Break | | |
-| Items | `items` | Table | Yes | Nubefact Delivery Item |
-| **Related Documents** | | Section Break | | |
-| Related Documents | `related_documents` | Table | No | Nubefact Delivery Reference |
-| **Secondary Vehicles** | | Section Break | | |
-| Secondary Vehicles | `secondary_vehicles` | Table | No | Nubefact Delivery Vehicle |
-| **Secondary Drivers** | | Section Break | | |
-| Secondary Drivers | `secondary_drivers` | Table | No | Nubefact Delivery Driver |
-| **Additional Information** | | Section Break | | |
-| Observations | `observations` | Text | No | Additional notes |
-| **SUNAT Status** | | Section Break | | |
-| SUNAT Status | `sunat_status` | Select | No | Options: Pending, Processing, Accepted, Rejected |
-| SUNAT Response Code | `sunat_response_code` | Data | No | SUNAT response code |
-| SUNAT Response Message | `sunat_response_message` | Text | No | SUNAT response message |
-| | Column Break | | | |
-| CDR URL | `cdr_url` | Data | No | URL to download CDR (after acceptance) |
-| PDF URL | `pdf_url` | Data | No | URL to download PDF (after acceptance) |
-| XML URL | `xml_url` | Data | No | URL to download XML (after acceptance) |
-| QR URL | `qr_url` | Data | No | URL to QR code (after acceptance) |
-
-### Child Table: Nubefact Delivery Item
-
-| Field Label | Field Name | Field Type | Required | Description |
-|------------|------------|------------|----------|-------------|
-| Unit of Measure | `unit_of_measure` | Link | Yes | Link to UOM |
-| Item Code | `item_code` | Data | Yes | Internal product code |
-| Description | `description` | Text | Yes | Product description |
-| Quantity | `quantity` | Float | Yes | Item quantity |
-
-### Child Table: Nubefact Delivery Reference
-
-| Field Label | Field Name | Field Type | Required | Description |
-|------------|------------|------------|----------|-------------|
-| Document Type | `document_type` | Select | Yes | 01=Factura, 02=Boleta, etc. |
-| Series | `series` | Data | Yes | Document series |
-| Number | `number` | Data | Yes | Document number |
-
-### Child Table: Nubefact Delivery Vehicle
-
-| Field Label | Field Name | Field Type | Required | Description |
-|------------|------------|------------|----------|-------------|
-| License Plate | `license_plate` | Data | Yes | Vehicle license plate number |
-
-### Child Table: Nubefact Delivery Driver
-
-| Field Label | Field Name | Field Type | Required | Description |
-|------------|------------|------------|----------|-------------|
-| Document Type | `document_type` | Select | Yes | Usually 1 (DNI) |
-| Document Number | `document_number` | Data | Yes | Driver's ID number |
-| First Name | `first_name` | Data | Yes | Driver's given name |
-| Last Name | `last_name` | Data | Yes | Driver's family name |
-| License Number | `license_number` | Data | Yes | Driver's license ID |
-
-### Settings
-- Auto Name: `format:{series}-{number}`
-- Sort Field: `issue_date`
-- Sort Order: DESC
-- Track Changes: Yes
-- Is Submittable: Yes
-
-### Permissions
-- Stock Manager: Full access (create, read, write, submit, cancel)
-- Stock User: Create, Read, Write, Submit
 - Sales User: Read only
 
 ### Implementation Status

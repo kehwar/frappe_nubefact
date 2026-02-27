@@ -1,0 +1,513 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{series}-{number}",
+ "creation": "2026-02-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "document_section",
+  "branch",
+  "document_type",
+  "series",
+  "number",
+  "column_break_document",
+  "issue_date",
+  "transfer_start_date",
+  "client_section",
+  "client_document_type",
+  "client_document_number",
+  "client_name",
+  "column_break_client",
+  "client_address",
+  "client_email",
+  "client_email_1",
+  "client_email_2",
+  "recipient_section",
+  "recipient_document_type",
+  "recipient_document_number",
+  "recipient_name",
+  "transfer_section",
+  "transfer_reason",
+  "transport_type",
+  "gross_total_weight",
+  "weight_unit",
+  "number_of_packages",
+  "column_break_transfer",
+  "carrier_document_type",
+  "carrier_document_number",
+  "carrier_name",
+  "vehicle_license_plate",
+  "driver_section",
+  "driver_document_type",
+  "driver_document_number",
+  "driver_first_name",
+  "column_break_driver",
+  "driver_last_name",
+  "driver_license_number",
+  "origin_section",
+  "origin_ubigeo",
+  "origin_address",
+  "origin_establishment_code",
+  "column_break_origin",
+  "destination_ubigeo",
+  "destination_address",
+  "destination_establishment_code",
+  "automation_section",
+  "auto_send_to_client",
+  "pdf_format",
+  "items_section",
+  "items",
+  "related_documents_section",
+  "related_documents",
+  "secondary_vehicles_section",
+  "secondary_vehicles",
+  "secondary_drivers_section",
+  "secondary_drivers",
+  "additional_info_section",
+  "observations",
+  "sunat_section",
+  "accepted_by_sunat",
+  "sunat_response_code",
+  "sunat_response_message",
+  "sunat_note",
+  "sunat_soap_error",
+  "column_break_sunat",
+  "link_url",
+  "pdf_url",
+  "xml_url",
+  "cdr_url",
+  "qr_url"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_section",
+   "fieldtype": "Section Break",
+   "label": "Document"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Nubefact Branch"
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Select",
+   "label": "Document Type",
+   "options": "7\n8",
+   "reqd": 1
+  },
+  {
+   "fieldname": "series",
+   "fieldtype": "Data",
+   "label": "Series",
+   "reqd": 1
+  },
+  {
+   "fieldname": "number",
+   "fieldtype": "Int",
+   "label": "Number",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_document",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "transfer_start_date",
+   "fieldtype": "Date",
+   "label": "Transfer Start Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "client_section",
+   "fieldtype": "Section Break",
+   "label": "Client"
+  },
+  {
+   "fieldname": "client_document_type",
+   "fieldtype": "Select",
+   "label": "Client Document Type",
+   "options": "6\n1\n4\n7\nA\n0",
+   "reqd": 1
+  },
+  {
+   "fieldname": "client_document_number",
+   "fieldtype": "Data",
+   "label": "Client Document Number",
+   "reqd": 1
+  },
+  {
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "label": "Client Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_client",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "client_address",
+   "fieldtype": "Small Text",
+   "label": "Client Address",
+   "reqd": 1
+  },
+  {
+   "fieldname": "client_email",
+   "fieldtype": "Data",
+   "label": "Client Email"
+  },
+  {
+   "fieldname": "client_email_1",
+   "fieldtype": "Data",
+   "label": "Client Email 1"
+  },
+  {
+   "fieldname": "client_email_2",
+   "fieldtype": "Data",
+   "label": "Client Email 2"
+  },
+  {
+   "fieldname": "recipient_section",
+   "fieldtype": "Section Break",
+   "label": "Transportista Recipient (Type 8)"
+  },
+  {
+   "fieldname": "recipient_document_type",
+   "fieldtype": "Select",
+   "label": "Recipient Document Type",
+   "options": "6\n1\n4\n7\nA\n0"
+  },
+  {
+   "fieldname": "recipient_document_number",
+   "fieldtype": "Data",
+   "label": "Recipient Document Number"
+  },
+  {
+   "fieldname": "recipient_name",
+   "fieldtype": "Data",
+   "label": "Recipient Name"
+  },
+  {
+   "fieldname": "transfer_section",
+   "fieldtype": "Section Break",
+   "label": "Transfer Details"
+  },
+  {
+   "fieldname": "transfer_reason",
+   "fieldtype": "Select",
+   "label": "Transfer Reason",
+   "options": "01\n02\n04\n05\n06\n07\n08\n09\n13\n14\n18\n19",
+   "reqd": 1
+  },
+  {
+   "fieldname": "transport_type",
+   "fieldtype": "Select",
+   "label": "Transport Type",
+   "options": "01\n02",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gross_total_weight",
+   "fieldtype": "Float",
+   "label": "Gross Total Weight",
+   "reqd": 1
+  },
+  {
+   "fieldname": "weight_unit",
+   "fieldtype": "Select",
+   "label": "Weight Unit",
+   "options": "KGM\nTNE",
+   "reqd": 1
+  },
+  {
+   "fieldname": "number_of_packages",
+   "fieldtype": "Int",
+   "label": "Number of Packages",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_transfer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "carrier_document_type",
+   "fieldtype": "Select",
+   "label": "Carrier Document Type",
+   "options": "6\n1\n4\n7\nA\n0"
+  },
+  {
+   "fieldname": "carrier_document_number",
+   "fieldtype": "Data",
+   "label": "Carrier Document Number"
+  },
+  {
+   "fieldname": "carrier_name",
+   "fieldtype": "Data",
+   "label": "Carrier Name"
+  },
+  {
+   "fieldname": "vehicle_license_plate",
+   "fieldtype": "Data",
+   "label": "Vehicle License Plate"
+  },
+  {
+   "fieldname": "driver_section",
+   "fieldtype": "Section Break",
+   "label": "Main Driver"
+  },
+  {
+   "fieldname": "driver_document_type",
+   "fieldtype": "Select",
+   "label": "Driver Document Type",
+   "options": "1\n4\n7"
+  },
+  {
+   "fieldname": "driver_document_number",
+   "fieldtype": "Data",
+   "label": "Driver Document Number"
+  },
+  {
+   "fieldname": "driver_first_name",
+   "fieldtype": "Data",
+   "label": "Driver First Name"
+  },
+  {
+   "fieldname": "column_break_driver",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "driver_last_name",
+   "fieldtype": "Data",
+   "label": "Driver Last Name"
+  },
+  {
+   "fieldname": "driver_license_number",
+   "fieldtype": "Data",
+   "label": "Driver License Number"
+  },
+  {
+   "fieldname": "origin_section",
+   "fieldtype": "Section Break",
+   "label": "Origin / Destination"
+  },
+  {
+   "fieldname": "origin_ubigeo",
+   "fieldtype": "Data",
+   "label": "Origin Ubigeo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "origin_address",
+   "fieldtype": "Small Text",
+   "label": "Origin Address",
+   "reqd": 1
+  },
+  {
+   "fieldname": "origin_establishment_code",
+   "fieldtype": "Data",
+   "label": "Origin Establishment Code"
+  },
+  {
+   "fieldname": "column_break_origin",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "destination_ubigeo",
+   "fieldtype": "Data",
+   "label": "Destination Ubigeo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "destination_address",
+   "fieldtype": "Small Text",
+   "label": "Destination Address",
+   "reqd": 1
+  },
+  {
+   "fieldname": "destination_establishment_code",
+   "fieldtype": "Data",
+   "label": "Destination Establishment Code"
+  },
+  {
+   "fieldname": "automation_section",
+   "fieldtype": "Section Break",
+   "label": "Automation"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_send_to_client",
+   "fieldtype": "Check",
+   "label": "Auto Send to Client"
+  },
+  {
+   "fieldname": "pdf_format",
+   "fieldtype": "Select",
+   "label": "PDF Format",
+   "options": "\nA4\nA5\nTICKET"
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Nubefact Delivery Note Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "related_documents_section",
+   "fieldtype": "Section Break",
+   "label": "Related Documents"
+  },
+  {
+   "fieldname": "related_documents",
+   "fieldtype": "Table",
+   "label": "Related Documents",
+   "options": "Nubefact Delivery Note Related Document"
+  },
+  {
+   "fieldname": "secondary_vehicles_section",
+   "fieldtype": "Section Break",
+   "label": "Secondary Vehicles"
+  },
+  {
+   "fieldname": "secondary_vehicles",
+   "fieldtype": "Table",
+   "label": "Secondary Vehicles",
+   "options": "Nubefact Delivery Note Secondary Vehicle"
+  },
+  {
+   "fieldname": "secondary_drivers_section",
+   "fieldtype": "Section Break",
+   "label": "Secondary Drivers"
+  },
+  {
+   "fieldname": "secondary_drivers",
+   "fieldtype": "Table",
+   "label": "Secondary Drivers",
+   "options": "Nubefact Delivery Note Secondary Driver"
+  },
+  {
+   "fieldname": "additional_info_section",
+   "fieldtype": "Section Break",
+   "label": "Additional Information"
+  },
+  {
+   "fieldname": "observations",
+   "fieldtype": "Text",
+   "label": "Observations"
+  },
+  {
+   "fieldname": "sunat_section",
+   "fieldtype": "Section Break",
+   "label": "SUNAT Status"
+  },
+  {
+   "default": "0",
+   "fieldname": "accepted_by_sunat",
+   "fieldtype": "Check",
+   "label": "Accepted by SUNAT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_response_code",
+   "fieldtype": "Data",
+   "label": "SUNAT Response Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_response_message",
+   "fieldtype": "Text",
+   "label": "SUNAT Response Message",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_note",
+   "fieldtype": "Text",
+   "label": "SUNAT Note",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_soap_error",
+   "fieldtype": "Text",
+   "label": "SUNAT SOAP Error",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sunat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "link_url",
+   "fieldtype": "Data",
+   "label": "Link URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pdf_url",
+   "fieldtype": "Data",
+   "label": "PDF URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "xml_url",
+   "fieldtype": "Data",
+   "label": "XML URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cdr_url",
+   "fieldtype": "Data",
+   "label": "CDR URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qr_url",
+   "fieldtype": "Data",
+   "label": "QR URL",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-02-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nubefact",
+ "name": "Nubefact Delivery Note",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
