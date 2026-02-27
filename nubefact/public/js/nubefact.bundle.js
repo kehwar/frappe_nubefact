@@ -31,13 +31,31 @@ class NubefactWatcher {
 	}
 
 	can_poll() {
+		const current_form = cur_page?.page?.frm;
+		if (!current_form) {
+			return false;
+		}
+
+		if (current_form.doctype !== this.frm.doctype) {
+			return false;
+		}
+
+        if (current_form.docname !== this.frm.docname) {
+            return false;
+        }
+
 		return this.is_pending_response() && !this.frm.is_dirty();
 	}
 
 	async call_api(options = {}) {
+		const freeze = options.freeze ?? true;
+		const freeze_message = options.freeze_message ?? __("Refreshing SUNAT status...");
+
 		await frappe.call({
 			method: this.api_method,
 			args: { name: this.frm.doc.name },
+			freeze,
+			freeze_message,
 			...options,
 		});
 	}
@@ -80,7 +98,7 @@ class NubefactWatcher {
 			if (should_trigger_initial_delay) {
 				this.timeout_id = setTimeout(() => {
 					void this.run_poll_cycle();
-				}, 1000);
+				}, 1500);
 			return;
 		}
 

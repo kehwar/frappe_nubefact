@@ -21,10 +21,7 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 
 		if (["Draft", "Pending Response", "Accepted", "Error"].includes(frm.doc.status)) {
 			frm.add_custom_button(__("Refresh SUNAT Status"), async () => {
-				await watcher.refresh_now_and_continue({
-					freeze: true,
-					freeze_message: __("Refreshing SUNAT status..."),
-				});
+				await watcher.refresh_now_and_continue();
 
 				frappe.show_alert({
 					message: __("SUNAT status refreshed"),
