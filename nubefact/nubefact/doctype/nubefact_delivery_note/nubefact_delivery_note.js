@@ -3,6 +3,9 @@
 
 frappe.ui.form.on("Nubefact Delivery Note", {
 	refresh(frm) {
+		if (frm.doc.status === "Accepted") {
+			frm.disable_form();
+		}
 
 		if (["Draft", "Error"].includes(frm.doc.status || "Draft")) {
 			frm.add_custom_button(__("Send to Nubefact"), () => {
