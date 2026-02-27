@@ -7,46 +7,47 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 			frm.disable_form();
 		}
 
-		if (["Draft", "Error"].includes(frm.doc.status || "Draft")) {
-			frm.add_custom_button(__("Send to Nubefact"), () => {
-				frm.trigger("open_send_dialog");
-			});
-		}
-
-		if (["Draft", "Pending Response", "Accepted", "Error"].includes(frm.doc.status)) {
-			frm.add_custom_button(__("Refresh SUNAT Status"), async () => {
-				await watcher.refresh_now_and_continue();
-
-				frappe.show_alert({
-					message: __("SUNAT status refreshed"),
-					indicator: "green",
-				});
-			});
-		}
-
-		if (frm.doc.status === "Accepted") {
-			frm.add_custom_button(__("PDF"), () => {
-				download_file_from_url(frm, "pdf_url", "PDF");
-			}, "Download");
-
-			frm.add_custom_button(__("XML"), () => {
-				download_file_from_url(frm, "xml_url", "XML");
-			}, "Download");
-
-			frm.add_custom_button(__("CDR"), () => {
-				download_file_from_url(frm, "cdr_url", "CDR");
-			}, "Download");
-		}
-
-		frm.add_custom_button(__("Help"), () => {
-			frm.trigger("open_help_dialog");
-		});
-
 		if (!frm.is_new()){
             const watcher = nubefact.get_watcher(frm, "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.refresh_sunat_status");
             watcher.on_refresh();
             watcher.schedule_if_needed();
+
+            if (["Draft", "Error"].includes(frm.doc.status || "Draft")) {
+                frm.add_custom_button(__("Send to Nubefact"), () => {
+                    frm.trigger("open_send_dialog");
+                });
+            }
+
+            if (["Draft", "Pending Response", "Accepted", "Error"].includes(frm.doc.status)) {
+                frm.add_custom_button(__("Refresh SUNAT Status"), async () => {
+                    await watcher.refresh_now_and_continue();
+
+                    frappe.show_alert({
+                        message: __("SUNAT status refreshed"),
+                        indicator: "green",
+                    });
+                });
+            }
+
+            if (frm.doc.status === "Accepted") {
+                frm.add_custom_button(__("PDF"), () => {
+                    download_file_from_url(frm, "pdf_url", "PDF");
+                }, "Download");
+
+                frm.add_custom_button(__("XML"), () => {
+                    download_file_from_url(frm, "xml_url", "XML");
+                }, "Download");
+
+                frm.add_custom_button(__("CDR"), () => {
+                    download_file_from_url(frm, "cdr_url", "CDR");
+                }, "Download");
+            }
+
         }
+
+		frm.add_custom_button(__("Help"), () => {
+			frm.trigger("open_help_dialog");
+		});
 	},
 	open_send_dialog(frm) {
 		frappe.confirm(
