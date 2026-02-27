@@ -59,33 +59,22 @@ class NubefactDeliveryNote(Document):
         if not self.status:
             self.status = "Draft"
 
-        self._set_default_branch()
-
-        self._set_inferred_fields()
-
-        self.title = _build_delivery_note_title(
-            document_type=self.document_type,
-            series=self.series,
-            number=self.number,
-        )
+        self._set_inferred_values()
 
         if not cint(getattr(self, "skip_required_fields_validation", 0)):
             self._validate_submit_payload()
 
-    def _set_default_branch(self):
-        if cstr(self.branch or "").strip():
-            return
+    def _set_inferred_values(self):
+        if not cstr(self.branch or "").strip():
+            last_branch = get_last_used_branch_for_user(
+                doctype=self.doctype,
+                user=frappe.session.user,
+                exclude_name=self.name,
+            )
 
-        last_branch = get_last_used_branch_for_user(
-            doctype=self.doctype,
-            user=frappe.session.user,
-            exclude_name=self.name,
-        )
+            if last_branch:
+                self.branch = last_branch
 
-        if last_branch:
-            self.branch = last_branch
-
-    def _set_inferred_fields(self):
         origin_values = get_effective_origin_values(self)
         inferred_origin_fields = (
             ("origin_ubigeo", origin_values.get("origin_ubigeo")),
@@ -96,6 +85,10 @@ class NubefactDeliveryNote(Document):
         for fieldname, inferred_value in inferred_origin_fields:
             if not cstr(self.get(fieldname) or "").strip() and inferred_value:
                 self.set(fieldname, inferred_value)
+
+        series = cstr(self.series or "").strip()
+        number = cstr(self.number or "").strip()
+        self.title = f"{series}-{number}" if (series or number) else ""
 
     def _build_generate_payload(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -264,14 +257,14 @@ class NubefactDeliveryNote(Document):
             return {}
 
         accepted_by_sunat = 1 if response.get("aceptada_por_sunat") else 0
+        number = response.get("numero") or self.number
+        series = cstr(self.series or "").strip()
+        number_text = cstr(number or "").strip()
+        title = f"{series}-{number_text}" if (series or number_text) else ""
 
         return {
-            "number": response.get("numero") or self.number,
-            "title": _build_delivery_note_title(
-                document_type=self.document_type,
-                series=self.series,
-                number=response.get("numero") or self.number,
-            ),
+            "number": number,
+            "title": title,
             "status": "Accepted" if accepted_by_sunat else "Pending Response",
             "accepted_by_sunat": accepted_by_sunat,
             "last_sunat_check": now_datetime(),
@@ -446,17 +439,6 @@ def _get_missing_fields(doc: Document, fields: list[str]) -> list[str]:
         if not doc.get(fieldname)
         or (isinstance(doc.get(fieldname), str) and not doc.get(fieldname).strip())
     ]
-
-
-def _build_delivery_note_title(document_type: Any, series: Any, number: Any) -> str:
-    prefix = (
-        "T" if cstr(document_type) == "7" else "V" if cstr(document_type) == "8" else ""
-    )
-
-    if not prefix:
-        return ""
-
-    return f"{prefix}-{cstr(series or '').strip()}-{cstr(number or '').strip()}"
 
 
 def get_effective_origin_values(doc: NubefactDeliveryNote) -> dict[str, str | None]:
