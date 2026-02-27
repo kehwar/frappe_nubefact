@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from frappe import throw
 from frappe.model.document import Document
 from frappe.utils import cstr, getdate
@@ -9,6 +11,17 @@ from nubefact.utils.nubefact import make_request
 
 def to_nubefact_date(value: str) -> str:
     return getdate(value).strftime("%d-%m-%Y")
+
+
+def set_if_value(payload: dict[str, Any], key: str, value: Any):
+    if value is None:
+        return
+    if isinstance(value, str) and not value.strip():
+        return
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and value == 0:
+        return
+
+    payload[key] = value
 
 
 def require_fields(doc: Document, fields: list[str], message: str):
@@ -47,6 +60,7 @@ def get_missing_fields(doc: Document, fields: list[str]) -> list[str]:
 __all__ = [
     "make_request",
     "to_nubefact_date",
+    "set_if_value",
     "require_fields",
     "require_child_fields",
     "format_missing_fields",

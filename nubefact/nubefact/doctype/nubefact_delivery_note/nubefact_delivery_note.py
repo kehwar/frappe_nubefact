@@ -34,6 +34,7 @@ from nubefact.utils import (
     make_request,
     require_child_fields,
     require_fields,
+    set_if_value,
     to_nubefact_date,
 )
 
@@ -133,40 +134,40 @@ class NubefactDeliveryNote(Document):
             ],
         }
 
-        _set_if_value(payload, "numero", self.number)
+        set_if_value(payload, "numero", self.number)
 
-        _set_if_value(payload, "cliente_email", self.client_email)
-        _set_if_value(payload, "cliente_email_1", self.client_email_1)
-        _set_if_value(payload, "cliente_email_2", self.client_email_2)
-        _set_if_value(payload, "observaciones", self.observations)
-        _set_if_value(
+        set_if_value(payload, "cliente_email", self.client_email)
+        set_if_value(payload, "cliente_email_1", self.client_email_1)
+        set_if_value(payload, "cliente_email_2", self.client_email_2)
+        set_if_value(payload, "observaciones", self.observations)
+        set_if_value(
             payload,
             "punto_de_partida_codigo_establecimiento_sunat",
             self.origin_sunat_code,
         )
-        _set_if_value(
+        set_if_value(
             payload,
             "punto_de_llegada_codigo_establecimiento_sunat",
             self.destination_sunat_code,
         )
 
-        _set_if_value(
+        set_if_value(
             payload, "transportista_documento_tipo", self.carrier_document_type
         )
-        _set_if_value(
+        set_if_value(
             payload,
             "transportista_documento_numero",
             self.carrier_document_number,
         )
-        _set_if_value(payload, "transportista_denominacion", self.carrier_name)
-        _set_if_value(payload, "transportista_placa_numero", self.vehicle_license_plate)
-        _set_if_value(payload, "conductor_documento_tipo", self.driver_document_type)
-        _set_if_value(
+        set_if_value(payload, "transportista_denominacion", self.carrier_name)
+        set_if_value(payload, "transportista_placa_numero", self.vehicle_license_plate)
+        set_if_value(payload, "conductor_documento_tipo", self.driver_document_type)
+        set_if_value(
             payload, "conductor_documento_numero", self.driver_document_number
         )
-        _set_if_value(payload, "conductor_nombre", self.driver_first_name)
-        _set_if_value(payload, "conductor_apellidos", self.driver_last_name)
-        _set_if_value(payload, "conductor_numero_licencia", self.driver_license_number)
+        set_if_value(payload, "conductor_nombre", self.driver_first_name)
+        set_if_value(payload, "conductor_apellidos", self.driver_last_name)
+        set_if_value(payload, "conductor_numero_licencia", self.driver_license_number)
 
         if cstr(self.document_type) == "8":
             payload["destinatario_documento_tipo"] = cstr(self.recipient_document_type)
@@ -187,7 +188,7 @@ class NubefactDeliveryNote(Document):
             payload["vehiculos_secundarios"] = []
             for row in self.secondary_vehicles:
                 vehicle = {"placa_numero": row.license_plate}
-                _set_if_value(vehicle, "tuc", row.tuc)
+                set_if_value(vehicle, "tuc", row.tuc)
                 payload["vehiculos_secundarios"].append(vehicle)
 
         if self.secondary_drivers:
@@ -248,9 +249,6 @@ class NubefactDeliveryNote(Document):
                 TYPE_8_RECIPIENT_REQUIRED_FIELDS,
                 "Recipient fields are required for Delivery Note type 8.",
             )
-
-    def _apply_generate_response(self, response: Any):
-        self.update(self._extract_response_values(response))
 
     def _build_consult_payload(self) -> dict[str, Any]:
         return {
@@ -364,17 +362,6 @@ def poll_pending_delivery_notes():
                 title=f"Nubefact Delivery Note SUNAT refresh failed: {name}",
                 message=frappe.get_traceback(),
             )
-
-
-def _set_if_value(payload: dict[str, Any], key: str, value: Any):
-    if value is None:
-        return
-    if isinstance(value, str) and not value.strip():
-        return
-    if isinstance(value, (int, float)) and not isinstance(value, bool) and value == 0:
-        return
-
-    payload[key] = value
 
 
 def _refresh_sunat_status_doc(doc: NubefactDeliveryNote) -> dict[str, Any]:
