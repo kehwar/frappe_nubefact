@@ -285,6 +285,7 @@ class NubefactDeliveryNote(Document):
             "sunat_response_message": cstr(response.get("sunat_description") or ""),
             "sunat_note": cstr(response.get("sunat_note") or ""),
             "sunat_soap_error": cstr(response.get("sunat_soap_error") or ""),
+            "error_message": cstr(response.get("sunat_soap_error") or ""),
             "link_url": cstr(response.get("enlace") or ""),
             "pdf_url": cstr(response.get("enlace_del_pdf") or ""),
             "xml_url": cstr(response.get("enlace_del_xml") or ""),
@@ -321,6 +322,7 @@ def send_to_nubefact(name: str):
             "last_sunat_check": now_datetime(),
             "sunat_response_message": error_message,
             "sunat_soap_error": error_message,
+            "error_message": error_message,
         }
 
     if values:

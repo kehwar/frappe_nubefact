@@ -76,6 +76,7 @@
   "sunat_response_message",
   "sunat_note",
   "sunat_soap_error",
+  "error_message",
   "column_break_sunat",
   "link_url",
   "pdf_url",
@@ -467,6 +468,13 @@
    "fieldname": "sunat_soap_error",
    "fieldtype": "Text",
    "label": "SUNAT SOAP Error",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Text",
+   "label": "Error Message",
    "no_copy": 1,
    "read_only": 1
   },
