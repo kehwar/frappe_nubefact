@@ -3,6 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
+from frappe.utils import cstr
 
 DEFAULT_BASE_URL = "https://api.nubefact.com/api/v1"
 
@@ -11,14 +12,50 @@ class NubefactBranch(Document):
     pass
 
 
-def _get_branch_doc(branch: str):
-    if isinstance(branch, str):
-        return frappe.get_doc("Nubefact Branch", branch)
+def get_origin_values(branch: str | None) -> dict[str, str | None]:
+    branch_doc = frappe.get_doc("Nubefact Branch", branch) if branch else None
 
-    if getattr(branch, "doctype", None) == "Nubefact Branch":
-        return branch
+    branch_origin_ubigeo = cstr(branch_doc.ubigeo).strip() if branch_doc else None
+    branch_origin_address = cstr(branch_doc.address).strip() if branch_doc else None
+    branch_origin_sunat_code = (
+        cstr(branch_doc.sunat_code).strip() if branch_doc else None
+    )
 
-    frappe.throw("Invalid branch. Expected Nubefact Branch name.")
+    return {
+        "origin_ubigeo": branch_origin_ubigeo,
+        "origin_address": branch_origin_address,
+        "origin_sunat_code": branch_origin_sunat_code,
+    }
+
+
+def get_last_used_branch_for_user(
+    *, doctype: str, user: str | None = None, exclude_name: str | None = None
+) -> str | None:
+    if not cstr(doctype).strip():
+        frappe.throw("DocType is required.")
+
+    if doctype not in ("Nubefact Delivery Note", "Nubefact Invoice"):
+        frappe.throw(
+            "Unsupported DocType. Expected 'Nubefact Delivery Note' or 'Nubefact Invoice'."
+        )
+
+    filters = {
+        "owner": cstr(user or frappe.session.user).strip(),
+        "branch": ["is", "set"],
+    }
+
+    if exclude_name:
+        filters["name"] = ["!=", exclude_name]
+
+    last_branch = frappe.get_all(
+        doctype,
+        filters=filters,
+        pluck="branch",
+        order_by="modified desc",
+        limit=1,
+    )
+
+    return last_branch[0] if last_branch else None
 
 
 def _build_request_url(route: str | None) -> str:
@@ -33,7 +70,7 @@ def _build_request_url(route: str | None) -> str:
 
 
 def get_request_config(branch: str) -> tuple[Document, str, str]:
-    branch_doc = _get_branch_doc(branch)
+    branch_doc = frappe.get_doc("Nubefact Branch", branch)
     url = _build_request_url(branch_doc.api_route)
     token = branch_doc.get_password("api_token")
     if not token:
