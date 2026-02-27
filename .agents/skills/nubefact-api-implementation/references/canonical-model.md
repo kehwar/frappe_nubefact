@@ -1,37 +1,39 @@
 # Canonical Model - NubeFact Frappe DocTypes
 
-**Reference**: [Google Docs - Guía de Integración JSON v1](https://docs.google.com/document/d/1OosuF6j0pS0nU-qsGLuhQwqKbojbkTyXLFyC7CVVV7c/edit), [Google Docs - Guía de Remisión](https://docs.google.com/document/d/1vUpZrBEGJJRGpbUxFdKo2dBKSPfGRnLo2SINwgGSKoA/edit)
-
 This document describes the Frappe DocTypes required for NubeFact API integration. These doctypes provide the canonical data model for managing electronic invoices, receipts, credit/debit notes, and delivery guides (guías de remisión).
 
 ---
 
-## 1. Nubefact API Settings
+## Current Implementation Status (as of 2026-02-27)
 
-**DocType Name**: `Nubefact API Settings`
-**Type**: Single DocType
-**Purpose**: Stores API configuration and credentials for connecting to NubeFact API endpoints.
+| Object | Status | Notes |
+|--------|--------|-------|
+| Nubefact Branch | ✅ Implemented | Active credentials container per branch/company. Uses `api_route` + `api_token`. |
+| Nubefact API Log | ✅ Implemented | Request/response logging active. Uses `status` (`Success`/`Error`) and script-based naming from `request_timestamp`. |
+| Request API Utility (`make_request`) | ✅ Implemented | Sends POST requests, handles errors, and writes API log entries. |
+| Nubefact Invoice | ❌ Not Implemented | Canonical model only. |
+| Nubefact Delivery Note | ❌ Not Implemented | Canonical model only. |
 
-### Fields
+---
+
+## 1. Nubefact Branch
+
+**DocType Name**: `Nubefact Branch`
+**Type**: Standard DocType
+**Purpose**: Stores per-branch NubeFact API credentials and route.
+
+### Current Fields
 
 | Field Label | Field Name | Field Type | Required | Description |
 |------------|------------|------------|----------|-------------|
-| **API Credentials** | | Section Break | | |
-| API URL | `api_url` | Data | Yes | Base URL for NubeFact API (e.g., https://api.nubefact.com/api/v1/) |
-| API Token | `api_token` | Password | Yes | Authentication token for API access |
-| Route | `route` | Data | Yes | Route identifier for API authentication |
-| **Settings** | | Section Break | | |
-| Enable API Logging | `enable_logging` | Check | No | Log all API requests and responses |
-| Auto Send to SUNAT | `auto_send_to_sunat` | Check | No | Default setting for automatic SUNAT submission |
-| Auto Send to Client | `auto_send_to_client` | Check | No | Default setting for automatic client email |
-| Default PDF Format | `default_pdf_format` | Select | No | Options: "", "A4", "A5", "TICKET" |
-| **Default Values** | | Section Break | | |
-| Default IGV Percentage | `default_igv_percentage` | Float | No | Default IGV rate (typically 18.00) |
-| Default Currency | `default_currency` | Link | No | Link to Currency (default: PEN) |
+| Title | `title` | Data | Yes | Human-friendly branch name. |
+| Company | `company` | Link | No | Optional ERP company mapping. |
+| API Route | `api_route` | Data | Yes | Client route appended to API base URL (or absolute URL). |
+| API Token | `api_token` | Password | Yes | Authorization token used in request header. |
 
-### Permissions
-- System Manager: Full access
-- Accounts Manager: Read and Write
+### Implementation Status
+- ✅ Implemented
+- Used directly by `get_request_config()` in API request flow.
 
 ---
 
@@ -47,6 +49,7 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 |------------|------------|------------|----------|-------------|
 | **Request Details** | | Section Break | | |
 | Operation | `operation` | Select | Yes | Options: generar_comprobante, consultar_comprobante, generar_anulacion, consultar_anulacion, generar_guia, consultar_guia |
+| API Route | `api_route` | Data | No | Effective request route/URL used for API call |
 | Reference DocType | `reference_doctype` | Link | No | DocType name of source document |
 | Reference Name | `reference_name` | Dynamic Link | No | Name of source document |
 | Request Timestamp | `request_timestamp` | Datetime | Yes | When the request was sent |
@@ -55,24 +58,30 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | Response Timestamp | `response_timestamp` | Datetime | No | When the response was received |
 | Response Status Code | `response_status_code` | Int | No | HTTP status code |
 | Response Payload | `response_payload` | Code | No | Full JSON response payload |
-| Success | `success` | Check | No | Whether the operation succeeded |
+| Status | `status` | Select | No | Options: Success, Error |
 | **Error Details** | | Section Break | | |
 | Error Code | `error_code` | Data | No | NubeFact error code if failed |
 | Error Message | `error_message` | Text | No | Error message if failed |
-| **Metadata** | | Section Break | | |
 | Duration (ms) | `duration_ms` | Int | No | Request duration in milliseconds |
-| User | `user` | Link | No | User who initiated the request |
 
 ### Settings
-- Auto Name: `format:LOG-{reference_doctype}-{reference_name}-{####}`
+- Auto Name: `By script` (generated from `request_timestamp`, with collision suffix when needed)
 - Sort Field: `request_timestamp`
 - Sort Order: DESC
 - Track Changes: Disabled
 - Allow Rename: No
 
+### Status Colors
+- Success: green
+- Error: red
+
 ### Permissions
 - System Manager: Full access
 - Accounts Manager: Read only
+
+### Implementation Status
+- ✅ Implemented.
+- `create_api_log(...)` is used by `make_request(...)` to persist all API attempts.
 
 ---
 
@@ -224,6 +233,9 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 - Accounts User: Create, Read, Write, Submit
 - Sales User: Read only
 
+### Implementation Status
+- ❌ Not implemented in codebase yet (canonical target only).
+
 ---
 
 ## 4. Nubefact Delivery Note
@@ -350,6 +362,9 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 - Stock User: Create, Read, Write, Submit
 - Sales User: Read only
 
+### Implementation Status
+- ❌ Not implemented in codebase yet (canonical target only).
+
 ---
 
 ## Implementation Notes
@@ -384,8 +399,3 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 2. **Status Polling**: Use `consultar_comprobante` or `consultar_guia` to check SUNAT acceptance
 3. **Void/Cancel**: Trigger `generar_anulacion` operation
 4. **Error Handling**: Log all API calls to Nubefact API Log for troubleshooting
-
----
-
-**Last Updated**: 2026-02-25
-**Version**: 1.0
