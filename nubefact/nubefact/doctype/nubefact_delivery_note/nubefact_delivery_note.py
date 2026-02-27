@@ -49,16 +49,12 @@ _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
 
 
 class NubefactDeliveryNote(Document):
+
     def autoname(self):
         timestamp = now_datetime()
         self.name = append_number_if_name_exists(
             "Nubefact Delivery Note", timestamp.strftime("%Y%m%d-%H%M%S-%f")
         )
-
-    def autotitle(self):
-        series = cstr(self.series or "").strip()
-        number = cstr(self.number or "").strip()
-        self.title = f"{series}-{number}" if (series or number) else ""
 
     def validate(self):
         if not self.status:
@@ -91,7 +87,12 @@ class NubefactDeliveryNote(Document):
             if not cstr(self.get(fieldname) or "").strip() and inferred_value:
                 self.set(fieldname, inferred_value)
 
-        self.autotitle()
+        self.title = self._compose_title()
+
+    def _compose_title(self, number: Any | None = None) -> str:
+        series = cstr(self.series or "").strip()
+        number_text = cstr((self.number if number is None else number) or "").strip()
+        return f"{series}-{number_text}" if (series or number_text) else ""
 
     def _build_generate_payload(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -197,33 +198,22 @@ class NubefactDeliveryNote(Document):
         if not self.items:
             frappe.throw("At least one item is required for Delivery Note submission.")
 
-        for index, row in enumerate(self.items, start=1):
-            require_child_fields(
-                row,
-                ITEM_REQUIRED_FIELDS,
-                f"Items row #{index} has missing required fields.",
-            )
-
-        for index, row in enumerate(self.related_documents or [], start=1):
-            require_child_fields(
-                row,
-                RELATED_DOCUMENT_REQUIRED_FIELDS,
-                f"Related Documents row #{index} has missing required fields.",
-            )
-
-        for index, row in enumerate(self.secondary_vehicles or [], start=1):
-            require_child_fields(
-                row,
-                SECONDARY_VEHICLE_REQUIRED_FIELDS,
-                f"Secondary Vehicles row #{index} has missing required fields.",
-            )
-
-        for index, row in enumerate(self.secondary_drivers or [], start=1):
-            require_child_fields(
-                row,
-                SECONDARY_DRIVER_REQUIRED_FIELDS,
-                f"Secondary Drivers row #{index} has missing required fields.",
-            )
+        self._validate_required_child_rows(self.items, ITEM_REQUIRED_FIELDS, "Items")
+        self._validate_required_child_rows(
+            self.related_documents,
+            RELATED_DOCUMENT_REQUIRED_FIELDS,
+            "Related Documents",
+        )
+        self._validate_required_child_rows(
+            self.secondary_vehicles,
+            SECONDARY_VEHICLE_REQUIRED_FIELDS,
+            "Secondary Vehicles",
+        )
+        self._validate_required_child_rows(
+            self.secondary_drivers,
+            SECONDARY_DRIVER_REQUIRED_FIELDS,
+            "Secondary Drivers",
+        )
 
         if cstr(self.document_type) == "8":
             require_fields(
@@ -232,15 +222,26 @@ class NubefactDeliveryNote(Document):
                 "Recipient fields are required for Delivery Note type 8.",
             )
 
+    def _validate_required_child_rows(
+        self,
+        rows: list[Document] | None,
+        required_fields: list[str],
+        table_label: str,
+    ):
+        for index, row in enumerate(rows or [], start=1):
+            require_child_fields(
+                row,
+                required_fields,
+                f"{table_label} row #{index} has missing required fields.",
+            )
+
     def _extract_response_values(self, response: Any) -> dict[str, Any]:
         if not isinstance(response, dict):
             return {}
 
         accepted_by_sunat = 1 if response.get("aceptada_por_sunat") else 0
         number = response.get("numero") or self.number
-        series = cstr(self.series or "").strip()
-        number_text = cstr(number or "").strip()
-        title = f"{series}-{number_text}" if (series or number_text) else ""
+        title = self._compose_title(number)
 
         return {
             "number": number,
@@ -362,7 +363,7 @@ def _save_response_status(
     cleared_values.update(values)
 
     doc.update(cleared_values)
-    doc.autotitle()
+    doc.title = doc._compose_title()
 
     doc.db_update()
     doc.notify_update()
