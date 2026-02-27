@@ -33,11 +33,13 @@ Minimal skill scaffold for NubeFact API work in this repository.
 - `references/json-v1-manual.md` — **JSON API v1 Manual** - Complete API documentation transcribed from PDF with operation details, field descriptions, and workflow guides.
 - `references/guia-remision-v1-manual.md` — **Guía de Remisión API Manual** - Complete delivery guide API documentation with two-step workflow, Remitente/Transportista flows, and SUNAT acceptance polling.
 
-## Example JSON assets
+## Example assets
 
-All example JSON files in `assets/` folder:
+All example files in `assets/` folder:
 - `json-v1-*` — request/response examples from JSON v1 API
 - `guia-remision-*` — request/response examples from Guía de Remisión API
+- `guia-remision-xml.xml` — sample SUNAT XML generated for Guía de Remisión
+- `guia-remision-cdr.xml` — sample SUNAT CDR (Constancia de Recepción) XML response
 
 ## Original docs
 
