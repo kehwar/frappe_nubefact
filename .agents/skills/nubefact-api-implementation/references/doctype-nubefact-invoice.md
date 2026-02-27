@@ -14,6 +14,7 @@
 ## Manual / Asset Alignment Notes
 
 - Model aligned to `generar_comprobante`, `consultar_comprobante`, and `generar_anulacion` examples in `assets/cpe-example-*.json` (indexed in `references/cpe-examples.md`).
+- `number` / `numero` is optional on send. If omitted, NubeFact auto-generates the next sequential number.
 - Includes credit/debit note reference fields and credit-sale installments.
 - Includes SUNAT response and void/anulacion tracking fields.
 
@@ -24,7 +25,7 @@
 | **Document Type** | | - | Section Break | | |
 | Document Type | `document_type` | `tipo_de_comprobante` | Select | Yes* | `1` FACTURA, `2` BOLETA, `3` NOTA DE CRÉDITO, `4` NOTA DE DÉBITO |
 | Series | `series` | `serie` | Data | Yes* | 4-character series (F* for Factura, B* for Boleta) |
-| Number | `number` | `numero` | Int | Yes* | Sequential document number |
+| Number | `number` | `numero` | Int | No | Sequential document number. Optional on send; API response can assign/fill it. |
 | SUNAT Transaction Type | `sunat_transaction` | `sunat_transaction` | Select | No | Catálogo SUNAT/NubeFact de tipo de transacción (códigos `1` a `35`) |
 | | | - | Column Break | | |
 | Issue Date | `issue_date` | `fecha_de_emision` | Date | Yes* | Date of document issuance |
