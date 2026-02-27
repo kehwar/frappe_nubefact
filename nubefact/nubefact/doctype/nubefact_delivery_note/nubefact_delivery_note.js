@@ -3,14 +3,11 @@
 
 frappe.ui.form.on("Nubefact Delivery Note", {
 	refresh(frm) {
-		frm.add_custom_button(__("Help"), () => {
-			open_help_dialog(frm);
-		}, __("Actions"));
 
 		if (["Draft", "Error"].includes(frm.doc.status || "Draft")) {
 			frm.add_custom_button(__("Send to Nubefact"), () => {
 				open_send_dialog(frm);
-			}, __("Actions"));
+			});
 		}
 
 		if (["Draft", "Pending Response", "Accepted", "Error"].includes(frm.doc.status)) {
@@ -27,8 +24,12 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 					message: __("SUNAT status refreshed"),
 					indicator: "green",
 				});
-			}, __("Actions"));
+			});
 		}
+
+		frm.add_custom_button(__("Help"), () => {
+			open_help_dialog(frm);
+		});
 	},
 });
 
