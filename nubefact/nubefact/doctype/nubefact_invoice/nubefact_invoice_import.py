@@ -55,27 +55,55 @@ def apply_import_payload_to_doc(doc: Document, payload: dict[str, Any]):
         "total_exonerada": "total_exempt",
         "total_igv": "total_igv",
         "descuento_global": "global_discount",
+        "total_isc": "total_isc",
         "total_descuento": "total_discount",
         "total_anticipo": "total_advance",
         "total_gratuita": "total_free",
         "total_otros_cargos": "total_other_charges",
         "total": "total",
         "tipo_de_cambio": "exchange_rate",
-        "percepcion_tipo": "perception_type",
-        "percepcion_base_imponible": "perception_base",
+        "retencion_tipo": "withholding_type",
+        "retencion_base_imponible": "withholding_base",
         "total_percepcion": "total_perception",
         "total_incluido_percepcion": "total_with_perception",
-        "retencion_tipo": "retention_type",
-        "retencion_base_imponible": "retention_base",
-        "total_retencion": "total_retention",
+        "detraccion_tipo": "detraction_type",
+        "detraccion_total": "detraction_total",
+        "detraccion_porcentaje": "detraction_percentage",
+        "medio_de_pago_detraccion": "detraction_payment_method",
+        "ubigeo_origen": "origin_ubigeo",
+        "direccion_origen": "origin_address",
+        "ubigeo_destino": "destination_ubigeo",
+        "direccion_destino": "destination_address",
+        "detalle_viaje": "trip_detail",
+        "val_ref_serv_trans": "transport_reference_value",
+        "val_ref_carga_efec": "effective_load_reference_value",
+        "val_ref_carga_util": "useful_load_reference_value",
+        "punto_origen_viaje": "trip_origin_point",
+        "punto_destino_viaje": "trip_destination_point",
+        "descripcion_tramo": "route_description",
+        "configuracion_vehicular": "vehicle_configuration",
+        "carga_util_tonel_metricas": "vehicle_useful_load_metric_tons",
+        "carga_efec_tonel_metricas": "vehicle_effective_load_metric_tons",
+        "val_ref_tonel_metrica": "reference_value_per_metric_ton",
+        "val_pre_ref_carga_util_nominal": "nominal_useful_load_preliminary_reference_value",
+        "matricula_emb_pesquera": "fishing_vessel_registration",
+        "nombre_emb_pesquera": "fishing_vessel_name",
+        "descripcion_tipo_especie_vendida": "sold_species_type_description",
+        "lugar_de_descarga": "unloading_place",
+        "cantidad_especie_vendida": "sold_species_quantity",
+        "documento_que_se_modifica_tipo": "base_document_type",
+        "documento_que_se_modifica_serie": "base_document_series",
+        "documento_que_se_modifica_numero": "base_document_number",
         "total_impuestos_bolsas": "total_plastic_bag_tax",
         "documento_que_se_modifica_tipo": "modifies_document_type",
         "documento_que_se_modifica_serie": "modifies_series",
         "documento_que_se_modifica_numero": "modifies_number",
+        "codigo_unico": "unique_code",
         "tipo_de_nota_de_credito": "credit_note_reason",
         "tipo_de_nota_de_debito": "debit_note_reason",
         "condiciones_de_pago": "payment_terms",
-        "medio_de_pago": "payment_method",
+        "observaciones": "remarks",
+        "nubecont_tipo_de_venta_codigo": "nubecont_sale_type_code",
         "placa_vehiculo": "vehicle_license_plate",
         "orden_compra_servicio": "purchase_order",
         "formato_de_pdf": "pdf_format",
@@ -136,35 +164,51 @@ def apply_import_payload_to_doc(doc: Document, payload: dict[str, Any]):
             1 if _to_bool(payload.get("servicios_region_selva")) else 0,
         )
 
+    if "indicador_aplicacion_retorno_vacio" in payload:
+        doc.set(
+            "empty_return_application_indicator",
+            1 if _to_bool(payload.get("indicador_aplicacion_retorno_vacio")) else 0,
+        )
+
+    if payload.get("fecha_de_descarga"):
+        doc.set(
+            "unloading_date",
+            _normalize_import_date(cstr(payload.get("fecha_de_descarga"))),
+        )
+
     doc.set("items", [])
     for row in payload.get("items") or []:
         doc.append(
             "items",
             {
-                "unit_of_measure": row.get("unidad_de_medida"),
+                "uom": row.get("unidad_de_medida"),
                 "item_code": row.get("codigo"),
                 "sunat_product_code": row.get("codigo_producto_sunat"),
                 "description": row.get("descripcion"),
                 "quantity": row.get("cantidad"),
-                "unit_value": row.get("valor_unitario"),
-                "unit_price": row.get("precio_unitario"),
+                "unit_price": row.get("valor_unitario"),
+                "unit_price_with_tax": row.get("precio_unitario"),
                 "discount": row.get("descuento"),
-                "subtotal": row.get("subtotal"),
+                "line_total": row.get("subtotal"),
                 "igv_type": row.get("tipo_de_igv"),
+                "ivap_type": row.get("tipo_de_ivap"),
                 "igv": row.get("igv"),
-                "total": row.get("total"),
-                "advance_regularization": (
+                "plastic_bag_tax": row.get("impuesto_bolsas"),
+                "line_total_with_tax": row.get("total"),
+                "downpayment_regularization": (
                     1 if _to_bool(row.get("anticipo_regularizacion")) else 0
                 ),
-                "advance_document_series": row.get("anticipo_documento_serie"),
-                "advance_document_number": row.get("anticipo_documento_numero"),
+                "downpayment_document_series": row.get("anticipo_documento_serie"),
+                "downpayment_document_number": row.get("anticipo_documento_numero"),
+                "isc_type": row.get("tipo_de_isc"),
+                "isc": row.get("isc"),
             },
         )
 
-    doc.set("delivery_guides", [])
+    doc.set("delivery_references", [])
     for row in payload.get("guias") or []:
         doc.append(
-            "delivery_guides",
+            "delivery_references",
             {
                 "guide_type": row.get("guia_tipo"),
                 "guide_series_number": row.get("guia_serie_numero"),
