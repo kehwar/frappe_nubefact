@@ -70,7 +70,6 @@ async function apply_payload_to_form(frm, payload) {
 	const scalarMap = {
 		tipo_de_comprobante: "document_type",
 		serie: "series",
-		numero: "number",
 		cliente_tipo_de_documento: "client_document_type",
 		cliente_numero_de_documento: "client_document_number",
 		cliente_denominacion: "client_name",
@@ -109,6 +108,12 @@ async function apply_payload_to_form(frm, payload) {
 		if (payload[sourceKey] !== undefined && payload[sourceKey] !== null) {
 			await frm.set_value(targetField, payload[sourceKey]);
 		}
+	}
+
+	if (Object.prototype.hasOwnProperty.call(payload, "numero")) {
+		await frm.set_value("number", payload.numero ?? null);
+	} else {
+		await frm.set_value("number", null);
 	}
 
 	if (payload.fecha_de_emision) {

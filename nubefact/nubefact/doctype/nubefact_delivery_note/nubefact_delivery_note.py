@@ -44,7 +44,6 @@ class NubefactDeliveryNote(Document):
             "operacion": "generar_guia",
             "tipo_de_comprobante": cint(self.document_type),
             "serie": self.series,
-            "numero": cstr(self.number),
             "cliente_tipo_de_documento": cstr(self.client_document_type),
             "cliente_numero_de_documento": self.client_document_number,
             "cliente_denominacion": self.client_name,
@@ -74,6 +73,8 @@ class NubefactDeliveryNote(Document):
                 for row in self.items
             ],
         }
+
+        _set_if_value(payload, "numero", self.number)
 
         _set_if_value(payload, "cliente_email", self.client_email)
         _set_if_value(payload, "cliente_email_1", self.client_email_1)
@@ -150,7 +151,6 @@ class NubefactDeliveryNote(Document):
             [
                 "document_type",
                 "series",
-                "number",
                 "issue_date",
                 "transfer_start_date",
                 "client_document_type",
@@ -234,6 +234,12 @@ class NubefactDeliveryNote(Document):
             return {}
 
         return {
+            "number": response.get("numero") or self.number,
+            "title": _build_delivery_note_title(
+                document_type=self.document_type,
+                series=self.series,
+                number=response.get("numero") or self.number,
+            ),
             "accepted_by_sunat": 1 if response.get("aceptada_por_sunat") else 0,
             "last_sunat_check": now_datetime(),
             "sunat_response_code": cstr(response.get("sunat_responsecode") or ""),
