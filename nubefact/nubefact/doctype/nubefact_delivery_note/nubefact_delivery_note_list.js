@@ -3,19 +3,19 @@
 
 frappe.listview_settings["Nubefact Delivery Note"] = {
 	onload(listview) {
-		listview.page.add_inner_button(__("JSON File"), async () => {
+		listview.page.add_inner_button(__("JSON"), async () => {
 			await import_delivery_note_from_file([".json"]);
-		});
+		}, "Import");
 
 		listview.page.add_inner_button(__("JSON Paste"), () => {
 			open_json_paste_dialog();
-		});
+		}, "Import");
 
-		listview.page.add_inner_button(__("XML File (T=7, V=8)"), async () => {
+		listview.page.add_inner_button(__("XML"), async () => {
 			await import_delivery_note_from_file([".xml", "text/xml"], {
-				dialog_title: __("Import Delivery Note XML (Series: T=7, V=8)"),
+				dialog_title: __("Import Delivery Note XML"),
 			});
-		});
+		}, "Import");
 	},
 };
 
