@@ -19,7 +19,7 @@ frappe.ui.form.on("Nubefact Delivery Note", {
 			}, __("Actions"));
 		}
 
-		if (["Pending Response", "Accepted"].includes(frm.doc.status)) {
+		if (["Draft", "Pending Response", "Accepted", "Error"].includes(frm.doc.status)) {
 			frm.add_custom_button(__("Refresh SUNAT Status"), async () => {
 				await frappe.call({
 					method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.refresh_sunat_status",
