@@ -296,7 +296,7 @@ class NubefactDeliveryNote(Document):
 
 
 @frappe.whitelist()
-def send_to_nubefact(name: str, skip_required_fields_validation: int | str | None = 0):
+def send_to_nubefact(name: str):
 
     doc = frappe.get_doc("Nubefact Delivery Note", name)
     doc.check_permission("write")
@@ -305,7 +305,7 @@ def send_to_nubefact(name: str, skip_required_fields_validation: int | str | Non
         frappe.throw("Only Draft or Error delivery notes can be sent to Nubefact.")
 
     payload = doc._build_generate_payload(
-        skip_required_fields_validation=bool(cint(skip_required_fields_validation))
+        skip_required_fields_validation=bool(cint(doc.skip_required_fields_validation))
     )
 
     try:

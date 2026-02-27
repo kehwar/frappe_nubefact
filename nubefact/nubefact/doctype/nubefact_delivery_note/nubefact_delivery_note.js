@@ -70,15 +70,9 @@ function open_send_dialog(frm) {
 				fieldtype: "HTML",
 				options: `<div class="text-muted">${__("Confirm sending this Delivery Note to Nubefact.")}</div>`,
 			},
-			{
-				fieldname: "skip_required_fields_validation",
-				fieldtype: "Check",
-				label: __("Skip required fields validation"),
-				default: 0,
-			},
 		],
 		primary_action_label: __("Send"),
-		primary_action: async (values) => {
+		primary_action: async () => {
 			if (frm.is_dirty()) {
 				await frm.save();
 			}
@@ -87,7 +81,6 @@ function open_send_dialog(frm) {
 				method: "nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note.send_to_nubefact",
 				args: {
 					name: frm.doc.name,
-					skip_required_fields_validation: values.skip_required_fields_validation ? 1 : 0,
 				},
 				freeze: true,
 				freeze_message: __("Sending to Nubefact..."),
