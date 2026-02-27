@@ -188,6 +188,41 @@
 | Payment Date | `payment_date` | `fecha_de_pago` | Date | Yes* | Due date for installment |
 | Amount | `amount` | `importe` | Currency | Yes* | Installment amount |
 
+## Select Values Legend
+
+### Main DocType Selects
+
+| Field Name | NubeFact Field | Legend |
+|------------|----------------|--------|
+| `document_type` | `tipo_de_comprobante` | `1` FACTURA, `2` BOLETA, `3` NOTA DE CRÉDITO, `4` NOTA DE DÉBITO |
+| `sunat_transaction` | `sunat_transaction` | `1` VENTA INTERNA, `2` EXPORTACIÓN, `4` VENTA INTERNA – ANTICIPOS, `29` VENTAS NO DOMICILIADOS QUE NO CALIFICAN COMO EXPORTACIÓN, `30` OPERACIÓN SUJETA A DETRACCIÓN, `33` DETRACCIÓN - SERVICIOS DE TRANSPORTE CARGA, `34` OPERACIÓN SUJETA A PERCEPCIÓN, `32` DETRACCIÓN - SERVICIOS DE TRANSPORTE DE PASAJEROS, `31` DETRACCIÓN - RECURSOS HIDROBIOLÓGICOS, `35` VENTA NACIONAL A TURISTAS - TAX FREE |
+| `client_document_type` | `cliente_tipo_de_documento` | `6` RUC - REGISTRO ÚNICO DE CONTRIBUYENTE, `1` DNI - DOC. NACIONAL DE IDENTIDAD, `-` VARIOS - VENTAS MENORES A S/.700.00 Y OTROS, `4` CARNET DE EXTRANJERÍA, `7` PASAPORTE, `A` CÉDULA DIPLOMÁTICA DE IDENTIDAD, `B` DOC.IDENT.PAIS.RESIDENCIA-NO.D, `0` NO DOMICILIADO, SIN RUC (EXPORTACIÓN), `G` Salvoconducto |
+| `currency` | `moneda` | `1` SOLES, `2` DÓLARES, `3` EUROS, `4` LIBRA ESTERLINA |
+| `perception_type` | `percepcion_tipo` | `1` PERCEPCIÓN VENTA INTERNA - TASA 2%, `2` PERCEPCIÓN ADQUISICIÓN DE COMBUSTIBLE - TASA 1%, `3` PERCEPCIÓN REALIZADA AL AGENTE DE PERCEPCIÓN CON TASA ESPECIAL - TASA 0.5% |
+| `withholding_type` | `retencion_tipo` | `1` TASA 3%, `2` TASA 6% |
+| `detraction_type` | `detraccion_tipo` | `001` Azúcar y melaza de caña, `002` Arroz, `003` Alcohol etílico, `004` Recursos Hidrobiológicos, `005` Maíz amarillo duro, `007` Caña de azúcar, `008` Madera, `009` Arena y piedra, `010` Residuos, subproductos, desechos, recortes y desperdicios, `011` Bienes gravados con el IGV, o renuncia a la exoneración, `012` Intermediación laboral y tercerización, `013` ANIMALES VIVOS, `014` Carnes y despojos comestibles, `015` ABONOS, CUEROS Y PIELES DE ORIGEN ANIMAL, `016` Aceite de pescado, `017` Harina, polvo y pellets de pescado, crustáceos, moluscos y demás invertebrados acuáticos, `019` Arrendamiento de bienes muebles, `020` Mantenimiento y reparación de bienes muebles, `021` Movimiento de carga, `022` Otros servicios empresariales, `023` Leche, `024` Comisión mercantil, `025` Fabricación de bienes por encargo, `026` Servicio de transporte de personas, `027` Servicio de transporte de carga, `028` Transporte de pasajeros, `030` Contratos de construcción, `031` Oro gravado con el IGV, `032` Paprika y otros frutos de los generos capsicum o pimienta, `034` Minerales metálicos no auríferos, `035` Bienes exonerados del IGV, `036` Oro y demás minerales metálicos exonerados del IGV, `037` Demás servicios gravados con el IGV, `039` Minerales no metálicos, `040` Bien inmueble gravado con IGV, `041` Plomo, `044` Servicio de beneficio de minerales metálicos gravado con el IGV, `045` Minerales de oro y sus concentrados gravados con el IGV, `099` LEY 30737 |
+| `detraction_payment_method` | `medio_de_pago_detraccion` | `001` Depósito en cuenta, `002` Giro, `003` Transferencia de fondos, `004` Orden de pago, `005` Tarjeta de débito, `006` Tarjeta de crédito emitida en el país por una empresa del sistema financiero, `007` Cheques con cláusula NO NEGOCIABLE/INTRANSFERIBLE/NO A LA ORDEN, `008` Efectivo (operaciones sin obligación de medio de pago), `009` Efectivo (demás casos), `010` Medios de pago usados en comercio exterior, `011` Documentos emitidos por EDPYMES y cooperativas no autorizadas a captar depósitos, `012` Tarjeta de crédito emitida en el país o exterior por empresa no perteneciente al sistema financiero, `013` Tarjetas de crédito emitidas en el exterior por empresas bancarias o financieras no domiciliadas, `101` Transferencias – Comercio exterior, `102` Cheques bancarios - Comercio exterior, `103` Orden de pago simple - Comercio exterior, `104` Orden de pago documentario - Comercio exterior, `105` Remesa simple - Comercio exterior, `106` Remesa documentaria - Comercio exterior, `107` Carta de crédito simple - Comercio exterior, `108` Carta de crédito documentario - Comercio exterior, `999` Otros medios de pago |
+| `base_document_type` | `documento_que_se_modifica_tipo` | `1` FACTURAS ELECTRÓNICAS, `2` BOLETAS DE VENTA ELECTRÓNICAS |
+| `credit_note_reason` | `tipo_de_nota_de_credito` | `1` ANULACIÓN DE LA OPERACIÓN, `2` ANULACIÓN POR ERROR EN EL RUC, `3` CORRECCIÓN POR ERROR EN LA DESCRIPCIÓN, `4` DESCUENTO GLOBAL, `5` DESCUENTO POR ÍTEM, `6` DEVOLUCIÓN TOTAL, `7` DEVOLUCIÓN POR ÍTEM, `8` BONIFICACIÓN, `9` DISMINUCIÓN EN EL VALOR, `10` OTROS CONCEPTOS, `11` AJUSTES AFECTOS AL IVAP, `12` AJUSTES DE OPERACIONES DE EXPORTACIÓN, `13` AJUSTES - MONTOS Y/O FECHAS DE PAGO |
+| `debit_note_reason` | `tipo_de_nota_de_debito` | `1` INTERESES POR MORA, `2` AUMENTO DE VALOR, `3` PENALIDADES, `4` AJUSTES AFECTOS AL IVAP, `5` AJUSTES DE OPERACIONES DE EXPORTACIÓN |
+| `pdf_format` | `formato_de_pdf` | `A4` FORMATO A4, `A5` FORMATO A5 (MITAD DE A4), `TICKET` FORMATO TICKET, `""` FORMATO POR DEFECTO DE NUBEFACT |
+| `status` | - | `Draft`, `Pending Response`, `Accepted`, `Voided`, `Error` (estado interno del DocType) |
+| `void_status` | - | `Pending`, `Accepted`, `Rejected` (estado interno de anulación) |
+
+### Item Child Table Selects (`Nubefact Invoice Item`)
+
+| Field Name | NubeFact Field | Legend |
+|------------|----------------|--------|
+| `igv_type` | `tipo_de_igv` | `1` Gravado - Operación Onerosa, `2` Gravado – Retiro por premio, `3` Gravado – Retiro por donación, `4` Gravado – Retiro, `5` Gravado – Retiro por publicidad, `6` Gravado – Bonificaciones, `7` Gravado – Retiro por entrega a trabajadores, `8` Exonerado - Operación Onerosa, `9` Inafecto - Operación Onerosa, `10` Inafecto – Retiro por Bonificación, `11` Inafecto – Retiro, `12` Inafecto – Retiro por Muestras Médicas, `13` Inafecto - Retiro por Convenio Colectivo, `14` Inafecto – Retiro por premio, `15` Inafecto - Retiro por publicidad, `16` Exportación, `17` Exonerado - Transferencia Gratuita, `20` Inafecto - Transferencia Gratuita |
+| `ivap_type` | `tipo_de_ivap` | `17` IVAP Gravado, `101` IVAP Gratuito |
+| `isc_type` | `tipo_de_isc` | `1` Sistema al valor, `2` Sistema específico, `3` Sistema de precios de venta al público |
+
+### Delivery Reference Child Table Selects (`Nubefact Invoice Delivery Reference`)
+
+| Field Name | NubeFact Field | Legend |
+|------------|----------------|--------|
+| `guide_type` | `guia_tipo` | `1` GUÍA DE REMISIÓN REMITENTE, `2` GUÍA DE REMISIÓN TRANSPORTISTA |
+
 \* `Required = Yes*` means canonical/API-required at runtime payload validation level (not necessarily marked mandatory in DocType schema yet).
 
 ## Settings
