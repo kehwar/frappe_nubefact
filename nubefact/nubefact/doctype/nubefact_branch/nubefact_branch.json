@@ -8,21 +8,68 @@
  "field_order": [
   "title",
   "company",
+  "location_section",
+  "state",
+  "city",
+  "county",
+  "ubigeo",
+  "column_break_location",
+  "address",
+  "sunat_code",
   "api_section",
-    "api_route",
+  "api_route",
   "column_break_duba",
-    "api_token"
+  "api_token"
  ],
  "fields": [
   {
-     "fieldname": "api_route",
+   "fieldname": "api_route",
    "fieldtype": "Data",
-     "label": "API Route"
+   "label": "API Route"
   },
   {
-     "fieldname": "api_token",
+   "fieldname": "api_token",
    "fieldtype": "Password",
-     "label": "API Token"
+   "label": "API Token"
+  },
+  {
+   "fieldname": "location_section",
+   "fieldtype": "Section Break",
+   "label": "Location"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "ubigeo",
+   "fieldtype": "Data",
+   "label": "Ubigeo"
+  },
+  {
+   "fieldname": "sunat_code",
+   "fieldtype": "Data",
+   "label": "SUNAT Code"
+  },
+  {
+   "fieldname": "column_break_location",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "county",
+   "fieldtype": "Data",
+   "label": "County"
   },
   {
    "fieldname": "title",
@@ -49,7 +96,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-26 21:25:40.218898",
+ "modified": "2026-02-26 23:31:31.945475",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Branch",

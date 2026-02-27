@@ -28,6 +28,12 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 |------------|------------|------------|----------|-------------|
 | Title | `title` | Data | Yes | Human-friendly branch name. |
 | Company | `company` | Link | No | Optional ERP company mapping. |
+| Address | `address` | Small Text | No | Branch address. |
+| Ubigeo | `ubigeo` | Data | No | SUNAT ubigeo code for branch location. |
+| SUNAT Code | `sunat_code` | Data | No | SUNAT establishment code for branch. |
+| State | `state` | Data | No | State/region. |
+| City | `city` | Data | No | City. |
+| County | `county` | Data | No | District/county. |
 | API Route | `api_route` | Data | Yes | Client route appended to API base URL (or absolute URL). |
 | API Token | `api_token` | Password | Yes | Authorization token used in request header. |
 
@@ -154,12 +160,12 @@ This document describes the Frappe DocTypes required for NubeFact API integratio
 | Origin Ubigeo | `origin_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
 | Origin Address | `origin_address` | Small Text | Yes | Full origin address |
 | | Column Break | | | |
-| Origin Establishment Code | `origin_establishment_code` | Data | No | SUNAT establishment code (default "0000") |
+| Origin SUNAT Code | `origin_sunat_code` | Data | No | SUNAT establishment code (default "0000") |
 | **Destination (Punto de Llegada)** | | Section Break | | |
 | Destination Ubigeo | `destination_ubigeo` | Data | Yes | 6-digit SUNAT ubigeo code |
 | Destination Address | `destination_address` | Small Text | Yes | Full destination address |
 | | Column Break | | | |
-| Destination Establishment Code | `destination_establishment_code` | Data | No | SUNAT establishment code (default "0000") |
+| Destination SUNAT Code | `destination_sunat_code` | Data | No | SUNAT establishment code (default "0000") |
 | **Automation** | | Section Break | | |
 | Auto Send to Client | `auto_send_to_client` | Check | No | Email PDF to client |
 | PDF Format | `pdf_format` | Select | No | Options: "", "A4", "A5", "TICKET" |
