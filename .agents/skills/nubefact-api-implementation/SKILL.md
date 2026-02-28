@@ -34,30 +34,35 @@ Minimal skill scaffold for NubeFact API work in this repository.
 - `references/gre-examples.md` — GRE examples index grouped by document/operation.
 - `references/doctype-nubefact-branch.md` — `Nubefact Branch` DocType specification.
 - `references/doctype-nubefact-api-log.md` — `Nubefact API Log` DocType specification.
-- `references/doctype-nubefact-delivery-note-schema.md` — `Nubefact Delivery Note` DocType schema/specification.
-- `references/doctype-nubefact-invoice-schema.md` — `Nubefact Invoice` DocType schema/specification.
+- `references/doctype-nubefact-guia-remision-schema.md` — `Nubefact Guía de Remisión` (main) DocType schema/specification.
+- `references/doctype-nubefact-guia-remision-item-schema.md` — `Nubefact Guía de Remisión Ítem` child DocType schema/specification.
+- `references/doctype-nubefact-guia-remision-documento-relacionado-schema.md` — `Nubefact Guía de Remisión Documento Relacionado` child DocType schema/specification.
+- `references/doctype-nubefact-guia-remision-vehiculo-secundario-schema.md` — `Nubefact Guía de Remisión Vehículo Secundario` child DocType schema/specification.
+- `references/doctype-nubefact-guia-remision-conductor-secundario-schema.md` — `Nubefact Guía de Remisión Conductor Secundario` child DocType schema/specification.
+- `references/doctype-nubefact-factura-schema.md` — `Nubefact Factura` DocType schema/specification.
 - `references/doctype-nubefact-invoice-guide.md` — `Nubefact Invoice` workflow guide (how to fill fields correctly by scenario).
 
 ### CPE API Structure Tables (from `assets/cpe-manual-google-doc.md`)
 
-- `references/cpe-api-structure-header.md` — ESTRUCTURA PARA GENERAR FACTURAS, BOLETAS Y NOTAS — CABECERA DEL DOCUMENTO.
-- `references/cpe-api-structure-items.md` — PARA ITEMS O LÍNEAS DEL DOCUMENTO.
-- `references/cpe-api-structure-guides.md` — PARA GUÍAS.
-- `references/cpe-api-structure-credit-sale.md` — PARA VENTA AL CRÉDITO.
-- `references/cpe-api-structure-consult.md` — ESTRUCTURA PARA CONSULTAR FACTURAS, BOLETAS Y NOTAS.
-- `references/cpe-api-structure-response.md` — ESTRUCTURA DE RESPUESTA DE NUBEFACT PARA FACTURAS, BOLETAS, NOTAS.
-- `references/cpe-api-structure-annul-generate.md` — ESTRUCTURA PARA GENERAR ANULACIÓN O COMUNICACIÓN DE BAJA.
-- `references/cpe-api-structure-annul-consult.md` — ESTRUCTURA PARA CONSULTAR ANULACIÓN O COMUNICACIÓN DE BAJA.
-- `references/cpe-api-structure-annul-response.md` — ESTRUCTURA DE LA RESPUESTA DE NUBEFACT PARA ANULACIÓN O COMUNICACIÓN DE BAJA.
+- `references/cpe-api-estructura-cabecera.md` — ESTRUCTURA PARA GENERAR FACTURAS, BOLETAS Y NOTAS — CABECERA DEL DOCUMENTO.
+- `references/cpe-api-estructura-items.md` — PARA ITEMS O LÍNEAS DEL DOCUMENTO.
+- `references/cpe-api-estructura-guias.md` — PARA GUÍAS.
+- `references/cpe-api-estructura-venta-credito.md` — PARA VENTA AL CRÉDITO.
+- `references/cpe-api-estructura-consulta.md` — ESTRUCTURA PARA CONSULTAR FACTURAS, BOLETAS Y NOTAS.
+- `references/cpe-api-estructura-respuesta.md` — ESTRUCTURA DE RESPUESTA DE NUBEFACT PARA FACTURAS, BOLETAS, NOTAS.
+- `references/cpe-api-estructura-anulacion-generar.md` — ESTRUCTURA PARA GENERAR ANULACIÓN O COMUNICACIÓN DE BAJA.
+- `references/cpe-api-estructura-anulacion-consultar.md` — ESTRUCTURA PARA CONSULTAR ANULACIÓN O COMUNICACIÓN DE BAJA.
+- `references/cpe-api-estructura-anulacion-respuesta.md` — ESTRUCTURA DE LA RESPUESTA DE NUBEFACT PARA ANULACIÓN O COMUNICACIÓN DE BAJA.
 
 ### GRE API Structure Tables (from `assets/gre-manual-google-doc.md`)
 
-- `references/gre-api-structure-header.md` — ESTRUCTURA PARA GENERAR GUÍA DE REMISIÓN REMITENTE — CABECERA DEL DOCUMENTO.
-- `references/gre-api-structure-items.md` — PARA ITEMS O LÍNEAS DEL DOCUMENTO.
-- `references/gre-api-structure-related-documents.md` — PARA DOCUMENTOS RELACIONADOS AL DOCUMENTO.
-- `references/gre-api-structure-secondary-vehicles.md` — PARA VEHÍCULOS SECUNDARIOS (opcional, máx. 2).
-- `references/gre-api-structure-secondary-drivers.md` — PARA CONDUCTORES SECUNDARIOS (opcional, máx. 2).
-- `references/gre-api-structure-response.md` — ESTRUCTURA DE RESPUESTA DE NUBEFACT.
+- `references/gre-api-estructura-cabecera.md` — ESTRUCTURA PARA GENERAR GUÍA DE REMISIÓN REMITENTE — CABECERA DEL DOCUMENTO.
+- `references/gre-api-estructura-items.md` — PARA ITEMS O LÍNEAS DEL DOCUMENTO.
+- `references/gre-api-estructura-documentos-relacionados.md` — PARA DOCUMENTOS RELACIONADOS AL DOCUMENTO.
+- `references/gre-api-estructura-vehiculos-secundarios.md` — PARA VEHÍCULOS SECUNDARIOS (opcional, máx. 2).
+- `references/gre-api-estructura-conductores-secundarios.md` — PARA CONDUCTORES SECUNDARIOS (opcional, máx. 2).
+- `references/gre-api-estructura-consulta.md` — ESTRUCTURA PARA CONSULTAR GRE REMITENTE O TRANSPORTISTA.
+- `references/gre-api-estructura-respuesta.md` — ESTRUCTURA DE RESPUESTA DE NUBEFACT.
 
 ## Example assets
 

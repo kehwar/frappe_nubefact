@@ -1,6 +1,6 @@
-# DocType: Nubefact Invoice
+# DocType: Nubefact Factura
 
-**DocType Name**: `Nubefact Invoice`
+**DocType Name**: `Nubefact Factura`
 **Type**: Standard DocType
 **Purpose**: Manages electronic invoices, receipts (boletas), credit notes, and debit notes via NubeFact JSON v1 API.
 
@@ -111,11 +111,11 @@
 | Vehicle License Plate | `vehicle_license_plate` | `placa_vehiculo` | Data | No | Delivery vehicle plate |
 | Purchase Order | `purchase_order` | `orden_compra_servicio` | Data | No | Client's PO/SO reference |
 | **Items** | | - | Section Break | | |
-| Items | `items` | `items` | Table | Yes* | Nubefact Invoice Item |
+| Items | `items` | `items` | Table | Yes* | Nubefact Factura Ítem |
 | **Related Guides** | | - | Section Break | | |
-| Delivery References | `delivery_references` | `guias` | Table | No | Nubefact Invoice Delivery Reference |
+| Delivery References | `delivery_references` | `guias` | Table | No | Nubefact Factura Guía Relacionada |
 | **Credit Sale** | | - | Section Break | | |
-| Credit Sale Installments | `credit_installments` | `venta_al_credito` | Table | No | Nubefact Invoice Payment Installment |
+| Credit Sale Installments | `credit_installments` | `venta_al_credito` | Table | No | Nubefact Factura Cuota de Venta al Crédito |
 | **Additional Information** | | - | Section Break | | |
 | Remarks | `remarks` | `observaciones` | Text | No | Additional notes |
 | **More Information** | | - | Tab Break | | |
@@ -150,7 +150,7 @@
 | Void Status | `void_status` | - | Select | No | `Pending`, `Accepted`, `Rejected` |
 | Void Ticket | `void_ticket` | `sunat_ticket_numero` | Data | No | SUNAT void ticket number |
 
-## Child Table: Nubefact Invoice Item
+## Child Table: Nubefact Factura Ítem
 
 | Field Label | Field Name | NubeFact Field | Field Type | Required | Description |
 |------------|------------|----------------|------------|----------|-------------|
@@ -174,14 +174,14 @@
 | ISC Type | `isc_type` | `tipo_de_isc` | Select | No | `1` Sistema al valor, `2` Sistema específico, `3` Sistema de precios de venta al público |
 | ISC | `isc` | `isc` | Currency | No | ISC amount for the line |
 
-## Child Table: Nubefact Invoice Delivery Reference
+## Child Table: Nubefact Factura Guía Relacionada
 
 | Field Label | Field Name | NubeFact Field | Field Type | Required | Description |
 |------------|------------|----------------|------------|----------|-------------|
 | Guide Type | `guide_type` | `guia_tipo` | Select | Yes* | `1` GUÍA DE REMISIÓN REMITENTE, `2` GUÍA DE REMISIÓN TRANSPORTISTA |
 | Guide Series and Number | `guide_series_number` | `guia_serie_numero` | Data | Yes* | Format: "0001-23" |
 
-## Child Table: Nubefact Invoice Payment Installment
+## Child Table: Nubefact Factura Cuota de Venta al Crédito
 
 | Field Label | Field Name | NubeFact Field | Field Type | Required | Description |
 |------------|------------|----------------|------------|----------|-------------|
@@ -210,7 +210,7 @@
 | `status` | - | `Draft`, `Pending Response`, `Accepted`, `Voided`, `Error` (estado interno del DocType) |
 | `void_status` | - | `Pending`, `Accepted`, `Rejected` (estado interno de anulación) |
 
-### Item Child Table Selects (`Nubefact Invoice Item`)
+### Item Child Table Selects (`Nubefact Factura Ítem`)
 
 | Field Name | NubeFact Field | Legend |
 |------------|----------------|--------|
@@ -218,7 +218,7 @@
 | `ivap_type` | `tipo_de_ivap` | `17` IVAP Gravado, `101` IVAP Gratuito |
 | `isc_type` | `tipo_de_isc` | `1` Sistema al valor, `2` Sistema específico, `3` Sistema de precios de venta al público |
 
-### Delivery Reference Child Table Selects (`Nubefact Invoice Delivery Reference`)
+### Delivery Reference Child Table Selects (`Nubefact Factura Guía Relacionada`)
 
 | Field Name | NubeFact Field | Legend |
 |------------|----------------|--------|
