@@ -65,11 +65,13 @@ class NubefactFacturacion(Document):
             f"NubefactFacturacion::{series_prefix}", 6
         )
 
-    def validate(self):
+    def before_validate(self):
         if not self.status:
             self.status = "Borrador"
 
         self._set_inferred_values()
+
+    def validate(self):
 
         if not cint(getattr(self, "skip_required_fields_validation", 0)):
             self._validate_required_fields()
@@ -345,7 +347,8 @@ def send_to_nubefact(name: str):
         )
 
     try:
-        doc.run_method("validate")
+        doc._action = "save"
+        doc.run_before_save_methods()
 
         values = _request_extract_and_save_response(
             doc,
