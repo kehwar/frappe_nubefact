@@ -25,15 +25,6 @@ description: Minimal starter skill for implementing and extending NubeFact API i
 - `references/canonical-model.md` — Canonical model index and shared implementation notes.
 - `references/cpe-examples.md` — CPE examples index grouped by document/operation.
 - `references/gre-examples.md` — GRE examples index grouped by document/operation.
-- `references/doctype-nubefact-local.md` — `Nubefact Local` DocType specification.
-- `references/doctype-nubefact-api-log.md` — `Nubefact API Log` DocType specification.
-- `references/doctype-nubefact-guia-remision-schema.md` — `Nubefact Guía de Remisión` (main) DocType schema/specification.
-- `references/doctype-nubefact-guia-remision-item-schema.md` — `Nubefact Guía de Remisión Ítem` child DocType schema/specification.
-- `references/doctype-nubefact-guia-remision-documento-relacionado-schema.md` — `Nubefact Guía de Remisión Documento Relacionado` child DocType schema/specification.
-- `references/doctype-nubefact-guia-remision-vehiculo-secundario-schema.md` — `Nubefact Guía de Remisión Vehículo Secundario` child DocType schema/specification.
-- `references/doctype-nubefact-guia-remision-conductor-secundario-schema.md` — `Nubefact Guía de Remisión Conductor Secundario` child DocType schema/specification.
-- `references/doctype-nubefact-factura-schema.md` — `Nubefact Factura` DocType schema/specification.
-- `references/doctype-nubefact-invoice-guide.md` — `Nubefact Invoice` workflow guide (how to fill fields correctly by scenario).
 
 ### CPE API Structure Tables (from `assets/cpe-manual-google-doc.md`)
 
