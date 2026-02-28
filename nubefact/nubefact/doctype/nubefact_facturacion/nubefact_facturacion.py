@@ -292,7 +292,7 @@ class NubefactFacturacion(Document):
         return {
             "number": number,
             "title": title,
-            "status": "Aceptado" if accepted_by_sunat else "Pendiente de Respuesta",
+            "status": "Aceptada" if accepted_by_sunat else "Pendiente de Aceptacion",
             "accepted_by_sunat": accepted_by_sunat,
             "last_sunat_check": now_datetime(),
             "sunat_response_code": cstr(response.get("sunat_responsecode") or ""),
@@ -323,8 +323,8 @@ class NubefactFacturacion(Document):
             "voided": 1 if accepted else 0,
             "void_date": now_datetime().date(),
             "void_ticket": ticket,
-            "void_status": "Aceptado" if accepted else "Pendiente",
-            "status": "Anulado" if accepted else self.status,
+            "void_status": "Aceptada" if accepted else "Pendiente",
+            "status": "Anulada" if accepted else self.status,
             "sunat_response_code": cstr(response.get("sunat_responsecode") or ""),
             "sunat_response_message": cstr(response.get("sunat_description") or ""),
             "sunat_note": cstr(response.get("sunat_note") or ""),
@@ -380,9 +380,9 @@ def void_in_nubefact(name: str, reason: str):
     doc = frappe.get_doc("Nubefact Facturacion", name)
     doc.check_permission("write")
 
-    if doc.status not in {"Aceptado", "Pendiente de Respuesta"}:
+    if doc.status not in {"Aceptada", "Pendiente de Aceptacion"}:
         frappe.throw(
-            "Solo los comprobantes Aceptados o con Respuesta Pendiente pueden anularse."
+            "Solo los comprobantes en estado Aceptada o Pendiente de Aceptacion pueden anularse."
         )
 
     if cint(doc.voided):
@@ -418,7 +418,7 @@ def void_in_nubefact(name: str, reason: str):
         values = {
             "status": "Error",
             "error_message": cstr(exc),
-            "void_status": "Rechazado",
+            "void_status": "Rechazada",
             "last_sunat_check": now_datetime(),
         }
         _save_response_status(doc, values)
@@ -430,7 +430,7 @@ def void_in_nubefact(name: str, reason: str):
 def poll_pending_invoices():
     pending_names = frappe.get_all(
         "Nubefact Facturacion",
-        filters={"status": "Pendiente de Respuesta", "accepted_by_sunat": 0},
+        filters={"status": "Pendiente de Aceptacion", "accepted_by_sunat": 0},
         pluck="name",
         limit=20,
         order_by="modified asc",

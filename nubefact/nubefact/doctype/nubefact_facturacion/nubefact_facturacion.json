@@ -179,7 +179,7 @@
    "in_list_view": 1,
    "label": "Estado",
    "no_copy": 1,
-    "options": "Borrador\nPendiente de Respuesta\nAceptado\nAnulado\nError",
+    "options": "Borrador\nPendiente de Aceptacion\nAceptada\nAnulada\nError",
    "read_only": 1
   },
   {
@@ -738,7 +738,7 @@
    "default": "0",
    "fieldname": "accepted_by_sunat",
    "fieldtype": "Check",
-   "label": "Aceptado por SUNAT",
+   "label": "Aceptada por SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
@@ -859,7 +859,7 @@
    "fieldname": "void_status",
    "fieldtype": "Select",
    "label": "Estado de Anulación",
-    "options": "\nPendiente\nAceptado\nRechazado",
+    "options": "\nPendiente\nAceptada\nRechazada",
    "read_only": 1
   },
   {
@@ -939,15 +939,15 @@
   },
   {
    "color": "Orange",
-    "title": "Pendiente de Respuesta"
+    "title": "Pendiente de Aceptacion"
   },
   {
    "color": "Green",
-    "title": "Aceptado"
+    "title": "Aceptada"
   },
   {
    "color": "Gray",
-    "title": "Anulado"
+    "title": "Anulada"
   },
   {
    "color": "Red",

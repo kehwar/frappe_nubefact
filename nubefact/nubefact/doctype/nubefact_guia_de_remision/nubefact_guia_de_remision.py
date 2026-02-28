@@ -334,7 +334,7 @@ class NubefactGuiaDeRemision(Document):
         return {
             "numero": numero,
             "title": title,
-            "status": "Aceptada" if aceptada_por_sunat else "Pendiente de Respuesta",
+            "status": "Aceptada" if aceptada_por_sunat else "Pendiente de Aceptacion",
             "aceptada_por_sunat": aceptada_por_sunat,
             "last_sunat_check": now_datetime(),
             "sunat_responsecode": cstr(response.get("sunat_responsecode") or ""),
@@ -394,7 +394,7 @@ def refrescar_estado_sunat(name: str):
 def consultar_guias_pendientes():
     pending_names = frappe.get_all(
         "Nubefact Guia De Remision",
-        filters={"status": "Pendiente de Respuesta", "aceptada_por_sunat": 0},
+        filters={"status": "Pendiente de Aceptacion", "aceptada_por_sunat": 0},
         pluck="name",
         limit=20,
         order_by="modified asc",

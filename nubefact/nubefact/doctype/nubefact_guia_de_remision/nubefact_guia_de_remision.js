@@ -5,7 +5,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 	refresh(frm) {
 		frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
 
-		if (["Pendiente de Respuesta", "Aceptada"].includes(frm.doc.status || "Borrador")) {
+		if (["Pendiente de Aceptacion", "Aceptada"].includes(frm.doc.status || "Borrador")) {
 			frm.disable_form();
 		}
 
@@ -23,7 +23,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 				});
 			}
 
-			if (["Borrador", "Pendiente de Respuesta", "Aceptada", "Error"].includes(frm.doc.status)) {
+			if (["Borrador", "Pendiente de Aceptacion", "Aceptada", "Error"].includes(frm.doc.status)) {
 				frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
 					await watcher.refresh_now_and_continue();
 
@@ -122,7 +122,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 				field: "status",
 				values: [
 					"Borrador = No enviada",
-					"Pendiente de Respuesta = Enviada, esperando SUNAT",
+					"Pendiente de Aceptacion = Enviada, esperando SUNAT",
 					"Aceptada = Aceptada por SUNAT",
 					"Error = Último envío falló",
 				],

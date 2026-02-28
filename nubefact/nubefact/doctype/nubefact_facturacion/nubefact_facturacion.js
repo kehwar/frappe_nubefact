@@ -5,7 +5,7 @@ frappe.ui.form.on("Nubefact Facturacion", {
 	refresh(frm) {
 		frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
 
-		if (["Pendiente de Respuesta", "Aceptado", "Anulado"].includes(frm.doc.status || "Borrador")) {
+		if (["Pendiente de Aceptacion", "Aceptada", "Anulada"].includes(frm.doc.status || "Borrador")) {
 			frm.disable_form();
 		}
 
@@ -20,7 +20,7 @@ frappe.ui.form.on("Nubefact Facturacion", {
 				});
 			}
 
-			if (["Borrador", "Pendiente de Respuesta", "Aceptado", "Error"].includes(frm.doc.status)) {
+			if (["Borrador", "Pendiente de Aceptacion", "Aceptada", "Error"].includes(frm.doc.status)) {
 				frm.add_custom_button(__("Refresh SUNAT Status"), async () => {
 					await watcher.refresh_now_and_continue();
 
@@ -31,7 +31,7 @@ frappe.ui.form.on("Nubefact Facturacion", {
 				});
 			}
 
-			if (["Aceptado"].includes(frm.doc.status) && !frm.doc.voided) {
+			if (["Aceptada"].includes(frm.doc.status) && !frm.doc.voided) {
 				frm.add_custom_button(__("Void in Nubefact"), () => {
 					frm.trigger("open_void_dialog");
 				});
