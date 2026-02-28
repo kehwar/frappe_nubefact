@@ -4,7 +4,7 @@
 frappe.listview_settings["Nubefact Facturacion"] = {
 	onload(listview) {
 			listview.page.add_inner_button(__("Archivo"), async () => {
-				await import_invoice_from_file([".json"]);
+				await import_invoice_from_file([".json", ".xml", "text/xml"]);
 			}, "Importar");
 
 			listview.page.add_inner_button(__("JSON"), () => {

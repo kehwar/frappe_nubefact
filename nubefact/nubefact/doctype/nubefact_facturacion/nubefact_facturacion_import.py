@@ -7,6 +7,10 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cstr
 
+from nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion_import_xml import (
+    parse_import_cpe_xml_payload,
+)
+
 
 @frappe.whitelist()
 def create_invoice_from_import_file(file_name: str) -> str:
@@ -15,13 +19,22 @@ def create_invoice_from_import_file(file_name: str) -> str:
     text = content.decode("utf-8-sig") if isinstance(content, bytes) else cstr(content)
 
     source_name = cstr(file_doc.file_name or file_doc.file_url or "").lower()
+    imported_from_xml = False
     if source_name.endswith(".json"):
         payload = parse_import_json_payload(text)
+    elif source_name.endswith(".xml"):
+        payload = parse_import_cpe_xml_payload(text)
+        imported_from_xml = True
     else:
-        frappe.throw("Tipo de archivo no soportado. Solo se permiten archivos JSON.")
+        frappe.throw(
+            "Tipo de archivo no soportado. Solo se permiten archivos JSON y XML."
+        )
 
     doc = frappe.new_doc("Nubefact Facturacion")
+    if imported_from_xml:
+        doc.set("skip_required_fields_validation", 1)
     apply_import_payload_to_doc(doc, payload)
+    doc.flags.ignore_validate = True
     doc.insert()
     return doc.name
 
@@ -32,6 +45,7 @@ def create_invoice_from_import_json_text(json_payload: str) -> str:
 
     doc = frappe.new_doc("Nubefact Facturacion")
     apply_import_payload_to_doc(doc, payload)
+    doc.flags.ignore_validate = True
     doc.insert()
     return doc.name
 
