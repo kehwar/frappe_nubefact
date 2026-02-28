@@ -6,11 +6,11 @@
  "engine": "InnoDB",
  "field_order": [
   "seccion_documento",
-  "titulo",
+    "title",
   "tipo_de_comprobante",
   "serie",
   "numero",
-  "estado",
+    "status",
   "columna_documento",
   "fecha_de_emision",
   "fecha_de_inicio_de_traslado",
@@ -66,20 +66,20 @@
   "conductores_secundarios",
   "seccion_informacion_adicional",
   "observaciones",
-  "datos_crudos",
+    "custom",
   "tab_mas_informacion",
   "seccion_automatizacion",
   "enviar_automaticamente_al_cliente",
-  "omitir_validacion_campos_obligatorios",
+    "skip_field_validation",
   "formato_de_pdf",
   "seccion_sunat",
   "aceptada_por_sunat",
-  "ultima_consulta_sunat",
+    "last_sunat_check",
   "sunat_responsecode",
   "sunat_description",
   "sunat_note",
   "sunat_soap_error",
-  "mensaje_error",
+    "error_message",
   "columna_sunat",
   "enlace",
   "enlace_del_pdf",
@@ -95,7 +95,7 @@
   },
   {
    "default": "Borrador",
-   "fieldname": "estado",
+    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Estado",
@@ -117,7 +117,7 @@
    "options": "7\n8"
   },
   {
-   "fieldname": "titulo",
+    "fieldname": "title",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Título",
@@ -373,7 +373,7 @@
   },
   {
    "default": "0",
-   "fieldname": "omitir_validacion_campos_obligatorios",
+    "fieldname": "skip_field_validation",
    "fieldtype": "Check",
    "label": "Omitir Validación de Campos Obligatorios"
   },
@@ -438,7 +438,7 @@
    "label": "Observaciones"
   },
   {
-   "fieldname": "datos_crudos",
+    "fieldname": "custom",
    "fieldtype": "JSON",
    "label": "Datos Crudos"
   },
@@ -456,7 +456,7 @@
    "read_only": 1
   },
   {
-   "fieldname": "ultima_consulta_sunat",
+    "fieldname": "last_sunat_check",
    "fieldtype": "Datetime",
    "label": "Última Consulta SUNAT",
    "no_copy": 1,
@@ -491,7 +491,7 @@
    "read_only": 1
   },
   {
-   "fieldname": "mensaje_error",
+    "fieldname": "error_message",
    "fieldtype": "Text",
    "label": "Mensaje de Error",
    "no_copy": 1,
@@ -598,6 +598,6 @@
    "title": "Error"
   }
  ],
- "title_field": "titulo",
+ "title_field": "title",
  "track_changes": 1
 }

@@ -3,7 +3,7 @@
 
 frappe.ui.form.on("Nubefact Guia de Remision", {
 	refresh(frm) {
-		if (["Pendiente de Respuesta", "Aceptada"].includes(frm.doc.estado || "Borrador")) {
+		if (["Pendiente de Respuesta", "Aceptada"].includes(frm.doc.status || "Borrador")) {
 			frm.disable_form();
 		}
 
@@ -15,13 +15,13 @@ frappe.ui.form.on("Nubefact Guia de Remision", {
 			watcher.on_refresh();
 			watcher.schedule_if_needed();
 
-			if (["Borrador", "Error"].includes(frm.doc.estado || "Borrador")) {
+			if (["Borrador", "Error"].includes(frm.doc.status || "Borrador")) {
 				frm.add_custom_button(__("Enviar a Nubefact"), () => {
 					frm.trigger("open_send_dialog");
 				});
 			}
 
-			if (["Borrador", "Pendiente de Respuesta", "Aceptada", "Error"].includes(frm.doc.estado)) {
+			if (["Borrador", "Pendiente de Respuesta", "Aceptada", "Error"].includes(frm.doc.status)) {
 				frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
 					await watcher.refresh_now_and_continue();
 
@@ -32,7 +32,7 @@ frappe.ui.form.on("Nubefact Guia de Remision", {
 				});
 			}
 
-			if (frm.doc.estado === "Aceptada") {
+			if (frm.doc.status === "Aceptada") {
 				frm.add_custom_button(__("PDF"), () => {
 					download_file_from_url(frm, "enlace_del_pdf", "PDF");
 				}, "Descargar");
@@ -70,7 +70,7 @@ frappe.ui.form.on("Nubefact Guia de Remision", {
 
 				await frm.reload_doc();
 
-				const has_error = message?.estado === "Error";
+				const has_error = message?.status === "Error";
 				frappe.show_alert({
 					message: has_error
 						? __("Falló el envío de la guía. El estado cambió a Error")
@@ -113,7 +113,7 @@ frappe.ui.form.on("Nubefact Guia de Remision", {
 				values: ["7 = GRE Remitente", "8 = GRE Transportista"],
 			},
 			{
-				field: "estado",
+				field: "status",
 				values: [
 					"Borrador = No enviada",
 					"Pendiente de Respuesta = Enviada, esperando SUNAT",

@@ -38,12 +38,12 @@ from nubefact.utils import (
 
 _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
     "aceptada_por_sunat": 0,
-    "ultima_consulta_sunat": None,
+    "last_sunat_check": None,
     "sunat_responsecode": "",
     "sunat_description": "",
     "sunat_note": "",
     "sunat_soap_error": "",
-    "mensaje_error": "",
+    "error_message": "",
     "enlace": "",
     "enlace_del_pdf": "",
     "enlace_del_xml": "",
@@ -61,12 +61,12 @@ class NubefactGuiadeRemision(Document):
         )
 
     def validate(self):
-        if not self.estado:
-            self.estado = "Borrador"
+        if not self.status:
+            self.status = "Borrador"
 
         self._set_inferred_values()
 
-        if not cint(getattr(self, "omitir_validacion_campos_obligatorios", 0)):
+        if not cint(getattr(self, "skip_field_validation", 0)):
             self._validate_required_fields()
 
     def _set_inferred_values(self):
@@ -102,7 +102,7 @@ class NubefactGuiadeRemision(Document):
             if not cstr(self.get(fieldname) or "").strip() and inferred_value:
                 self.set(fieldname, inferred_value)
 
-        self.titulo = self._compose_title()
+        self.title = self._compose_title()
 
     def _compose_title(self, numero: Any | None = None) -> str:
         serie = cstr(self.serie or "").strip()
@@ -232,7 +232,7 @@ class NubefactGuiadeRemision(Document):
                 for row in self.conductores_secundarios
             ]
 
-        return apply_raw_payload_overrides(payload, self.datos_crudos, "guía")
+        return apply_raw_payload_overrides(payload, self.custom, "guía")
 
     def _validate_required_fields(self):
         require_fields(
@@ -314,19 +314,19 @@ class NubefactGuiadeRemision(Document):
 
         aceptada_por_sunat = 1 if response.get("aceptada_por_sunat") else 0
         numero = response.get("numero") or self.numero
-        titulo = self._compose_title(numero)
+        title = self._compose_title(numero)
 
         return {
             "numero": numero,
-            "titulo": titulo,
-            "estado": "Aceptada" if aceptada_por_sunat else "Pendiente de Respuesta",
+            "title": title,
+            "status": "Aceptada" if aceptada_por_sunat else "Pendiente de Respuesta",
             "aceptada_por_sunat": aceptada_por_sunat,
-            "ultima_consulta_sunat": now_datetime(),
+            "last_sunat_check": now_datetime(),
             "sunat_responsecode": cstr(response.get("sunat_responsecode") or ""),
             "sunat_description": cstr(response.get("sunat_description") or ""),
             "sunat_note": cstr(response.get("sunat_note") or ""),
             "sunat_soap_error": cstr(response.get("sunat_soap_error") or ""),
-            "mensaje_error": cstr(response.get("sunat_soap_error") or ""),
+            "error_message": cstr(response.get("sunat_soap_error") or ""),
             "enlace": cstr(response.get("enlace") or ""),
             "enlace_del_pdf": cstr(response.get("enlace_del_pdf") or ""),
             "enlace_del_xml": cstr(response.get("enlace_del_xml") or ""),
@@ -341,7 +341,7 @@ def enviar_a_nubefact(name: str):
     doc = frappe.get_doc("Nubefact Guia de Remision", name)
     doc.check_permission("write")
 
-    if doc.estado not in {"Borrador", "Error"}:
+    if doc.status not in {"Borrador", "Error"}:
         frappe.throw("Solo se pueden enviar guías en estado Borrador o Error.")
 
     try:
@@ -355,13 +355,13 @@ def enviar_a_nubefact(name: str):
         frappe.db.rollback()
         error_message = cstr(exc)
         values = {
-            "estado": "Error",
+            "status": "Error",
             "aceptada_por_sunat": 0,
-            "ultima_consulta_sunat": now_datetime(),
-            "mensaje_error": error_message,
+            "last_sunat_check": now_datetime(),
+            "error_message": error_message,
         }
 
-    if values and values.get("estado") == "Error":
+    if values and values.get("status") == "Error":
         _save_response_status(doc, values)
         frappe.db.commit()
 
@@ -378,7 +378,7 @@ def refrescar_estado_sunat(name: str):
 def consultar_guias_pendientes():
     pending_names = frappe.get_all(
         "Nubefact Guia de Remision",
-        filters={"estado": "Pendiente de Respuesta", "aceptada_por_sunat": 0},
+        filters={"status": "Pendiente de Respuesta", "aceptada_por_sunat": 0},
         pluck="name",
         limit=20,
         order_by="modified asc",
