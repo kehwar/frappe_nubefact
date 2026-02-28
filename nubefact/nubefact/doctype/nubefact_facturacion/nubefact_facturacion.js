@@ -29,21 +29,25 @@ frappe.ui.form.on("Nubefact Facturacion", {
 				});
 			}
 
-			if (["Accepted", "Pending Response"].includes(frm.doc.status) && !frm.doc.voided) {
+			if (["Accepted"].includes(frm.doc.status) && !frm.doc.voided) {
 				frm.add_custom_button(__("Void in Nubefact"), () => {
 					frm.trigger("open_void_dialog");
 				});
 			}
 
-			if (["Accepted", "Voided"].includes(frm.doc.status)) {
+			if (frm.doc.pdf_url) {
 				frm.add_custom_button(__("PDF"), () => {
 					download_file_from_url(frm, "pdf_url", "PDF");
 				}, "Download");
+			}
 
+			if (frm.doc.xml_url) {
 				frm.add_custom_button(__("XML"), () => {
 					download_file_from_url(frm, "xml_url", "XML");
 				}, "Download");
+			}
 
+			if (frm.doc.cdr_url) {
 				frm.add_custom_button(__("CDR"), () => {
 					download_file_from_url(frm, "cdr_url", "CDR");
 				}, "Download");

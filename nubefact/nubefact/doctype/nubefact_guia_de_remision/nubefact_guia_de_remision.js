@@ -32,15 +32,19 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 				});
 			}
 
-			if (frm.doc.status === "Aceptada") {
+			if (frm.doc.enlace_del_pdf) {
 				frm.add_custom_button(__("PDF"), () => {
 					download_file_from_url(frm, "enlace_del_pdf", "PDF");
 				}, "Descargar");
+			}
 
+			if (frm.doc.enlace_del_xml) {
 				frm.add_custom_button(__("XML"), () => {
 					download_file_from_url(frm, "enlace_del_xml", "XML");
 				}, "Descargar");
+			}
 
+			if (frm.doc.enlace_del_cdr) {
 				frm.add_custom_button(__("CDR"), () => {
 					download_file_from_url(frm, "enlace_del_cdr", "CDR");
 				}, "Descargar");
