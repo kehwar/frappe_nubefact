@@ -7,7 +7,7 @@ from typing import Any
 
 import frappe
 from frappe.model.document import Document
-from frappe.model.naming import append_number_if_name_exists
+from frappe.model.naming import getseries
 from frappe.utils import cint, cstr, now_datetime
 
 from nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion_schema import (
