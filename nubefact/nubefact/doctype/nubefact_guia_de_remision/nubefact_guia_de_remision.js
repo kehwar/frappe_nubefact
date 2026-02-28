@@ -23,16 +23,14 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 				});
 			}
 
-			if (["Borrador", "Pendiente de Aceptacion", "Aceptada", "Error"].includes(frm.doc.status)) {
-				frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
-					await watcher.refresh_now_and_continue();
+            frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
+                await watcher.refresh_now_and_continue();
 
-					frappe.show_alert({
-						message: __("Estado SUNAT actualizado"),
-						indicator: "green",
-					});
-				});
-			}
+                frappe.show_alert({
+                    message: __("Estado SUNAT actualizado"),
+                    indicator: "green",
+                });
+            });
 
 			if (frm.doc.enlace_del_pdf) {
 				frm.add_custom_button(__("PDF"), () => {

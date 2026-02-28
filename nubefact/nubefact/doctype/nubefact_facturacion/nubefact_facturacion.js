@@ -20,16 +20,14 @@ frappe.ui.form.on("Nubefact Facturacion", {
 				});
 			}
 
-			if (["Borrador", "Pendiente de Aceptacion", "Aceptada", "Error"].includes(frm.doc.status)) {
-				frm.add_custom_button(__("Refresh SUNAT Status"), async () => {
-					await watcher.refresh_now_and_continue();
+            frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
+                await watcher.refresh_now_and_continue();
 
-					frappe.show_alert({
-						message: __("SUNAT status refreshed"),
-						indicator: "green",
-					});
-				});
-			}
+                frappe.show_alert({
+                    message: __("SUNAT status refreshed"),
+                    indicator: "green",
+                });
+            });
 
 			if (["Aceptada"].includes(frm.doc.status) && !frm.doc.voided) {
 				frm.add_custom_button(__("Void in Nubefact"), () => {
