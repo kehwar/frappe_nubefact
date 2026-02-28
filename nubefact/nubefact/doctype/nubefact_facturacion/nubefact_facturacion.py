@@ -55,6 +55,9 @@ class NubefactFacturacion(Document):
     - Ítems: cpe-api-estructura-items.md
     - Guías relacionadas: cpe-api-estructura-guias.md
     - Cuotas (venta al crédito): cpe-api-estructura-venta-credito.md
+    - Respuesta de consulta: cpe-api-estructura-respuesta.md
+    - Generacion de anulacion: cpe-api-estructura-anulacion-generar.md
+    - Respuesta de anulacion: cpe-api-estructura-anulacion-respuesta.md
 
     Ruta: .agents/skills/nubefact-api-implementation/references/
     """
