@@ -7,7 +7,7 @@
  "field_order": [
   "placa_numero",
   "tuc",
-  "datos_crudos"
+    "custom"
  ],
  "fields": [
   {
@@ -23,7 +23,7 @@
    "label": "TUC"
   },
   {
-   "fieldname": "datos_crudos",
+    "fieldname": "custom",
    "fieldtype": "JSON",
    "label": "Datos Crudos"
   }

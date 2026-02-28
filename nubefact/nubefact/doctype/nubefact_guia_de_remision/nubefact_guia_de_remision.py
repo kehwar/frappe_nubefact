@@ -137,7 +137,7 @@ class NubefactGuiaDeRemision(Document):
                         "codigo_dam": row.codigo_dam,
                     }
                 ),
-                row.datos_crudos,
+                row.custom,
                 f"items fila #{row.idx}",
             )
             for row in self.items
@@ -213,7 +213,7 @@ class NubefactGuiaDeRemision(Document):
                         "serie": row.serie,
                         "numero": cstr(row.numero),
                     },
-                    row.datos_crudos,
+                    row.custom,
                     f"documento relacionado fila #{row.idx}",
                 )
                 for row in self.documento_relacionado
@@ -227,7 +227,7 @@ class NubefactGuiaDeRemision(Document):
                 payload["vehiculos_secundarios"].append(
                     apply_raw_payload_overrides(
                         vehicle,
-                        row.datos_crudos,
+                        row.custom,
                         f"vehículo secundario fila #{row.idx}",
                     )
                 )
@@ -242,7 +242,7 @@ class NubefactGuiaDeRemision(Document):
                         "apellidos": row.apellidos,
                         "numero_licencia": row.numero_licencia,
                     },
-                    row.datos_crudos,
+                    row.custom,
                     f"conductor secundario fila #{row.idx}",
                 )
                 for row in self.conductores_secundarios

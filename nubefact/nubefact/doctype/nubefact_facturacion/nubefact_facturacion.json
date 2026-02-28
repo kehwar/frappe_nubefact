@@ -114,7 +114,7 @@
   "nubecont_tipo_de_venta_codigo",
   "adicional_section",
   "observaciones",
-  "json_crudo",
+    "custom",
   "sunat_section",
   "aceptada_por_sunat",
   "last_sunat_check",
@@ -718,7 +718,7 @@
    "label": "Observaciones"
   },
   {
-   "fieldname": "json_crudo",
+    "fieldname": "custom",
    "fieldtype": "JSON",
    "label": "JSON Crudo"
   },

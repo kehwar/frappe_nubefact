@@ -24,7 +24,7 @@
   "anticipo_documento_numero",
   "tipo_de_isc",
   "isc",
-  "json_crudo"
+    "custom"
  ],
  "fields": [
   {
@@ -146,7 +146,7 @@
    "label": "ISC"
   },
   {
-   "fieldname": "json_crudo",
+    "fieldname": "custom",
    "fieldtype": "JSON",
    "label": "JSON Crudo"
   }

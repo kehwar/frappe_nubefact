@@ -131,7 +131,7 @@ class NubefactFacturacion(Document):
                         "isc": cstr(row.isc),
                     }
                 ),
-                row.json_crudo,
+                row.custom,
                 f"items row #{row.idx}",
             )
             for row in self.items
@@ -267,7 +267,7 @@ class NubefactFacturacion(Document):
                         "guia_tipo": cstr(row.guia_tipo),
                         "guia_serie_numero": row.guia_serie_numero,
                     },
-                    row.json_crudo,
+                    row.custom,
                     f"delivery references row #{row.idx}",
                 )
                 for row in self.guias
@@ -281,13 +281,13 @@ class NubefactFacturacion(Document):
                         "fecha_de_pago": to_nubefact_date(row.fecha_de_pago),
                         "importe": cstr(row.importe),
                     },
-                    row.json_crudo,
+                    row.custom,
                     f"credit installments row #{row.idx}",
                 )
                 for row in self.venta_al_credito
             ]
 
-        return apply_raw_payload_overrides(payload, self.json_crudo, "invoice")
+        return apply_raw_payload_overrides(payload, self.custom, "invoice")
 
     def _validate_required_fields(self):
         require_fields(

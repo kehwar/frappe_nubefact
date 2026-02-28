@@ -7,7 +7,7 @@
  "field_order": [
   "guia_tipo",
   "guia_serie_numero",
-  "json_crudo"
+   "custom"
  ],
  "fields": [
   {
@@ -24,7 +24,7 @@
    "label": "Serie y Número de Guía"
   },
   {
-   "fieldname": "json_crudo",
+    "fieldname": "custom",
    "fieldtype": "JSON",
    "label": "JSON Crudo"
   }

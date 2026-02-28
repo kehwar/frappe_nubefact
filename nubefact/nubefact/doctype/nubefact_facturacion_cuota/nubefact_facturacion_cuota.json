@@ -8,7 +8,7 @@
   "cuota",
   "fecha_de_pago",
   "importe",
-  "json_crudo"
+   "custom"
  ],
  "fields": [
   {
@@ -30,7 +30,7 @@
    "label": "Importe"
   },
   {
-   "fieldname": "json_crudo",
+    "fieldname": "custom",
    "fieldtype": "JSON",
    "label": "JSON Crudo"
   }

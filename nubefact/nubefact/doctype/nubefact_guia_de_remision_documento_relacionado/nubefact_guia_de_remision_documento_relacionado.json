@@ -8,7 +8,7 @@
   "tipo",
   "serie",
   "numero",
-  "datos_crudos"
+    "custom"
  ],
  "fields": [
   {
@@ -31,7 +31,7 @@
    "label": "Número"
   },
   {
-   "fieldname": "datos_crudos",
+    "fieldname": "custom",
    "fieldtype": "JSON",
    "label": "Datos Crudos"
   }
