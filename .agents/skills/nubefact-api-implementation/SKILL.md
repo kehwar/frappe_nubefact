@@ -16,7 +16,7 @@ description: Minimal starter skill for implementing and extending NubeFact API i
 
 - Keep changes small and isolated.
 - Prefer explicit request and response schemas.
-- English is the primary language across this skill (instructions, workflow notes, and general implementation guidance).
+- Internal implementation guidance in this skill may be written in English, but field labels and all user-facing messages must be written in Spanish.
 - To reduce implementation friction and avoid an unnecessary complex mapping step, DocType names and API-facing field names are intentionally defined in Spanish, following NubeFact API requirements.
 - Expand this skill with references/scripts as the integration grows.
 
