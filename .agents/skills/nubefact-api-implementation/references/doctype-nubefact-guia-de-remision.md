@@ -201,9 +201,6 @@ These fields are populated when NubeFact returns a response (on send or status p
 | Enlace del XML | `enlace_del_xml` | Data/URL (read-only) | `enlace_del_xml` | Full XML link. Only set when SUNAT accepted. |
 | Enlace del CDR | `enlace_del_cdr` | Data/URL (read-only) | `enlace_del_cdr` | Full CDR link. Only set when SUNAT accepted. |
 | Cadena para Código QR | `cadena_para_codigo_qr` | Data (read-only) | `cadena_para_codigo_qr` | Data string for QR code generation. |
-| PDF ZIP Base64 | `pdf_zip_base64` | Long Text (read-only) | `pdf_zip_base64` | Zipped PDF in base64. Must be enabled in NubeFact settings. |
-| XML ZIP Base64 | `xml_zip_base64` | Long Text (read-only) | `xml_zip_base64` | Zipped XML in base64. Must be enabled in NubeFact settings. |
-| CDR ZIP Base64 | `cdr_zip_base64` | Long Text (read-only) | `cdr_zip_base64` | Zipped CDR in base64. Must be enabled in NubeFact settings. |
 
 ---
 

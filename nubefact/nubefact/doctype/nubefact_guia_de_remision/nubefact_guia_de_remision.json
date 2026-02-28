@@ -100,10 +100,7 @@
   "enlace_del_pdf",
   "enlace_del_xml",
   "enlace_del_cdr",
-  "cadena_para_codigo_qr",
-  "pdf_zip_base64",
-  "xml_zip_base64",
-  "cdr_zip_base64"
+  "cadena_para_codigo_qr"
  ],
  "fields": [
   {
@@ -626,27 +623,6 @@
    "fieldname": "cadena_para_codigo_qr",
    "fieldtype": "Data",
    "label": "Cadena para Código QR",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "pdf_zip_base64",
-   "fieldtype": "Long Text",
-   "label": "PDF ZIP Base64",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "xml_zip_base64",
-   "fieldtype": "Long Text",
-   "label": "XML ZIP Base64",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "cdr_zip_base64",
-   "fieldtype": "Long Text",
-   "label": "CDR ZIP Base64",
    "no_copy": 1,
    "read_only": 1
   },

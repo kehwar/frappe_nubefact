@@ -49,9 +49,6 @@ _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
     "enlace_del_xml": "",
     "enlace_del_cdr": "",
     "cadena_para_codigo_qr": "",
-    "pdf_zip_base64": "",
-    "xml_zip_base64": "",
-    "cdr_zip_base64": "",
 }
 
 
@@ -361,9 +358,6 @@ class NubefactGuiaDeRemision(Document):
             "enlace_del_xml": cstr(response.get("enlace_del_xml") or ""),
             "enlace_del_cdr": cstr(response.get("enlace_del_cdr") or ""),
             "cadena_para_codigo_qr": cstr(response.get("cadena_para_codigo_qr") or ""),
-            "pdf_zip_base64": cstr(response.get("pdf_zip_base64") or ""),
-            "xml_zip_base64": cstr(response.get("xml_zip_base64") or ""),
-            "cdr_zip_base64": cstr(response.get("cdr_zip_base64") or ""),
         }
 
 
