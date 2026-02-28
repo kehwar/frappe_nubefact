@@ -8,39 +8,39 @@
  "field_order": [
   "title",
   "company",
-    "ubicacion_section",
-    "departamento",
-    "provincia",
-    "distrito",
+  "ubicacion_section",
+  "departamento",
+  "provincia",
+  "distrito",
   "ubigeo",
-    "column_break_ubicacion",
-    "direccion",
-    "codigo_sunat",
+  "column_break_ubicacion",
+  "direccion",
+  "codigo_sunat",
   "api_section",
-    "ruta_api",
-    "column_break_api",
-    "token_api"
+  "ruta_api",
+  "column_break_api",
+  "token_api"
  ],
  "fields": [
   {
-     "fieldname": "ruta_api",
+   "fieldname": "ruta_api",
    "fieldtype": "Data",
-     "label": "Ruta API"
+   "label": "Ruta API"
   },
   {
-     "fieldname": "token_api",
+   "fieldname": "token_api",
    "fieldtype": "Password",
-     "label": "Token API"
+   "label": "Token API"
   },
   {
-     "fieldname": "ubicacion_section",
+   "fieldname": "ubicacion_section",
    "fieldtype": "Section Break",
-     "label": "Ubicación"
+   "label": "Ubicaci\u00f3n"
   },
   {
-     "fieldname": "direccion",
+   "fieldname": "direccion",
    "fieldtype": "Small Text",
-     "label": "Dirección"
+   "label": "Direcci\u00f3n"
   },
   {
    "fieldname": "ubigeo",
@@ -48,33 +48,33 @@
    "label": "Ubigeo"
   },
   {
-    "fieldname": "codigo_sunat",
+   "fieldname": "codigo_sunat",
    "fieldtype": "Data",
-    "label": "Código SUNAT"
+   "label": "C\u00f3digo SUNAT"
   },
   {
-    "fieldname": "column_break_ubicacion",
+   "fieldname": "column_break_ubicacion",
    "fieldtype": "Column Break"
   },
   {
-    "fieldname": "departamento",
+   "fieldname": "departamento",
    "fieldtype": "Data",
-    "label": "Departamento"
+   "label": "Departamento"
   },
   {
-    "fieldname": "provincia",
+   "fieldname": "provincia",
    "fieldtype": "Data",
-    "label": "Provincia"
+   "label": "Provincia"
   },
   {
-    "fieldname": "distrito",
+   "fieldname": "distrito",
    "fieldtype": "Data",
-    "label": "Distrito"
+   "label": "Distrito"
   },
   {
    "fieldname": "title",
    "fieldtype": "Data",
-   "label": "Title",
+   "label": "Titulo",
    "unique": 1
   },
   {
@@ -83,20 +83,20 @@
    "label": "API"
   },
   {
-    "fieldname": "column_break_api",
+   "fieldname": "column_break_api",
    "fieldtype": "Column Break"
   },
   {
    "fieldname": "company",
    "fieldtype": "Link",
-   "label": "Company",
+   "label": "Compa\u00f1ia",
    "options": "Company"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-27 12:09:39.728417",
+ "modified": "2026-02-27 22:21:13.428546",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Local",
