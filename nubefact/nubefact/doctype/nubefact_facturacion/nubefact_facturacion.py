@@ -60,9 +60,9 @@ class NubefactFacturacion(Document):
     """
 
     def autoname(self):
-        timestamp = now_datetime()
-        self.name = append_number_if_name_exists(
-            "Nubefact Facturacion", timestamp.strftime("%Y%m%d-%H%M%S-%f")
+        series_prefix = f"CPE-{frappe.utils.now_datetime().strftime('%Y')}-"
+        self.name = series_prefix + getseries(
+            f"NubefactFacturacion::{series_prefix}", 6
         )
 
     def validate(self):
