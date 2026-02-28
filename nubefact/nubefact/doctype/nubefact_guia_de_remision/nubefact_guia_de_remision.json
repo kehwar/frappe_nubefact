@@ -40,13 +40,27 @@
   "transportista_documento_numero",
   "transportista_denominacion",
   "transportista_placa_numero",
+  "tuc_vehiculo_principal",
   "seccion_conductor",
   "conductor_documento_tipo",
   "conductor_documento_numero",
+  "conductor_denominacion",
   "conductor_nombre",
   "columna_conductor",
   "conductor_apellidos",
   "conductor_numero_licencia",
+  "mtc",
+  "sunat_envio_indicador",
+  "seccion_subcontratador",
+  "subcontratador_documento_tipo",
+  "subcontratador_documento_numero",
+  "columna_subcontratador",
+  "subcontratador_denominacion",
+  "seccion_pagador_servicio",
+  "pagador_servicio_documento_tipo_identidad",
+  "pagador_servicio_documento_numero_identidad",
+  "columna_pagador_servicio",
+  "pagador_servicio_denominacion",
   "seccion_origen_destino",
   "punto_de_partida_ubigeo",
   "punto_de_partida_direccion",
@@ -288,6 +302,11 @@
    "label": "Transportista Placa N\u00famero"
   },
   {
+   "fieldname": "tuc_vehiculo_principal",
+   "fieldtype": "Data",
+   "label": "TUC Veh\u00edculo Principal"
+  },
+  {
    "fieldname": "seccion_conductor",
    "fieldtype": "Section Break",
    "label": "Conductor Principal"
@@ -302,6 +321,11 @@
    "fieldname": "conductor_documento_numero",
    "fieldtype": "Data",
    "label": "Conductor Documento N\u00famero"
+  },
+  {
+   "fieldname": "conductor_denominacion",
+   "fieldtype": "Data",
+   "label": "Conductor Denominaci\u00f3n"
   },
   {
    "fieldname": "conductor_nombre",
@@ -321,6 +345,67 @@
    "fieldname": "conductor_numero_licencia",
    "fieldtype": "Data",
    "label": "Conductor N\u00famero Licencia"
+  },
+  {
+   "fieldname": "mtc",
+   "fieldtype": "Data",
+   "label": "MTC"
+  },
+  {
+   "fieldname": "sunat_envio_indicador",
+   "fieldtype": "Select",
+   "label": "SUNAT Env\u00edo Indicador",
+   "options": "\n01\n02\n03\n04\n05\n06"
+  },
+  {
+   "fieldname": "seccion_subcontratador",
+   "fieldtype": "Section Break",
+   "label": "Subcontratador"
+  },
+  {
+   "fieldname": "subcontratador_documento_tipo",
+   "fieldtype": "Select",
+   "label": "Subcontratador Documento Tipo",
+   "options": "6"
+  },
+  {
+   "fieldname": "subcontratador_documento_numero",
+   "fieldtype": "Data",
+   "label": "Subcontratador Documento N\u00famero"
+  },
+  {
+   "fieldname": "columna_subcontratador",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "subcontratador_denominacion",
+   "fieldtype": "Data",
+   "label": "Subcontratador Denominaci\u00f3n"
+  },
+  {
+   "fieldname": "seccion_pagador_servicio",
+   "fieldtype": "Section Break",
+   "label": "Pagador del Servicio"
+  },
+  {
+   "fieldname": "pagador_servicio_documento_tipo_identidad",
+   "fieldtype": "Select",
+   "label": "Pagador Servicio Tipo de Documento",
+   "options": "6\n1\n4\n7\nA\n0"
+  },
+  {
+   "fieldname": "pagador_servicio_documento_numero_identidad",
+   "fieldtype": "Data",
+   "label": "Pagador Servicio N\u00famero de Documento"
+  },
+  {
+   "fieldname": "columna_pagador_servicio",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pagador_servicio_denominacion",
+   "fieldtype": "Data",
+   "label": "Pagador Servicio Denominaci\u00f3n"
   },
   {
    "fieldname": "seccion_origen_destino",
@@ -560,7 +645,7 @@
    "link_fieldname": "referencia_guia_de_remision"
   }
  ],
- "modified": "2026-02-28 10:07:41.868554",
+ "modified": "2026-02-28 20:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Guia De Remision",

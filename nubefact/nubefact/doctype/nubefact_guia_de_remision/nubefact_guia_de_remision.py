@@ -188,11 +188,21 @@ class NubefactGuiaDeRemision(Document):
                     "transportista_documento_numero": self.transportista_documento_numero,
                     "transportista_denominacion": self.transportista_denominacion,
                     "transportista_placa_numero": self.transportista_placa_numero,
+                    "tuc_vehiculo_principal": self.tuc_vehiculo_principal,
                     "conductor_documento_tipo": self.conductor_documento_tipo,
                     "conductor_documento_numero": self.conductor_documento_numero,
+                    "conductor_denominacion": self.conductor_denominacion,
                     "conductor_nombre": self.conductor_nombre,
                     "conductor_apellidos": self.conductor_apellidos,
                     "conductor_numero_licencia": self.conductor_numero_licencia,
+                    "mtc": self.mtc,
+                    "sunat_envio_indicador": self.sunat_envio_indicador,
+                    "subcontratador_documento_tipo": self.subcontratador_documento_tipo,
+                    "subcontratador_documento_numero": self.subcontratador_documento_numero,
+                    "subcontratador_denominacion": self.subcontratador_denominacion,
+                    "pagador_servicio_documento_tipo_identidad": self.pagador_servicio_documento_tipo_identidad,
+                    "pagador_servicio_documento_numero_identidad": self.pagador_servicio_documento_numero_identidad,
+                    "pagador_servicio_denominacion": self.pagador_servicio_denominacion,
                 }
             )
         )
