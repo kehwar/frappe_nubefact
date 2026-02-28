@@ -5,7 +5,7 @@ class NubefactWatcher {
 		this.frm = frm;
 		this.api_method = api_method;
 		this.poll_interval_ms = options.poll_interval_ms || 5000;
-		this.pending_status = options.pending_status || "Pending Response";
+		this.pending_status = options.pending_status || "Pendiente de Respuesta";
 		this.initialized = false;
 		this.in_flight = false;
 		this.current_poll_promise = null;
@@ -49,7 +49,7 @@ class NubefactWatcher {
 
 	async call_api(options = {}) {
 		const freeze = options.freeze ?? true;
-		const freeze_message = options.freeze_message ?? __("Refreshing SUNAT status...");
+		const freeze_message = options.freeze_message ?? __("Actualizando estado SUNAT...");
 
 		await frappe.call({
 			method: this.api_method,
@@ -145,9 +145,3 @@ nubefact.get_watcher = function(frm, api_method, options = {}) {
 
 	return watcher;
 };
-
-nubefact.hello = function() {
-	console.log("Hello from Nubefact!");
-};
-
-console.log("Nubefact bundle loaded");
