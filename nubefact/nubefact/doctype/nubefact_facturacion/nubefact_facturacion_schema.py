@@ -1,5 +1,16 @@
 from __future__ import annotations
 
+"""Comprobante electrónico de pago (factura, boleta, nota de crédito, nota de débito).
+
+Referencias CPE API:
+- Cabecera: cpe-api-estructura-cabecera.md
+- Ítems: cpe-api-estructura-items.md
+- Guías relacionadas: cpe-api-estructura-guias.md
+- Cuotas (venta al crédito): cpe-api-estructura-venta-credito.md
+
+Ruta: .agents/skills/nubefact-api-implementation/references/
+"""
+
 REQUIRED_FIELDS = [
     "document_type",
     "series",
