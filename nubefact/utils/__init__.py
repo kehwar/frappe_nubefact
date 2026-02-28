@@ -3,9 +3,12 @@ from __future__ import annotations
 import json
 from typing import Any
 
+import frappe
+import requests
 from frappe import throw
 from frappe.model.document import Document
 from frappe.utils import cstr, getdate
+from frappe.utils.file_manager import save_file
 
 from nubefact.utils.nubefact import make_request
 
@@ -99,15 +102,78 @@ def parse_raw_payload(raw_value: Any, context: str) -> dict[str, Any]:
     return {}
 
 
+def download_and_attach_file(url: str, filename: str, doctype: str, docname: str):
+	"""Descarga un archivo desde una URL y lo adjunta al documento Frappe indicado.
+
+	Si ya existe un adjunto con el mismo nombre en el documento, no se vuelve a descargar.
+	Los errores de red se registran en el log de errores de Frappe en lugar de propagarse,
+	para no interrumpir el procesamiento de otros documentos.
+	"""
+	if frappe.db.exists(
+		"File",
+		{"attached_to_doctype": doctype, "attached_to_name": docname, "file_name": filename},
+	):
+		return
+
+	try:
+		response = requests.get(url, timeout=60)
+		response.raise_for_status()
+	except requests.RequestException as exc:
+		frappe.log_error(
+			title=f"Nubefact: error al descargar el archivo {filename}",
+			message=str(exc),
+		)
+		return
+
+	save_file(
+		fname=filename,
+		content=response.content,
+		dt=doctype,
+		dn=docname,
+		is_private=1,
+	)
+
+
+def enqueue_nubefact_file_downloads(
+	doctype: str, docname: str, title: str, values: dict[str, Any]
+):
+	"""Encola la descarga de los archivos PDF, XML y CDR si las URLs son válidas.
+
+	Se usa ``enqueue_after_commit=True`` para que los trabajos se encolen sólo después de que
+	la transacción actual sea confirmada en la base de datos.
+	"""
+	file_urls: dict[str, str | None] = {
+		"pdf": values.get("enlace_del_pdf"),
+		"xml": values.get("enlace_del_xml"),
+		"cdr": values.get("enlace_del_cdr"),
+	}
+
+	base_name = cstr(title).strip() or cstr(docname).strip()
+
+	for ext, url in file_urls.items():
+		if url and isinstance(url, str) and url.startswith(("http://", "https://")):
+			filename = f"{base_name}.{ext}"
+			frappe.enqueue(
+				"nubefact.utils.download_and_attach_file",
+				url=url,
+				filename=filename,
+				doctype=doctype,
+				docname=docname,
+				queue="short",
+				enqueue_after_commit=True,
+			)
+
 __all__ = [
-    "make_request",
-    "to_nubefact_date",
-    "set_if_value",
-    "omit_empty_values",
-    "require_fields",
-    "require_child_fields",
-    "format_missing_fields",
-    "get_missing_fields",
-    "apply_raw_payload_overrides",
-    "parse_raw_payload",
+	"apply_raw_payload_overrides",
+	"download_and_attach_file",
+	"enqueue_nubefact_file_downloads",
+	"format_missing_fields",
+	"get_missing_fields",
+	"make_request",
+	"omit_empty_values",
+	"parse_raw_payload",
+	"require_child_fields",
+	"require_fields",
+	"set_if_value",
+	"to_nubefact_date",
 ]

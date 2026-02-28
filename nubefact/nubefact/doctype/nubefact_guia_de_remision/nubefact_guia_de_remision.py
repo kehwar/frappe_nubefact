@@ -29,6 +29,7 @@ from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
 )
 from nubefact.utils import (
     apply_raw_payload_overrides,
+    enqueue_nubefact_file_downloads,
     make_request,
     omit_empty_values,
     require_child_fields,
@@ -424,6 +425,7 @@ def _request_extract_and_save_response(
 
     if values:
         _save_response_status(doc, values)
+        enqueue_nubefact_file_downloads(doc.doctype, doc.name, doc.title or doc.name, values)
 
     return values
 
