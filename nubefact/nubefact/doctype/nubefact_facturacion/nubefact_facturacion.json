@@ -173,13 +173,13 @@
    "no_copy": 1
   },
   {
-   "default": "Draft",
+    "default": "Borrador",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Estado",
    "no_copy": 1,
-   "options": "Draft\nPending Response\nAccepted\nVoided\nError",
+    "options": "Borrador\nPendiente de Respuesta\nAceptado\nAnulado\nError",
    "read_only": 1
   },
   {
@@ -859,7 +859,7 @@
    "fieldname": "void_status",
    "fieldtype": "Select",
    "label": "Estado de Anulación",
-   "options": "\nPending\nAccepted\nRejected",
+    "options": "\nPendiente\nAceptado\nRechazado",
    "read_only": 1
   },
   {
@@ -935,19 +935,19 @@
  "states": [
   {
    "color": "Blue",
-   "title": "Draft"
+    "title": "Borrador"
   },
   {
    "color": "Orange",
-   "title": "Pending Response"
+    "title": "Pendiente de Respuesta"
   },
   {
    "color": "Green",
-   "title": "Accepted"
+    "title": "Aceptado"
   },
   {
    "color": "Gray",
-   "title": "Voided"
+    "title": "Anulado"
   },
   {
    "color": "Red",
