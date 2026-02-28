@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DespatchAdvice xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2" xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ccts="urn:un:unece:uncefact:documentation:2" xmlns="urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2">
+  <!-- GENERADO DESDE WWW.NUBEFACT.COM -->
+  <ext:UBLExtensions>
+    <ext:UBLExtension>
+      <ext:ExtensionContent>
+        <ds:Signature Id="NubeFacTSign">
+          <ds:SignedInfo>
+            <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+            <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+            <ds:Reference URI="">
+              <ds:Transforms>
+                <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+              </ds:Transforms>
+              <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+              <ds:DigestValue>U6gsIp68CTFsqsnJ/vRn2U5My/wld/ouP5jDdpYyF3A=</ds:DigestValue>
+            </ds:Reference>
+          </ds:SignedInfo>
+          <ds:SignatureValue>C0AgYC/fh6m+PCGGDQhnG30RlDUPpwXQZQX8lj6/iWu0LrOA6kXFlgRcrQ0aJ0SM+vdZ1YgxARqNR4UhTzMqDLx4L1vYnD8AJ1ML9PM+Juw4mRa/rYHGA6mYDWCl1YvV+QWe/WLXmM0FN2xfwRVck6wFpEYxKDIyqqQAl690KEK/99uinR3HLwwwhjiZhluG7S8twkTmnuZVHQMthg31pvlenAm6mbGa2wnS7FA66tw67unXtz5fL5iqrrvs3TMCtENFXnZ9/rmNBKknLBBuHJ1zcSR3iULXlOAfMfHHMgdsjSCHQZfYorsPP6uHG6la/RiYFc7Zk8vVYtUK/gCKDA==</ds:SignatureValue>
+          <ds:KeyInfo>
+            <ds:X509Data>
+              <ds:X509SubjectName>DC=LLAMA.PE SA,C=PE,ST=LIMA,L=LIMA,O=TU EMPRESA S.A.,OU=DNI 9999999 RUC 20600695771 - CERTIFICADO PARA DEMOSTRACI\xC3\x93N,CN=NOMBRE REPRESENTANTE LEGAL - CERTIFICADO PARA DEMOSTRACI\xC3\x93N,emailAddress=demo@llama.pe</ds:X509SubjectName>
+              <ds:X509Certificate>MIIFBzCCA++gAwIBAgIIagNuRArSkCowDQYJKoZIhvcNAQELBQAwggENMRswGQYKCZImiZPyLGQBGRYLTExBTUEuUEUgU0ExCzAJBgNVBAYTAlBFMQ0wCwYDVQQIDARMSU1BMQ0wCwYDVQQHDARMSU1BMRgwFgYDVQQKDA9UVSBFTVBSRVNBIFMuQS4xRTBDBgNVBAsMPEROSSA5OTk5OTk5IFJVQyAyMDYwMDY5NTc3MSAtIENFUlRJRklDQURPIFBBUkEgREVNT1NUUkFDScOTTjFEMEIGA1UEAww7Tk9NQlJFIFJFUFJFU0VOVEFOVEUgTEVHQUwgLSBDRVJUSUZJQ0FETyBQQVJBIERFTU9TVFJBQ0nDk04xHDAaBgkqhkiG9w0BCQEWDWRlbW9AbGxhbWEucGUwHhcNMjQwNTI4MTQ0OTM5WhcNMjYwNTI4MTQ0OTM5WjCCAQ0xGzAZBgoJkiaJk/IsZAEZFgtMTEFNQS5QRSBTQTELMAkGA1UEBhMCUEUxDTALBgNVBAgMBExJTUExDTALBgNVBAcMBExJTUExGDAWBgNVBAoMD1RVIEVNUFJFU0EgUy5BLjFFMEMGA1UECww8RE5JIDk5OTk5OTkgUlVDIDIwNjAwNjk1NzcxIC0gQ0VSVElGSUNBRE8gUEFSQSBERU1PU1RSQUNJw5NOMUQwQgYDVQQDDDtOT01CUkUgUkVQUkVTRU5UQU5URSBMRUdBTCAtIENFUlRJRklDQURPIFBBUkEgREVNT1NUUkFDScOTTjEcMBoGCSqGSIb3DQEJARYNZGVtb0BsbGFtYS5wZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAI/nIeBsAutEAVwWtoJhLLnKJOtIfRKeJN6sJybMUavPS0rT4aAviy8EfkN/ybC35KCfZKWu6f0Pd08KsAuI65Ao2OqaMnOIWo/XBzGbpxAsei6YaOP77Z7D3QWCCmPn7G2xjqJVDQoBmXYPBj5rU+KvO2yJ4iw0AsJNXTi7LduUpuJEBcI0ZtIFqOxfKdDn7jmNECo65vsjO/iYyoPmBQbGbuxbnCCKHisJqdHXsgxGkaf7+M+C4t+OfouF2TQ3OyMM4X8K6nbyDstQeQti6BKDku9Tr6lWamqrNfk+STTtpqr40kR3XLpal503TjXI82Mda1b7thxU7AfvP74508cCAwEAAaNnMGUwHQYDVR0OBBYEFM69pAt2yIWrHevUVXvGfiVYNp1gMB8GA1UdIwQYMBaAFM69pAt2yIWrHevUVXvGfiVYNp1gMBMGA1UdJQQMMAoGCCsGAQUFBwMBMA4GA1UdDwEB/wQEAwIHgDANBgkqhkiG9w0BAQsFAAOCAQEAHYuh1faYlV/YyE5slYkcJi5JMg3/3cr5cTcDegQWTUDCRdLNA4mxfRKgn+mssq934QaLEDQypcWJru+Z2BXU+EKN1w1UsezaBKYDpWJGPDz/85ZtshXQve3i9CvJnJL3WkwolN1zcx24VnCuoolbwMZ7V3kbTj0gFR+ilQc2iXCneJuhK9QJ1wOV6/+fCLPSHEe7GH9sW07++fPgFWczjz0n8KoP3HPFfmkPuVuspZIPKK6iTAR5GBb1k5sUDe6Dw5tNo9s/0sCZb1ffl463AckARy9wUSgoDdDNa6u5i/Xkc8QYCyd3LfK3yBULnM6IKGFZi4rFdj2IjI77m2WxJQ==</ds:X509Certificate>
+            </ds:X509Data>
+          </ds:KeyInfo>
+        </ds:Signature>
+      </ext:ExtensionContent>
+    </ext:UBLExtension>
+  </ext:UBLExtensions>
+  <!-- GENERADO DESDE WWW.NUBEFACT.COM -->
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>2.0</cbc:CustomizationID>
+  <cbc:ID>T001-25</cbc:ID>
+  <cbc:IssueDate>2026-02-27</cbc:IssueDate>
+  <cbc:IssueTime>00:00:06</cbc:IssueTime>
+  <cbc:DespatchAdviceTypeCode>09</cbc:DespatchAdviceTypeCode>
+  <cbc:Note>Obs: observaciones</cbc:Note>
+  <cac:Signature>
+    <cbc:ID>20615359646</cbc:ID>
+    <cbc:Note>WWW.NUBEFACT.COM</cbc:Note>
+    <cac:SignatoryParty>
+      <cac:PartyIdentification>
+        <cbc:ID>20615359646</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>RUIGU PERU S.A.C.</cbc:Name>
+      </cac:PartyName>
+    </cac:SignatoryParty>
+    <cac:DigitalSignatureAttachment>
+      <cac:ExternalReference>
+        <cbc:URI>20615359646</cbc:URI>
+      </cac:ExternalReference>
+    </cac:DigitalSignatureAttachment>
+  </cac:Signature>
+  <cac:DespatchSupplierParty>
+    <cbc:CustomerAssignedAccountID schemeID="6">20615359646</cbc:CustomerAssignedAccountID>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="6" schemeName="Documento de Identidad" schemeAgencyName="PE:SUNAT" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">20615359646</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyLegalEntity>
+        <cbc:RegistrationName>RUIGU PERU S.A.C.</cbc:RegistrationName>
+      </cac:PartyLegalEntity>
+    </cac:Party>
+  </cac:DespatchSupplierParty>
+  <cac:DeliveryCustomerParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="6" schemeName="Documento de Identidad" schemeAgencyName="PE:SUNAT" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">20600695771</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyLegalEntity>
+        <cbc:RegistrationName>NUBEFACT SA</cbc:RegistrationName>
+      </cac:PartyLegalEntity>
+    </cac:Party>
+  </cac:DeliveryCustomerParty>
+  <cac:Shipment>
+    <cbc:ID>SUNAT_Envio</cbc:ID>
+    <cbc:HandlingCode listAgencyName="PE:SUNAT" listName="Motivo de traslado" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo20">01</cbc:HandlingCode>
+    <cbc:GrossWeightMeasure unitCode="KGM">1.0</cbc:GrossWeightMeasure>
+    <cac:ShipmentStage>
+      <cbc:TransportModeCode listName="Modalidad de traslado" listAgencyName="PE:SUNAT" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo18">01</cbc:TransportModeCode>
+      <cac:TransitPeriod>
+        <cbc:StartDate>2026-02-27</cbc:StartDate>
+      </cac:TransitPeriod>
+      <cac:CarrierParty>
+        <cac:PartyIdentification>
+          <cbc:ID schemeID="6">20600695771</cbc:ID>
+        </cac:PartyIdentification>
+        <cac:PartyLegalEntity>
+          <cbc:RegistrationName>NUBEFACT SA</cbc:RegistrationName>
+        </cac:PartyLegalEntity>
+      </cac:CarrierParty>
+    </cac:ShipmentStage>
+    <cac:Delivery>
+      <cac:DeliveryAddress>
+        <cbc:ID schemeAgencyName="PE:INEI" schemeName="Ubigeos">211101</cbc:ID>
+        <cac:AddressLine>
+          <cbc:Line>DIRECCION LLEGADA</cbc:Line>
+        </cac:AddressLine>
+      </cac:DeliveryAddress>
+      <cac:Despatch>
+        <cac:DespatchAddress>
+          <cbc:ID schemeAgencyName="PE:INEI" schemeName="Ubigeos">151021</cbc:ID>
+          <cac:AddressLine>
+            <cbc:Line>DIRECCION PARTIDA</cbc:Line>
+          </cac:AddressLine>
+        </cac:DespatchAddress>
+      </cac:Despatch>
+    </cac:Delivery>
+  </cac:Shipment>
+  <!-- GENERADO DESDE WWW.NUBEFACT.COM -->
+  <cac:DespatchLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:DeliveredQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20" unitCodeListAgencyName="United Nations Economic Commission for Europe">1.0</cbc:DeliveredQuantity>
+    <cac:OrderLineReference>
+      <cbc:LineID>2</cbc:LineID>
+    </cac:OrderLineReference>
+    <cac:Item>
+      <cbc:Description>DETALLE DEL PRODUCTO 1</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>001</cbc:ID>
+      </cac:SellersItemIdentification>
+    </cac:Item>
+  </cac:DespatchLine>
+  <cac:DespatchLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:DeliveredQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20" unitCodeListAgencyName="United Nations Economic Commission for Europe">1.0</cbc:DeliveredQuantity>
+    <cac:OrderLineReference>
+      <cbc:LineID>3</cbc:LineID>
+    </cac:OrderLineReference>
+    <cac:Item>
+      <cbc:Description>DETALLE DEL PRODUCTO 2</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>002</cbc:ID>
+      </cac:SellersItemIdentification>
+    </cac:Item>
+  </cac:DespatchLine>
+  <!-- GENERADO DESDE WWW.NUBEFACT.COM -->
+</DespatchAdvice>
