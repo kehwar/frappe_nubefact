@@ -61,6 +61,7 @@ class NubefactGuiaDeRemision(Document):
     - Documentos relacionados: gre-api-estructura-documentos-relacionados.md
     - Vehículos secundarios: gre-api-estructura-vehiculos-secundarios.md
     - Conductores secundarios: gre-api-estructura-conductores-secundarios.md
+    - Respuesta de consulta: gre-api-estructura-respuesta.md
 
     Ruta: .agents/skills/nubefact-api-implementation/references/
     """
