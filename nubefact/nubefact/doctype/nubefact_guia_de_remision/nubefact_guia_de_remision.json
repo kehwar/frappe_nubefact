@@ -6,11 +6,11 @@
  "engine": "InnoDB",
  "field_order": [
   "seccion_documento",
-    "title",
+  "title",
   "tipo_de_comprobante",
   "serie",
   "numero",
-    "status",
+  "status",
   "columna_documento",
   "fecha_de_emision",
   "fecha_de_inicio_de_traslado",
@@ -66,20 +66,21 @@
   "conductores_secundarios",
   "seccion_informacion_adicional",
   "observaciones",
-    "custom",
   "tab_mas_informacion",
   "seccion_automatizacion",
   "enviar_automaticamente_al_cliente",
-    "skip_field_validation",
+  "skip_field_validation",
   "formato_de_pdf",
+  "column_break_otuj",
+  "custom",
   "seccion_sunat",
   "aceptada_por_sunat",
-    "last_sunat_check",
+  "last_sunat_check",
   "sunat_responsecode",
   "sunat_description",
   "sunat_note",
   "sunat_soap_error",
-    "error_message",
+  "error_message",
   "columna_sunat",
   "enlace",
   "enlace_del_pdf",
@@ -95,7 +96,7 @@
   },
   {
    "default": "Borrador",
-    "fieldname": "status",
+   "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Estado",
@@ -117,10 +118,10 @@
    "options": "7\n8"
   },
   {
-    "fieldname": "title",
+   "fieldname": "title",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Título",
+   "label": "T\u00edtulo",
    "read_only": 1
   },
   {
@@ -133,7 +134,7 @@
    "fieldname": "numero",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Número",
+   "label": "N\u00famero",
    "no_copy": 1
   },
   {
@@ -144,7 +145,7 @@
    "fieldname": "fecha_de_emision",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Fecha de Emisión"
+   "label": "Fecha de Emisi\u00f3n"
   },
   {
    "fieldname": "fecha_de_inicio_de_traslado",
@@ -165,12 +166,12 @@
   {
    "fieldname": "cliente_numero_de_documento",
    "fieldtype": "Data",
-   "label": "Cliente Número de Documento"
+   "label": "Cliente N\u00famero de Documento"
   },
   {
    "fieldname": "cliente_denominacion",
    "fieldtype": "Data",
-   "label": "Cliente Denominación"
+   "label": "Cliente Denominaci\u00f3n"
   },
   {
    "fieldname": "columna_cliente",
@@ -179,7 +180,7 @@
   {
    "fieldname": "cliente_direccion",
    "fieldtype": "Small Text",
-   "label": "Cliente Dirección"
+   "label": "Cliente Direcci\u00f3n"
   },
   {
    "fieldname": "cliente_email",
@@ -210,12 +211,12 @@
   {
    "fieldname": "destinatario_documento_numero",
    "fieldtype": "Data",
-   "label": "Destinatario Documento Número"
+   "label": "Destinatario Documento N\u00famero"
   },
   {
    "fieldname": "destinatario_denominacion",
    "fieldtype": "Data",
-   "label": "Destinatario Denominación"
+   "label": "Destinatario Denominaci\u00f3n"
   },
   {
    "fieldname": "seccion_traslado",
@@ -231,12 +232,12 @@
   {
    "fieldname": "motivo_de_traslado_otros_descripcion",
    "fieldtype": "Data",
-   "label": "Motivo de Traslado Otros Descripción"
+   "label": "Motivo de Traslado Otros Descripci\u00f3n"
   },
   {
    "fieldname": "documento_relacionado_codigo",
    "fieldtype": "Select",
-   "label": "Documento Relacionado Código",
+   "label": "Documento Relacionado C\u00f3digo",
    "options": "\n50\n52"
   },
   {
@@ -259,7 +260,7 @@
   {
    "fieldname": "numero_de_bultos",
    "fieldtype": "Int",
-   "label": "Número de Bultos"
+   "label": "N\u00famero de Bultos"
   },
   {
    "fieldname": "columna_traslado",
@@ -274,17 +275,17 @@
   {
    "fieldname": "transportista_documento_numero",
    "fieldtype": "Data",
-   "label": "Transportista Documento Número"
+   "label": "Transportista Documento N\u00famero"
   },
   {
    "fieldname": "transportista_denominacion",
    "fieldtype": "Data",
-   "label": "Transportista Denominación"
+   "label": "Transportista Denominaci\u00f3n"
   },
   {
    "fieldname": "transportista_placa_numero",
    "fieldtype": "Data",
-   "label": "Transportista Placa Número"
+   "label": "Transportista Placa N\u00famero"
   },
   {
    "fieldname": "seccion_conductor",
@@ -300,7 +301,7 @@
   {
    "fieldname": "conductor_documento_numero",
    "fieldtype": "Data",
-   "label": "Conductor Documento Número"
+   "label": "Conductor Documento N\u00famero"
   },
   {
    "fieldname": "conductor_nombre",
@@ -319,7 +320,7 @@
   {
    "fieldname": "conductor_numero_licencia",
    "fieldtype": "Data",
-   "label": "Conductor Número Licencia"
+   "label": "Conductor N\u00famero Licencia"
   },
   {
    "fieldname": "seccion_origen_destino",
@@ -334,12 +335,12 @@
   {
    "fieldname": "punto_de_partida_direccion",
    "fieldtype": "Small Text",
-   "label": "Punto de Partida Dirección"
+   "label": "Punto de Partida Direcci\u00f3n"
   },
   {
    "fieldname": "punto_de_partida_codigo_establecimiento_sunat",
    "fieldtype": "Data",
-   "label": "Punto de Partida Código Establecimiento SUNAT"
+   "label": "Punto de Partida C\u00f3digo Establecimiento SUNAT"
   },
   {
    "fieldname": "columna_origen",
@@ -353,29 +354,29 @@
   {
    "fieldname": "punto_de_llegada_direccion",
    "fieldtype": "Small Text",
-   "label": "Punto de Llegada Dirección"
+   "label": "Punto de Llegada Direcci\u00f3n"
   },
   {
    "fieldname": "punto_de_llegada_codigo_establecimiento_sunat",
    "fieldtype": "Data",
-   "label": "Punto de Llegada Código Establecimiento SUNAT"
+   "label": "Punto de Llegada C\u00f3digo Establecimiento SUNAT"
   },
   {
    "fieldname": "seccion_automatizacion",
    "fieldtype": "Section Break",
-   "label": "Configuración"
+   "label": "Configuraci\u00f3n"
   },
   {
    "default": "0",
    "fieldname": "enviar_automaticamente_al_cliente",
    "fieldtype": "Check",
-   "label": "Enviar Automáticamente al Cliente"
+   "label": "Enviar Autom\u00e1ticamente al Cliente"
   },
   {
    "default": "0",
-    "fieldname": "skip_field_validation",
+   "fieldname": "skip_field_validation",
    "fieldtype": "Check",
-   "label": "Omitir Validación de Campos Obligatorios"
+   "label": "Omitir Validaci\u00f3n de Campos Obligatorios"
   },
   {
    "fieldname": "formato_de_pdf",
@@ -386,12 +387,12 @@
   {
    "fieldname": "seccion_items",
    "fieldtype": "Section Break",
-   "label": "Ítems"
+   "label": "\u00cdtems"
   },
   {
    "fieldname": "items",
    "fieldtype": "Table",
-   "label": "Ítems",
+   "label": "\u00cdtems",
    "options": "Nubefact Guia de Remision Item"
   },
   {
@@ -408,12 +409,12 @@
   {
    "fieldname": "seccion_vehiculos_secundarios",
    "fieldtype": "Section Break",
-   "label": "Vehículos Secundarios"
+   "label": "Veh\u00edculos Secundarios"
   },
   {
    "fieldname": "vehiculos_secundarios",
    "fieldtype": "Table",
-   "label": "Vehículos Secundarios",
+   "label": "Veh\u00edculos Secundarios",
    "options": "Nubefact Guia de Remision Vehiculo Secundario"
   },
   {
@@ -430,7 +431,7 @@
   {
    "fieldname": "seccion_informacion_adicional",
    "fieldtype": "Section Break",
-   "label": "Información Adicional"
+   "label": "Informaci\u00f3n Adicional"
   },
   {
    "fieldname": "observaciones",
@@ -438,7 +439,7 @@
    "label": "Observaciones"
   },
   {
-    "fieldname": "custom",
+   "fieldname": "custom",
    "fieldtype": "JSON",
    "label": "Datos Crudos"
   },
@@ -456,9 +457,9 @@
    "read_only": 1
   },
   {
-    "fieldname": "last_sunat_check",
+   "fieldname": "last_sunat_check",
    "fieldtype": "Datetime",
-   "label": "Última Consulta SUNAT",
+   "label": "\u00daltima Consulta SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
@@ -491,7 +492,7 @@
    "read_only": 1
   },
   {
-    "fieldname": "error_message",
+   "fieldname": "error_message",
    "fieldtype": "Text",
    "label": "Mensaje de Error",
    "no_copy": 1,
@@ -536,14 +537,18 @@
   {
    "fieldname": "cadena_para_codigo_qr",
    "fieldtype": "Data",
-   "label": "Cadena para Código QR",
+   "label": "Cadena para C\u00f3digo QR",
    "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "tab_mas_informacion",
    "fieldtype": "Tab Break",
-   "label": "Más Información"
+   "label": "M\u00e1s Informaci\u00f3n"
+  },
+  {
+   "fieldname": "column_break_otuj",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
@@ -555,7 +560,7 @@
    "link_fieldname": "referencia_guia_de_remision"
   }
  ],
- "modified": "2026-02-27 12:09:20.905590",
+ "modified": "2026-02-27 23:35:01.392273",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Guia de Remision",
