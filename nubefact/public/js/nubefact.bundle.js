@@ -26,7 +26,7 @@ class NubefactWatcher {
 	}
 
 	is_pending_response() {
-		return !this.frm.doc.enlace_del_pdf && this.frm.doc.estado_del_comprobante === "Pendiente de Aceptacion";
+		return !this.frm.doc.enlace_del_pdf && this.frm.doc.estado_del_comprobante === "Pendiente de Aceptación";
 	}
 
 	can_poll() {

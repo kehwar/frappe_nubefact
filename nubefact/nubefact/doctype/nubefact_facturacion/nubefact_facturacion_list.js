@@ -20,7 +20,7 @@ function open_json_paste_dialog() {
 			{
 				fieldname: "json_payload",
 				fieldtype: "Code",
-				label: __("Payload JSON"),
+				label: __("Contenido JSON"),
 				options: "JSON",
 				reqd: 1,
 				description: __(

@@ -132,7 +132,7 @@ class NubefactFacturacion(Document):
                     }
                 ),
                 row.custom,
-                f"items row #{row.idx}",
+                f"fila de ítems #{row.idx}",
             )
             for row in self.items
         ]
@@ -268,7 +268,7 @@ class NubefactFacturacion(Document):
                         "guia_serie_numero": row.guia_serie_numero,
                     },
                     row.custom,
-                    f"delivery references row #{row.idx}",
+                    f"fila de guías relacionadas #{row.idx}",
                 )
                 for row in self.guias
             ]
@@ -282,12 +282,12 @@ class NubefactFacturacion(Document):
                         "importe": cstr(row.importe),
                     },
                     row.custom,
-                    f"credit installments row #{row.idx}",
+                    f"fila de cuotas de venta al crédito #{row.idx}",
                 )
                 for row in self.venta_al_credito
             ]
 
-        return apply_raw_payload_overrides(payload, self.custom, "invoice")
+        return apply_raw_payload_overrides(payload, self.custom, "comprobante")
 
     def _validate_required_fields(self):
         require_fields(
@@ -342,7 +342,7 @@ class NubefactFacturacion(Document):
             require_child_fields(
                 row,
                 required_fields,
-                f"{table_label} row #{index} has missing required fields.",
+                f"La fila #{index} de {table_label} tiene campos obligatorios faltantes.",
             )
 
     def _extract_response_values(self, response: Any) -> dict[str, Any]:
@@ -356,7 +356,7 @@ class NubefactFacturacion(Document):
         return {
             "numero": number,
             "title": title,
-            "status": "Aceptada" if accepted_by_sunat else "Pendiente de Aceptacion",
+            "status": "Aceptada" if accepted_by_sunat else "Pendiente de Aceptación",
             "aceptada_por_sunat": accepted_by_sunat,
             "last_sunat_check": now_datetime(),
             "sunat_responsecode": cstr(response.get("sunat_responsecode") or ""),
@@ -459,7 +459,7 @@ def void_in_nubefact(name: str, reason: str):
 
     if doc.status not in {"Aceptada", "Pendiente de Aceptacion"}:
         frappe.throw(
-            "Solo los comprobantes en estado Aceptada o Pendiente de Aceptacion pueden anularse."
+            "Solo los comprobantes en estado Aceptada o Pendiente de Aceptación pueden anularse."
         )
 
     if cint(doc.anulado):
@@ -507,7 +507,7 @@ def void_in_nubefact(name: str, reason: str):
 def poll_pending_invoices():
     pending_names = frappe.get_all(
         "Nubefact Facturacion",
-        filters={"status": "Pendiente de Aceptacion", "aceptada_por_sunat": 0},
+        filters={"status": "Pendiente de Aceptación", "aceptada_por_sunat": 0},
         pluck="name",
         limit=20,
         order_by="modified asc",

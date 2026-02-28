@@ -5,7 +5,7 @@ frappe.ui.form.on("Nubefact Facturacion", {
 	refresh(frm) {
 		frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
 
-		if (["Pendiente de Aceptacion", "Aceptada", "Anulada"].includes(frm.doc.status || "Borrador")) {
+		if (["Pendiente de Aceptación", "Aceptada", "Anulada"].includes(frm.doc.status || "Borrador")) {
 			frm.disable_form();
 		}
 
@@ -15,22 +15,22 @@ frappe.ui.form.on("Nubefact Facturacion", {
 			watcher.schedule_if_needed();
 
 			if (["Borrador", "Error"].includes(frm.doc.status || "Borrador")) {
-				frm.add_custom_button(__("Send to Nubefact"), () => {
+				frm.add_custom_button(__("Enviar a Nubefact"), () => {
 					frm.trigger("open_send_dialog");
 				});
 			}
 
-            frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
+			frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
                 await watcher.refresh_now_and_continue();
 
                 frappe.show_alert({
-                    message: __("SUNAT status refreshed"),
+					message: __("Estado SUNAT actualizado"),
                     indicator: "green",
                 });
             });
 
 			if (["Aceptada"].includes(frm.doc.status) && !frm.doc.voided) {
-				frm.add_custom_button(__("Void in Nubefact"), () => {
+				frm.add_custom_button(__("Anular en Nubefact"), () => {
 					frm.trigger("open_void_dialog");
 				});
 			}
@@ -38,19 +38,19 @@ frappe.ui.form.on("Nubefact Facturacion", {
 			if (frm.doc.pdf_url) {
 				frm.add_custom_button(__("PDF"), () => {
 					download_file_from_url(frm, "pdf_url", "PDF");
-				}, "Download");
+				}, __("Descargar"));
 			}
 
 			if (frm.doc.xml_url) {
 				frm.add_custom_button(__("XML"), () => {
 					download_file_from_url(frm, "xml_url", "XML");
-				}, "Download");
+				}, __("Descargar"));
 			}
 
 			if (frm.doc.cdr_url) {
 				frm.add_custom_button(__("CDR"), () => {
 					download_file_from_url(frm, "cdr_url", "CDR");
-				}, "Download");
+				}, __("Descargar"));
 			}
 		}
 	},
@@ -136,7 +136,7 @@ function download_file_from_url(frm, fieldname, label) {
 	const url = frm.doc[fieldname];
 
 	if (!url) {
-		frappe.msgprint(__("{0} URL is not available yet.", [label]));
+		frappe.msgprint(__("El enlace de {0} aún no está disponible.", [label]));
 		return;
 	}
 

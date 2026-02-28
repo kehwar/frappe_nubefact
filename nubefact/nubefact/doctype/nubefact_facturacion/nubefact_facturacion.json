@@ -188,7 +188,7 @@
    "in_list_view": 1,
    "label": "Estado",
    "no_copy": 1,
-   "options": "Borrador\nPendiente de Aceptacion\nAceptada\nAnulada\nError",
+  "options": "Borrador\nPendiente de Aceptación\nAceptada\nAnulada\nError",
    "read_only": 1
   },
   {
@@ -933,7 +933,7 @@
   },
   {
    "color": "Orange",
-   "title": "Pendiente de Aceptacion"
+  "title": "Pendiente de Aceptación"
   },
   {
    "color": "Green",
