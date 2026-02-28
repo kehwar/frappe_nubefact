@@ -10,7 +10,6 @@
   "tipo_de_comprobante",
   "serie",
   "numero",
-  "status",
   "columna_documento",
   "fecha_de_emision",
   "fecha_de_inicio_de_traslado",
@@ -71,6 +70,7 @@
   "enviar_automaticamente_al_cliente",
   "skip_field_validation",
   "formato_de_pdf",
+  "status",
   "column_break_otuj",
   "custom",
   "seccion_sunat",
@@ -560,7 +560,7 @@
    "link_fieldname": "referencia_guia_de_remision"
   }
  ],
- "modified": "2026-02-27 23:35:01.392273",
+ "modified": "2026-02-28 10:07:41.868554",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Guia De Remision",
