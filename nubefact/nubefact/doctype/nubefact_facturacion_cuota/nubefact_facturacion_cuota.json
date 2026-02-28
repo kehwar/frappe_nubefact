@@ -5,34 +5,34 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "installment_number",
-  "payment_date",
-  "amount",
-  "raw"
+  "cuota",
+  "fecha_de_pago",
+  "importe",
+  "json_crudo"
  ],
  "fields": [
   {
-   "fieldname": "installment_number",
+   "fieldname": "cuota",
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Número de Cuota"
   },
   {
-   "fieldname": "payment_date",
+   "fieldname": "fecha_de_pago",
    "fieldtype": "Date",
    "in_list_view": 1,
    "label": "Fecha de Pago"
   },
   {
-   "fieldname": "amount",
+   "fieldname": "importe",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Importe"
   },
   {
-   "fieldname": "raw",
+   "fieldname": "json_crudo",
    "fieldtype": "JSON",
-   "label": "Raw (JSON Crudo)"
+   "label": "JSON Crudo"
   }
  ],
  "grid_page_length": 50,

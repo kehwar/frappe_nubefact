@@ -5,28 +5,28 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "guide_type",
-  "guide_series_number",
-  "raw"
+  "guia_tipo",
+  "guia_serie_numero",
+  "json_crudo"
  ],
  "fields": [
   {
-   "fieldname": "guide_type",
+   "fieldname": "guia_tipo",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Tipo de Guía",
    "options": "1\n2"
   },
   {
-   "fieldname": "guide_series_number",
+   "fieldname": "guia_serie_numero",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Serie y Número de Guía"
   },
   {
-   "fieldname": "raw",
+   "fieldname": "json_crudo",
    "fieldtype": "JSON",
-   "label": "Raw (JSON Crudo)"
+   "label": "JSON Crudo"
   }
  ],
  "grid_page_length": 50,

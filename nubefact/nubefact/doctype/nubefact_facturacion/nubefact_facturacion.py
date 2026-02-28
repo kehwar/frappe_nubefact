@@ -108,26 +108,30 @@ class NubefactFacturacion(Document):
             apply_raw_payload_overrides(
                 omit_empty_values(
                     {
-                        "unidad_de_medida": row.uom,
-                        "codigo": row.item_code,
-                        "codigo_producto_sunat": row.sunat_product_code,
-                        "descripcion": row.description,
-                        "cantidad": cstr(row.quantity),
-                        "valor_unitario": cstr(row.unit_price),
-                        "precio_unitario": cstr(row.unit_price_with_tax),
-                        "descuento": cstr(row.discount),
-                        "subtotal": cstr(row.line_total),
-                        "tipo_de_igv": cstr(row.igv_type),
+                        "unidad_de_medida": row.unidad_de_medida,
+                        "codigo": row.codigo,
+                        "codigo_producto_sunat": row.codigo_producto_sunat,
+                        "descripcion": row.descripcion,
+                        "cantidad": cstr(row.cantidad),
+                        "valor_unitario": cstr(row.valor_unitario),
+                        "precio_unitario": cstr(row.precio_unitario),
+                        "descuento": cstr(row.descuento),
+                        "subtotal": cstr(row.subtotal),
+                        "tipo_de_igv": cstr(row.tipo_de_igv),
+                        "tipo_de_ivap": cstr(row.tipo_de_ivap),
                         "igv": cstr(row.igv),
-                        "total": cstr(row.line_total_with_tax),
+                        "impuesto_bolsas": cstr(row.impuesto_bolsas),
+                        "total": cstr(row.total),
                         "anticipo_regularizacion": bool(
-                            cint(row.downpayment_regularization)
+                            cint(row.anticipo_regularizacion)
                         ),
-                        "anticipo_documento_serie": row.downpayment_document_series,
-                        "anticipo_documento_numero": row.downpayment_document_number,
+                        "anticipo_documento_serie": row.anticipo_documento_serie,
+                        "anticipo_documento_numero": row.anticipo_documento_numero,
+                        "tipo_de_isc": cstr(row.tipo_de_isc),
+                        "isc": cstr(row.isc),
                     }
                 ),
-                row.raw,
+                row.json_crudo,
                 f"items row #{row.idx}",
             )
             for row in self.items
@@ -260,10 +264,10 @@ class NubefactFacturacion(Document):
             payload["guias"] = [
                 apply_raw_payload_overrides(
                     {
-                        "guia_tipo": cstr(row.guide_type),
-                        "guia_serie_numero": row.guide_series_number,
+                        "guia_tipo": cstr(row.guia_tipo),
+                        "guia_serie_numero": row.guia_serie_numero,
                     },
-                    row.raw,
+                    row.json_crudo,
                     f"delivery references row #{row.idx}",
                 )
                 for row in self.guias
@@ -273,11 +277,11 @@ class NubefactFacturacion(Document):
             payload["venta_al_credito"] = [
                 apply_raw_payload_overrides(
                     {
-                        "cuota": cstr(row.installment_number),
-                        "fecha_de_pago": to_nubefact_date(row.payment_date),
-                        "importe": cstr(row.amount),
+                        "cuota": cstr(row.cuota),
+                        "fecha_de_pago": to_nubefact_date(row.fecha_de_pago),
+                        "importe": cstr(row.importe),
                     },
-                    row.raw,
+                    row.json_crudo,
                     f"credit installments row #{row.idx}",
                 )
                 for row in self.venta_al_credito

@@ -26,21 +26,20 @@ REQUIRED_FIELDS = [
 ]
 
 ITEM_REQUIRED_FIELDS = [
-    "uom",
-    "item_code",
-    "description",
-    "quantity",
-    "unit_price",
-    "unit_price_with_tax",
-    "line_total",
-    "igv_type",
+    "unidad_de_medida",
+    "descripcion",
+    "cantidad",
+    "valor_unitario",
+    "precio_unitario",
+    "subtotal",
+    "tipo_de_igv",
     "igv",
-    "line_total_with_tax",
+    "total",
 ]
 
-DELIVERY_REFERENCE_REQUIRED_FIELDS = ["guide_type", "guide_series_number"]
+DELIVERY_REFERENCE_REQUIRED_FIELDS = ["guia_tipo", "guia_serie_numero"]
 
-PAYMENT_INSTALLMENT_REQUIRED_FIELDS = ["installment_number", "payment_date", "amount"]
+PAYMENT_INSTALLMENT_REQUIRED_FIELDS = ["cuota", "fecha_de_pago", "importe"]
 
 NOTE_REFERENCE_REQUIRED_FIELDS = [
     "documento_que_se_modifica_tipo",

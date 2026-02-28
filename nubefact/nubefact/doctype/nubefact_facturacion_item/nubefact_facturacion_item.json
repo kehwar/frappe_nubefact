@@ -5,91 +5,91 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "uom",
-  "item_code",
-  "sunat_product_code",
-  "description",
-  "quantity",
-  "unit_price",
-  "unit_price_with_tax",
-  "discount",
-  "line_total",
-  "igv_type",
-  "ivap_type",
+  "unidad_de_medida",
+  "codigo",
+  "codigo_producto_sunat",
+  "descripcion",
+  "cantidad",
+  "valor_unitario",
+  "precio_unitario",
+  "descuento",
+  "subtotal",
+  "tipo_de_igv",
+  "tipo_de_ivap",
   "igv",
-  "plastic_bag_tax",
-  "line_total_with_tax",
-  "downpayment_regularization",
-  "downpayment_document_series",
-  "downpayment_document_number",
-  "isc_type",
+  "impuesto_bolsas",
+  "total",
+  "anticipo_regularizacion",
+  "anticipo_documento_serie",
+  "anticipo_documento_numero",
+  "tipo_de_isc",
   "isc",
-  "raw"
+  "json_crudo"
  ],
  "fields": [
   {
-   "fieldname": "uom",
+   "fieldname": "unidad_de_medida",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Unidad de Medida"
   },
   {
-   "fieldname": "item_code",
+   "fieldname": "codigo",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Código de Ítem"
+   "label": "Código"
   },
   {
-   "fieldname": "sunat_product_code",
+   "fieldname": "codigo_producto_sunat",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Código de Producto SUNAT"
   },
   {
-   "fieldname": "description",
+   "fieldname": "descripcion",
    "fieldtype": "Text",
    "in_list_view": 1,
    "label": "Descripción"
   },
   {
-   "fieldname": "quantity",
+   "fieldname": "cantidad",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Cantidad"
   },
   {
-   "fieldname": "unit_price",
+   "fieldname": "valor_unitario",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Valor Unitario"
   },
   {
-   "fieldname": "unit_price_with_tax",
+   "fieldname": "precio_unitario",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Precio Unitario"
   },
   {
-   "fieldname": "discount",
+   "fieldname": "descuento",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Descuento"
   },
   {
-   "fieldname": "line_total",
+   "fieldname": "subtotal",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Subtotal"
   },
   {
-   "fieldname": "igv_type",
+   "fieldname": "tipo_de_igv",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Tipo de IGV",
    "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n20"
   },
   {
-   "fieldname": "ivap_type",
+   "fieldname": "tipo_de_ivap",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Tipo de IVAP",
@@ -102,38 +102,38 @@
    "label": "IGV"
   },
   {
-   "fieldname": "plastic_bag_tax",
+   "fieldname": "impuesto_bolsas",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Impuesto Bolsas Plásticas"
   },
   {
-   "fieldname": "line_total_with_tax",
+   "fieldname": "total",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Total"
   },
   {
    "default": "0",
-   "fieldname": "downpayment_regularization",
+   "fieldname": "anticipo_regularizacion",
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Regularización de Anticipo"
   },
   {
-   "fieldname": "downpayment_document_series",
+   "fieldname": "anticipo_documento_serie",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Serie de Documento de Anticipo"
   },
   {
-   "fieldname": "downpayment_document_number",
+   "fieldname": "anticipo_documento_numero",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Número de Documento de Anticipo"
   },
   {
-   "fieldname": "isc_type",
+   "fieldname": "tipo_de_isc",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Tipo de ISC",
@@ -146,9 +146,9 @@
    "label": "ISC"
   },
   {
-   "fieldname": "raw",
+   "fieldname": "json_crudo",
    "fieldtype": "JSON",
-   "label": "Raw (JSON Crudo)"
+   "label": "JSON Crudo"
   }
  ],
  "grid_page_length": 50,

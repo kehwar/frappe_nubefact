@@ -194,26 +194,26 @@ def apply_import_payload_to_doc(doc: Document, payload: dict[str, Any]):
         doc.append(
             "items",
             {
-                "uom": row.get("unidad_de_medida"),
-                "item_code": row.get("codigo"),
-                "sunat_product_code": row.get("codigo_producto_sunat"),
-                "description": row.get("descripcion"),
-                "quantity": row.get("cantidad"),
-                "unit_price": row.get("valor_unitario"),
-                "unit_price_with_tax": row.get("precio_unitario"),
-                "discount": row.get("descuento"),
-                "line_total": row.get("subtotal"),
-                "igv_type": row.get("tipo_de_igv"),
-                "ivap_type": row.get("tipo_de_ivap"),
+                "unidad_de_medida": row.get("unidad_de_medida"),
+                "codigo": row.get("codigo"),
+                "codigo_producto_sunat": row.get("codigo_producto_sunat"),
+                "descripcion": row.get("descripcion"),
+                "cantidad": row.get("cantidad"),
+                "valor_unitario": row.get("valor_unitario"),
+                "precio_unitario": row.get("precio_unitario"),
+                "descuento": row.get("descuento"),
+                "subtotal": row.get("subtotal"),
+                "tipo_de_igv": row.get("tipo_de_igv"),
+                "tipo_de_ivap": row.get("tipo_de_ivap"),
                 "igv": row.get("igv"),
-                "plastic_bag_tax": row.get("impuesto_bolsas"),
-                "line_total_with_tax": row.get("total"),
-                "downpayment_regularization": (
+                "impuesto_bolsas": row.get("impuesto_bolsas"),
+                "total": row.get("total"),
+                "anticipo_regularizacion": (
                     1 if _to_bool(row.get("anticipo_regularizacion")) else 0
                 ),
-                "downpayment_document_series": row.get("anticipo_documento_serie"),
-                "downpayment_document_number": row.get("anticipo_documento_numero"),
-                "isc_type": row.get("tipo_de_isc"),
+                "anticipo_documento_serie": row.get("anticipo_documento_serie"),
+                "anticipo_documento_numero": row.get("anticipo_documento_numero"),
+                "tipo_de_isc": row.get("tipo_de_isc"),
                 "isc": row.get("isc"),
             },
         )
@@ -223,8 +223,8 @@ def apply_import_payload_to_doc(doc: Document, payload: dict[str, Any]):
         doc.append(
             "guias",
             {
-                "guide_type": row.get("guia_tipo"),
-                "guide_series_number": row.get("guia_serie_numero"),
+                "guia_tipo": row.get("guia_tipo"),
+                "guia_serie_numero": row.get("guia_serie_numero"),
             },
         )
 
@@ -233,11 +233,11 @@ def apply_import_payload_to_doc(doc: Document, payload: dict[str, Any]):
         doc.append(
             "venta_al_credito",
             {
-                "installment_number": row.get("cuota"),
-                "payment_date": _normalize_import_date(
+                "cuota": row.get("cuota"),
+                "fecha_de_pago": _normalize_import_date(
                     cstr(row.get("fecha_de_pago") or "")
                 ),
-                "amount": row.get("importe"),
+                "importe": row.get("importe"),
             },
         )
 
