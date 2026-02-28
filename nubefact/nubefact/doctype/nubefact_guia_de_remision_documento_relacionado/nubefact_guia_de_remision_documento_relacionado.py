@@ -4,7 +4,7 @@
 from frappe.model.document import Document
 
 
-class NubefactGuiadeRemisionDocumentoRelacionado(Document):
+class NubefactGuiaDeRemisionDocumentoRelacionado(Document):
     """Documentos comerciales relacionados a la guía de remisión (facturas, órdenes de compra, etc.).
 
     Referencia GRE API: .agents/skills/nubefact-api-implementation/references/gre-api-estructura-documentos-relacionados.md

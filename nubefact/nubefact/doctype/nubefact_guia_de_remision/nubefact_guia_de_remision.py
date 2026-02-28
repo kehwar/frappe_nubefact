@@ -52,7 +52,7 @@ _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
 }
 
 
-class NubefactGuiadeRemision(Document):
+class NubefactGuiaDeRemision(Document):
     """Guía de Remisión Electrónica (GRE).
 
     Referencias GRE API:
@@ -68,7 +68,7 @@ class NubefactGuiadeRemision(Document):
     def autoname(self):
         series_prefix = f"GRE-{frappe.utils.now_datetime().strftime('%Y')}-"
         self.name = series_prefix + getseries(
-            f"NubefactGuiadeRemision::{series_prefix}", 6
+            f"NubefactGuiaDeRemision::{series_prefix}", 6
         )
 
     def before_validate(self):
@@ -353,7 +353,7 @@ class NubefactGuiadeRemision(Document):
 @frappe.whitelist()
 def enviar_a_nubefact(name: str):
 
-    doc = frappe.get_doc("Nubefact Guia de Remision", name)
+    doc = frappe.get_doc("Nubefact Guia De Remision", name)
     doc.check_permission("write")
 
     if doc.status not in {"Borrador", "Error"}:
@@ -386,14 +386,14 @@ def enviar_a_nubefact(name: str):
 
 @frappe.whitelist()
 def refrescar_estado_sunat(name: str):
-    doc = frappe.get_doc("Nubefact Guia de Remision", name)
+    doc = frappe.get_doc("Nubefact Guia De Remision", name)
     doc.check_permission("read")
     return _refresh_sunat_status_doc(doc)
 
 
 def consultar_guias_pendientes():
     pending_names = frappe.get_all(
-        "Nubefact Guia de Remision",
+        "Nubefact Guia De Remision",
         filters={"status": "Pendiente de Respuesta", "aceptada_por_sunat": 0},
         pluck="name",
         limit=20,
@@ -402,17 +402,17 @@ def consultar_guias_pendientes():
 
     for name in pending_names:
         try:
-            doc = frappe.get_doc("Nubefact Guia de Remision", name)
+            doc = frappe.get_doc("Nubefact Guia De Remision", name)
             _refresh_sunat_status_doc(doc)
         except Exception:
             frappe.log_error(
-                title=f"Nubefact Guia de Remision: falló refresco SUNAT ({name})",
+                title=f"Nubefact Guia De Remision: falló refresco SUNAT ({name})",
                 message=frappe.get_traceback(),
             )
 
 
 def _request_extract_and_save_response(
-    doc: NubefactGuiadeRemision, payload: dict[str, Any]
+    doc: NubefactGuiaDeRemision, payload: dict[str, Any]
 ) -> dict[str, Any]:
     response = make_request(
         payload=payload,
@@ -427,7 +427,7 @@ def _request_extract_and_save_response(
     return values
 
 
-def _refresh_sunat_status_doc(doc: NubefactGuiadeRemision) -> dict[str, Any]:
+def _refresh_sunat_status_doc(doc: NubefactGuiaDeRemision) -> dict[str, Any]:
 
     if not doc.numero:
         frappe.throw(
@@ -446,7 +446,7 @@ def _refresh_sunat_status_doc(doc: NubefactGuiadeRemision) -> dict[str, Any]:
 
 
 def _save_response_status(
-    doc: NubefactGuiadeRemision, values: dict[str, Any]
+    doc: NubefactGuiaDeRemision, values: dict[str, Any]
 ) -> dict[str, Any]:
     if not values:
         return {}

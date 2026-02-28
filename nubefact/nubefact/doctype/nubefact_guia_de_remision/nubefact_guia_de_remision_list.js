@@ -1,7 +1,7 @@
 // Copyright (c) 2026, Erick W.R. and contributors
 // For license information, please see license.txt
 
-frappe.listview_settings["Nubefact Guia de Remision"] = {
+frappe.listview_settings["Nubefact Guia De Remision"] = {
 	onload(listview) {
 		listview.page.add_inner_button(__("Archivo"), async () => {
 			await importar_guia_de_remision_desde_archivo([".json", ".xml", "text/xml"]);
@@ -46,7 +46,7 @@ function abrir_dialogo_pegar_json() {
 					indicator: "green",
 				});
 
-				frappe.set_route("Form", "Nubefact Guia de Remision", guiaName);
+				frappe.set_route("Form", "Nubefact Guia De Remision", guiaName);
 			} catch (error) {
 				frappe.msgprint({
 					title: __("Importación fallida"),
@@ -86,7 +86,7 @@ async function importar_guia_de_remision_desde_archivo(allowedFileTypes, options
 					indicator: "green",
 				});
 
-				frappe.set_route("Form", "Nubefact Guia de Remision", guiaName);
+			frappe.set_route("Form", "Nubefact Guia De Remision", guiaName);
 			} catch (error) {
 				frappe.msgprint({
 					title: __("Importación fallida"),

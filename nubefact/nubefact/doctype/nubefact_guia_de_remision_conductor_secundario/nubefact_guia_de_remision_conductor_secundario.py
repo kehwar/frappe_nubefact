@@ -4,7 +4,7 @@
 from frappe.model.document import Document
 
 
-class NubefactGuiadeRemisionConductorSecundario(Document):
+class NubefactGuiaDeRemisionConductorSecundario(Document):
     """Conductores secundarios en el transporte.
 
     Referencia GRE API: .agents/skills/nubefact-api-implementation/references/gre-api-estructura-conductores-secundarios.md

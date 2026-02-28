@@ -1,7 +1,7 @@
 // Copyright (c) 2026, Erick W.R. and contributors
 // For license information, please see license.txt
 
-frappe.ui.form.on("Nubefact Guia de Remision", {
+frappe.ui.form.on("Nubefact Guia De Remision", {
 	refresh(frm) {
 		if (["Pendiente de Respuesta", "Aceptada"].includes(frm.doc.status || "Borrador")) {
 			frm.disable_form();

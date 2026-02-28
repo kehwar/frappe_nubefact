@@ -28,7 +28,7 @@ def crear_guia_de_remision_desde_archivo(file_name: str) -> str:
             "Tipo de archivo no soportado. Solo se permiten archivos JSON y XML."
         )
 
-    doc = frappe.new_doc("Nubefact Guia de Remision")
+    doc = frappe.new_doc("Nubefact Guia De Remision")
     apply_import_payload_to_doc(doc, payload)
     doc.flags.ignore_validate = True
     doc.insert()
@@ -39,7 +39,7 @@ def crear_guia_de_remision_desde_archivo(file_name: str) -> str:
 def crear_guia_de_remision_desde_json(json_payload: str) -> str:
     payload = parse_import_json_payload(cstr(json_payload or ""))
 
-    doc = frappe.new_doc("Nubefact Guia de Remision")
+    doc = frappe.new_doc("Nubefact Guia De Remision")
     apply_import_payload_to_doc(doc, payload)
     doc.flags.ignore_validate = True
     doc.insert()

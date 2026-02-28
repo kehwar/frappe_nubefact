@@ -393,7 +393,7 @@
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "\u00cdtems",
-   "options": "Nubefact Guia de Remision Item"
+   "options": "Nubefact Guia De Remision Item"
   },
   {
    "fieldname": "seccion_documentos_relacionados",
@@ -404,7 +404,7 @@
    "fieldname": "documento_relacionado",
    "fieldtype": "Table",
    "label": "Documento Relacionado",
-   "options": "Nubefact Guia de Remision Documento Relacionado"
+   "options": "Nubefact Guia De Remision Documento Relacionado"
   },
   {
    "fieldname": "seccion_vehiculos_secundarios",
@@ -415,7 +415,7 @@
    "fieldname": "vehiculos_secundarios",
    "fieldtype": "Table",
    "label": "Veh\u00edculos Secundarios",
-   "options": "Nubefact Guia de Remision Vehiculo Secundario"
+   "options": "Nubefact Guia De Remision Vehiculo Secundario"
   },
   {
    "fieldname": "seccion_conductores_secundarios",
@@ -426,7 +426,7 @@
    "fieldname": "conductores_secundarios",
    "fieldtype": "Table",
    "label": "Conductores Secundarios",
-   "options": "Nubefact Guia de Remision Conductor Secundario"
+   "options": "Nubefact Guia De Remision Conductor Secundario"
   },
   {
    "fieldname": "seccion_informacion_adicional",
@@ -563,7 +563,7 @@
  "modified": "2026-02-27 23:35:01.392273",
  "modified_by": "Administrator",
  "module": "Nubefact",
- "name": "Nubefact Guia de Remision",
+ "name": "Nubefact Guia De Remision",
  "naming_rule": "By script",
  "owner": "Administrator",
  "permissions": [

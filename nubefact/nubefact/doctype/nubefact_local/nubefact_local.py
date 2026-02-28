@@ -34,9 +34,9 @@ def get_last_used_local_for_user(
     if not cstr(doctype).strip():
         frappe.throw("Se requiere DocType.")
 
-    if doctype not in ("Nubefact Guia de Remision", "Nubefact Facturacion"):
+    if doctype not in ("Nubefact Guia De Remision", "Nubefact Facturacion"):
         frappe.throw(
-            "DocType no soportado. Se esperaba 'Nubefact Guia de Remision' o 'Nubefact Facturacion'."
+            "DocType no soportado. Se esperaba 'Nubefact Guia De Remision' o 'Nubefact Facturacion'."
         )
 
     filters = {

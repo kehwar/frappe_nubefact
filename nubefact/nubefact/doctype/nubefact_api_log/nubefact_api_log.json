@@ -56,7 +56,7 @@
    "fieldname": "referencia_guia_de_remision",
    "fieldtype": "Link",
     "label": "Guía de remisión de referencia",
-   "options": "Nubefact Guia de Remision",
+  "options": "Nubefact Guia De Remision",
    "read_only": 1
   },
   {
@@ -181,11 +181,11 @@
  "sort_order": "DESC",
  "states": [
   {
-   "color": "green",
+   "color": "Green",
   "title": "OK"
   },
   {
-   "color": "red",
+   "color": "Red",
    "title": "Error"
   }
  ]
