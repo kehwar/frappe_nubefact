@@ -19,14 +19,14 @@ def make_request(
     timeout: int = 60,
 ) -> Any:
     if not isinstance(payload, dict):
-        frappe.throw("Nubefact payload must be a dict.")
+        frappe.throw("El payload de Nubefact debe ser un diccionario.")
 
-    operation = payload.get("operacion")
-    if not operation:
-        frappe.throw("Operation is required in payload field 'operacion'.")
+    operacion = payload.get("operacion")
+    if not operacion:
+        frappe.throw("La operación es obligatoria en el campo 'operacion' del payload.")
 
     if not local:
-        frappe.throw("Local is required to call Nubefact API.")
+        frappe.throw("El local es obligatorio para llamar a la API de Nubefact.")
 
     local_doc, url, token = get_request_config(local)
 
@@ -54,16 +54,12 @@ def make_request(
             response_payload = response.text
 
         status = (
-            "Success"
-            if response.ok and not _has_api_error(response_payload)
-            else "Error"
+            "OK" if response.ok and not _has_api_error(response_payload) else "Error"
         )
         if status == "Error":
             error_code, error_message = _extract_error_details(response_payload)
             if not error_message:
-                error_message = (
-                    f"Nubefact request failed with status code {response_status_code}."
-                )
+                error_message = f"La solicitud a Nubefact falló con código de estado {response_status_code}."
 
     except requests.RequestException as exc:
         error_message = str(exc)
@@ -72,9 +68,9 @@ def make_request(
         duration_ms = int((time.perf_counter() - start) * 1000)
         response_timestamp = now_datetime()
         log_name = create_api_log(
-            operation=operation,
+            operacion=operacion,
             local=local_doc.name,
-            api_route=url,
+            ruta_api=url,
             reference_delivery_note=reference_delivery_note,
             reference_invoice=reference_invoice,
             request_timestamp=request_timestamp,
@@ -90,8 +86,8 @@ def make_request(
 
     if status == "Error":
         frappe.throw(
-            error_message or "Nubefact request failed.",
-            title=f"Nubefact Error (Log: {log_name})",
+            error_message or "La solicitud a Nubefact falló.",
+            title=f"Error de Nubefact (Log: {log_name})",
         )
 
     return response_payload

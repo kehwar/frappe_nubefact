@@ -24,9 +24,9 @@ class NubefactAPILog(Document):
 
 
 def create_api_log(
-    operation: str,
+    operacion: str,
     local: str,
-    api_route: str,
+    ruta_api: str,
     reference_delivery_note: str | None,
     reference_invoice: str | None,
     request_timestamp,
@@ -42,9 +42,9 @@ def create_api_log(
 ) -> str:
     doc = {
         "doctype": "Nubefact API Log",
-        "operation": operation,
+        "operacion": operacion,
         "local": local,
-        "api_route": api_route,
+        "ruta_api": ruta_api,
         "reference_delivery_note": reference_delivery_note,
         "reference_invoice": reference_invoice,
         "request_timestamp": request_timestamp,

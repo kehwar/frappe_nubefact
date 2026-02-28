@@ -5,12 +5,12 @@
  "engine": "InnoDB",
  "field_order": [
   "request_details_section",
-  "operation",
+  "operacion",
   "local",
   "reference_delivery_note",
   "reference_invoice",
   "column_break_requests",
-  "api_route",
+  "ruta_api",
   "request_timestamp",
   "response_details_section",
   "response_timestamp",
@@ -28,13 +28,13 @@
   {
    "fieldname": "request_details_section",
    "fieldtype": "Section Break",
-   "label": "Request Details"
+    "label": "Detalles de la solicitud"
   },
   {
-   "fieldname": "operation",
+  "fieldname": "operacion",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Operation",
+    "label": "Operación",
    "options": "generar_comprobante\nconsultar_comprobante\ngenerar_anulacion\nconsultar_anulacion\ngenerar_guia\nconsultar_guia",
    "read_only": 1
   },
@@ -47,22 +47,22 @@
    "read_only": 1
   },
   {
-   "fieldname": "api_route",
+  "fieldname": "ruta_api",
    "fieldtype": "Data",
-   "label": "API Route",
+    "label": "Ruta API",
    "read_only": 1
   },
   {
    "fieldname": "reference_delivery_note",
    "fieldtype": "Link",
-   "label": "Reference Delivery Note",
+    "label": "Guía de remisión de referencia",
    "options": "Nubefact Delivery Note",
    "read_only": 1
   },
   {
    "fieldname": "reference_invoice",
    "fieldtype": "Link",
-   "label": "Reference Invoice",
+    "label": "Factura de referencia",
    "options": "Nubefact Invoice",
    "read_only": 1
   },
@@ -70,7 +70,7 @@
    "fieldname": "request_timestamp",
    "fieldtype": "Datetime",
    "in_list_view": 1,
-   "label": "Request Timestamp",
+    "label": "Fecha y hora de solicitud",
    "read_only": 1
   },
   {
@@ -80,32 +80,32 @@
   {
    "fieldname": "request_payload",
    "fieldtype": "Code",
-   "label": "Request Payload",
+    "label": "Payload de solicitud",
    "options": "JSON",
    "read_only": 1
   },
   {
    "fieldname": "response_details_section",
    "fieldtype": "Section Break",
-   "label": "Response Details"
+    "label": "Detalles de la respuesta"
   },
   {
    "fieldname": "response_timestamp",
    "fieldtype": "Datetime",
-   "label": "Response Timestamp",
+    "label": "Fecha y hora de respuesta",
    "read_only": 1
   },
   {
    "fieldname": "response_status_code",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Response Status Code",
+    "label": "Código de estado de respuesta",
    "read_only": 1
   },
   {
    "fieldname": "duration_ms",
    "fieldtype": "Int",
-   "label": "Duration (ms)",
+    "label": "Duración (ms)",
    "read_only": 1
   },
   {
@@ -115,35 +115,35 @@
   {
    "fieldname": "response_payload",
    "fieldtype": "Code",
-   "label": "Response Payload",
+    "label": "Payload de respuesta",
    "options": "JSON",
    "read_only": 1
   },
   {
    "fieldname": "error_code",
    "fieldtype": "Data",
-   "label": "Error Code",
+    "label": "Código de error",
    "read_only": 1
   },
   {
    "fieldname": "error_message",
    "fieldtype": "Text",
-   "label": "Error Message",
+    "label": "Mensaje de error",
    "read_only": 1
   },
   {
    "collapsible": 1,
    "fieldname": "section_break_crau",
    "fieldtype": "Section Break",
-   "label": "Request Payload"
+    "label": "Payload de solicitud"
   },
     {
-     "default": "Success",
+    "default": "OK",
      "fieldname": "status",
      "fieldtype": "Select",
      "in_list_view": 1,
-     "label": "Status",
-     "options": "Success\nError",
+    "label": "Estado",
+    "options": "OK\nError",
      "read_only": 1
     }
  ],
@@ -182,7 +182,7 @@
  "states": [
   {
    "color": "green",
-   "title": "Success"
+  "title": "OK"
   },
   {
    "color": "red",
