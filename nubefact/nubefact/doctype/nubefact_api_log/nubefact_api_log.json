@@ -7,7 +7,7 @@
   "request_details_section",
   "operacion",
   "local",
-  "reference_delivery_note",
+  "referencia_guia_de_remision",
   "reference_invoice",
   "column_break_requests",
   "ruta_api",
@@ -53,10 +53,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "reference_delivery_note",
+   "fieldname": "referencia_guia_de_remision",
    "fieldtype": "Link",
     "label": "Guía de remisión de referencia",
-   "options": "Nubefact Delivery Note",
+   "options": "Nubefact Guia de Remision",
    "read_only": 1
   },
   {

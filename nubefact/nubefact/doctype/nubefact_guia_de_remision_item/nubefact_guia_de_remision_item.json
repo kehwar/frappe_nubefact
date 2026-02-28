@@ -5,35 +5,47 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "document_type",
-  "series",
-  "number",
-  "raw"
+  "unidad_de_medida",
+  "codigo",
+  "descripcion",
+  "cantidad",
+  "codigo_dam",
+  "datos_crudos"
  ],
  "fields": [
   {
-   "fieldname": "document_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Document Type",
-    "options": "01\n02\n03\n04\n06\n09\n12\n31\n50\n80"
-  },
-  {
-   "fieldname": "series",
+   "fieldname": "unidad_de_medida",
    "fieldtype": "Data",
    "in_list_view": 1,
-    "label": "Series"
+   "label": "Unidad de Medida"
   },
   {
-   "fieldname": "number",
+   "fieldname": "codigo",
    "fieldtype": "Data",
    "in_list_view": 1,
-    "label": "Number"
+   "label": "Código"
   },
   {
-   "fieldname": "raw",
+   "fieldname": "descripcion",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "Descripción"
+  },
+  {
+   "fieldname": "cantidad",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Cantidad"
+  },
+  {
+   "fieldname": "codigo_dam",
+   "fieldtype": "Data",
+   "label": "Código DAM"
+  },
+  {
+   "fieldname": "datos_crudos",
    "fieldtype": "JSON",
-   "label": "Raw"
+   "label": "Datos Crudos"
   }
  ],
  "grid_page_length": 50,
@@ -43,7 +55,7 @@
  "modified": "2026-02-27 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nubefact",
- "name": "Nubefact Delivery Note Related Document",
+ "name": "Nubefact Guia de Remision Item",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",

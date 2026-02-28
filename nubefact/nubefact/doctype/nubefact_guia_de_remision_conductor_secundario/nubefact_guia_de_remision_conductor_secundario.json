@@ -5,47 +5,49 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "unit_of_measure",
-  "item_code",
-  "description",
-  "quantity",
-    "dam_code",
-    "raw"
+  "documento_tipo",
+  "documento_numero",
+  "nombre",
+  "apellidos",
+  "numero_licencia",
+  "datos_crudos"
  ],
  "fields": [
   {
-   "fieldname": "unit_of_measure",
+   "fieldname": "documento_tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Documento Tipo",
+   "options": "1\n4\n7"
+  },
+  {
+   "fieldname": "documento_numero",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Unit of Measure"
+   "label": "Documento Número"
   },
   {
-   "fieldname": "item_code",
+   "fieldname": "nombre",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Item Code"
+   "label": "Nombre"
   },
   {
-   "fieldname": "description",
-   "fieldtype": "Text",
-   "in_list_view": 1,
-   "label": "Description"
-  },
-  {
-   "fieldname": "quantity",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Quantity"
-  },
-  {
-   "fieldname": "dam_code",
+   "fieldname": "apellidos",
    "fieldtype": "Data",
-   "label": "DAM Code"
-    },
-    {
-     "fieldname": "raw",
-     "fieldtype": "JSON",
-     "label": "Raw"
+   "in_list_view": 1,
+   "label": "Apellidos"
+  },
+  {
+   "fieldname": "numero_licencia",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Número de Licencia"
+  },
+  {
+   "fieldname": "datos_crudos",
+   "fieldtype": "JSON",
+   "label": "Datos Crudos"
   }
  ],
  "grid_page_length": 50,
@@ -55,7 +57,7 @@
  "modified": "2026-02-27 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nubefact",
- "name": "Nubefact Delivery Note Item",
+ "name": "Nubefact Guia de Remision Conductor Secundario",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",

@@ -5,49 +5,35 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "document_type",
-  "document_number",
-  "first_name",
-  "last_name",
-  "license_number",
-  "raw"
+  "tipo",
+  "serie",
+  "numero",
+  "datos_crudos"
  ],
  "fields": [
   {
-   "fieldname": "document_type",
+   "fieldname": "tipo",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Document Type",
-    "options": "1\n4\n7"
+   "label": "Tipo",
+   "options": "01\n03\n09\n31"
   },
   {
-   "fieldname": "document_number",
+   "fieldname": "serie",
    "fieldtype": "Data",
    "in_list_view": 1,
-    "label": "Document Number"
+   "label": "Serie"
   },
   {
-   "fieldname": "first_name",
+   "fieldname": "numero",
    "fieldtype": "Data",
    "in_list_view": 1,
-    "label": "First Name"
+   "label": "Número"
   },
   {
-   "fieldname": "last_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-    "label": "Last Name"
-  },
-  {
-   "fieldname": "license_number",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-    "label": "License Number"
-  },
-  {
-   "fieldname": "raw",
+   "fieldname": "datos_crudos",
    "fieldtype": "JSON",
-   "label": "Raw"
+   "label": "Datos Crudos"
   }
  ],
  "grid_page_length": 50,
@@ -57,7 +43,7 @@
  "modified": "2026-02-27 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nubefact",
- "name": "Nubefact Delivery Note Secondary Driver",
+ "name": "Nubefact Guia de Remision Documento Relacionado",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",

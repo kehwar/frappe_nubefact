@@ -4,5 +4,5 @@
 from frappe.model.document import Document
 
 
-class NubefactDeliveryNoteSecondaryDriver(Document):
+class NubefactGuiadeRemisionVehiculoSecundario(Document):
     pass

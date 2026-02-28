@@ -4,5 +4,5 @@
 from frappe.model.document import Document
 
 
-class NubefactDeliveryNoteRelatedDocument(Document):
+class NubefactGuiadeRemisionDocumentoRelacionado(Document):
     pass

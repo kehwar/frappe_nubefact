@@ -22,9 +22,9 @@ def get_origin_values(local: str | None) -> dict[str, str | None]:
     )
 
     return {
-        "origin_ubigeo": local_origin_ubigeo,
-        "origin_address": local_origin_address,
-        "origin_sunat_code": local_origin_sunat_code,
+        "punto_de_partida_ubigeo": local_origin_ubigeo,
+        "punto_de_partida_direccion": local_origin_address,
+        "punto_de_partida_codigo_establecimiento_sunat": local_origin_sunat_code,
     }
 
 
@@ -34,9 +34,9 @@ def get_last_used_local_for_user(
     if not cstr(doctype).strip():
         frappe.throw("DocType is required.")
 
-    if doctype not in ("Nubefact Delivery Note", "Nubefact Invoice"):
+    if doctype not in ("Nubefact Guia de Remision", "Nubefact Invoice"):
         frappe.throw(
-            "Unsupported DocType. Expected 'Nubefact Delivery Note' or 'Nubefact Invoice'."
+            "DocType no soportado. Se esperaba 'Nubefact Guia de Remision' o 'Nubefact Invoice'."
         )
 
     filters = {

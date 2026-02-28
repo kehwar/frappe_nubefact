@@ -1,0 +1,603 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-27 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "seccion_documento",
+  "titulo",
+  "tipo_de_comprobante",
+  "serie",
+  "numero",
+  "estado",
+  "columna_documento",
+  "fecha_de_emision",
+  "fecha_de_inicio_de_traslado",
+  "local",
+  "seccion_cliente",
+  "cliente_tipo_de_documento",
+  "cliente_numero_de_documento",
+  "cliente_denominacion",
+  "columna_cliente",
+  "cliente_direccion",
+  "cliente_email",
+  "cliente_email_1",
+  "cliente_email_2",
+  "seccion_destinatario",
+  "destinatario_documento_tipo",
+  "destinatario_documento_numero",
+  "destinatario_denominacion",
+  "seccion_traslado",
+  "motivo_de_traslado",
+  "motivo_de_traslado_otros_descripcion",
+  "documento_relacionado_codigo",
+  "tipo_de_transporte",
+  "peso_bruto_total",
+  "peso_bruto_unidad_de_medida",
+  "numero_de_bultos",
+  "columna_traslado",
+  "transportista_documento_tipo",
+  "transportista_documento_numero",
+  "transportista_denominacion",
+  "transportista_placa_numero",
+  "seccion_conductor",
+  "conductor_documento_tipo",
+  "conductor_documento_numero",
+  "conductor_nombre",
+  "columna_conductor",
+  "conductor_apellidos",
+  "conductor_numero_licencia",
+  "seccion_origen_destino",
+  "punto_de_partida_ubigeo",
+  "punto_de_partida_direccion",
+  "punto_de_partida_codigo_establecimiento_sunat",
+  "columna_origen",
+  "punto_de_llegada_ubigeo",
+  "punto_de_llegada_direccion",
+  "punto_de_llegada_codigo_establecimiento_sunat",
+  "seccion_items",
+  "items",
+  "seccion_documentos_relacionados",
+  "documento_relacionado",
+  "seccion_vehiculos_secundarios",
+  "vehiculos_secundarios",
+  "seccion_conductores_secundarios",
+  "conductores_secundarios",
+  "seccion_informacion_adicional",
+  "observaciones",
+  "datos_crudos",
+  "tab_mas_informacion",
+  "seccion_automatizacion",
+  "enviar_automaticamente_al_cliente",
+  "omitir_validacion_campos_obligatorios",
+  "formato_de_pdf",
+  "seccion_sunat",
+  "aceptada_por_sunat",
+  "ultima_consulta_sunat",
+  "sunat_responsecode",
+  "sunat_description",
+  "sunat_note",
+  "sunat_soap_error",
+  "mensaje_error",
+  "columna_sunat",
+  "enlace",
+  "enlace_del_pdf",
+  "enlace_del_xml",
+  "enlace_del_cdr",
+  "cadena_para_codigo_qr"
+ ],
+ "fields": [
+  {
+   "fieldname": "seccion_documento",
+   "fieldtype": "Section Break",
+   "label": "Documento"
+  },
+  {
+   "default": "Borrador",
+   "fieldname": "estado",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Estado",
+   "no_copy": 1,
+   "options": "Borrador\nPendiente de Respuesta\nAceptada\nError",
+   "read_only": 1
+  },
+  {
+   "fieldname": "local",
+   "fieldtype": "Link",
+   "label": "Local",
+   "options": "Nubefact Local"
+  },
+  {
+   "fieldname": "tipo_de_comprobante",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo de Comprobante",
+   "options": "7\n8"
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Título",
+   "read_only": 1
+  },
+  {
+   "fieldname": "serie",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Serie"
+  },
+  {
+   "fieldname": "numero",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Número",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "columna_documento",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fecha_de_emision",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Fecha de Emisión"
+  },
+  {
+   "fieldname": "fecha_de_inicio_de_traslado",
+   "fieldtype": "Date",
+   "label": "Fecha de Inicio de Traslado"
+  },
+  {
+   "fieldname": "seccion_cliente",
+   "fieldtype": "Section Break",
+   "label": "Cliente"
+  },
+  {
+   "fieldname": "cliente_tipo_de_documento",
+   "fieldtype": "Select",
+   "label": "Cliente Tipo de Documento",
+   "options": "6\n1\n4\n7\nA\n0"
+  },
+  {
+   "fieldname": "cliente_numero_de_documento",
+   "fieldtype": "Data",
+   "label": "Cliente Número de Documento"
+  },
+  {
+   "fieldname": "cliente_denominacion",
+   "fieldtype": "Data",
+   "label": "Cliente Denominación"
+  },
+  {
+   "fieldname": "columna_cliente",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cliente_direccion",
+   "fieldtype": "Small Text",
+   "label": "Cliente Dirección"
+  },
+  {
+   "fieldname": "cliente_email",
+   "fieldtype": "Data",
+   "label": "Cliente Email"
+  },
+  {
+   "fieldname": "cliente_email_1",
+   "fieldtype": "Data",
+   "label": "Cliente Email 1"
+  },
+  {
+   "fieldname": "cliente_email_2",
+   "fieldtype": "Data",
+   "label": "Cliente Email 2"
+  },
+  {
+   "fieldname": "seccion_destinatario",
+   "fieldtype": "Section Break",
+   "label": "Destinatario (Tipo 8)"
+  },
+  {
+   "fieldname": "destinatario_documento_tipo",
+   "fieldtype": "Select",
+   "label": "Destinatario Documento Tipo",
+   "options": "6\n1\n4\n7\nA\n0"
+  },
+  {
+   "fieldname": "destinatario_documento_numero",
+   "fieldtype": "Data",
+   "label": "Destinatario Documento Número"
+  },
+  {
+   "fieldname": "destinatario_denominacion",
+   "fieldtype": "Data",
+   "label": "Destinatario Denominación"
+  },
+  {
+   "fieldname": "seccion_traslado",
+   "fieldtype": "Section Break",
+   "label": "Datos del Traslado"
+  },
+  {
+   "fieldname": "motivo_de_traslado",
+   "fieldtype": "Select",
+   "label": "Motivo de Traslado",
+   "options": "01\n02\n04\n05\n06\n07\n08\n09\n13\n14\n18\n19"
+  },
+  {
+   "fieldname": "motivo_de_traslado_otros_descripcion",
+   "fieldtype": "Data",
+   "label": "Motivo de Traslado Otros Descripción"
+  },
+  {
+   "fieldname": "documento_relacionado_codigo",
+   "fieldtype": "Select",
+   "label": "Documento Relacionado Código",
+   "options": "\n50\n52"
+  },
+  {
+   "fieldname": "tipo_de_transporte",
+   "fieldtype": "Select",
+   "label": "Tipo de Transporte",
+   "options": "01\n02"
+  },
+  {
+   "fieldname": "peso_bruto_total",
+   "fieldtype": "Float",
+   "label": "Peso Bruto Total"
+  },
+  {
+   "fieldname": "peso_bruto_unidad_de_medida",
+   "fieldtype": "Select",
+   "label": "Peso Bruto Unidad de Medida",
+   "options": "KGM\nTNE"
+  },
+  {
+   "fieldname": "numero_de_bultos",
+   "fieldtype": "Int",
+   "label": "Número de Bultos"
+  },
+  {
+   "fieldname": "columna_traslado",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transportista_documento_tipo",
+   "fieldtype": "Select",
+   "label": "Transportista Documento Tipo",
+   "options": "6\n1\n4\n7\nA\n0"
+  },
+  {
+   "fieldname": "transportista_documento_numero",
+   "fieldtype": "Data",
+   "label": "Transportista Documento Número"
+  },
+  {
+   "fieldname": "transportista_denominacion",
+   "fieldtype": "Data",
+   "label": "Transportista Denominación"
+  },
+  {
+   "fieldname": "transportista_placa_numero",
+   "fieldtype": "Data",
+   "label": "Transportista Placa Número"
+  },
+  {
+   "fieldname": "seccion_conductor",
+   "fieldtype": "Section Break",
+   "label": "Conductor Principal"
+  },
+  {
+   "fieldname": "conductor_documento_tipo",
+   "fieldtype": "Select",
+   "label": "Conductor Documento Tipo",
+   "options": "1\n4\n7"
+  },
+  {
+   "fieldname": "conductor_documento_numero",
+   "fieldtype": "Data",
+   "label": "Conductor Documento Número"
+  },
+  {
+   "fieldname": "conductor_nombre",
+   "fieldtype": "Data",
+   "label": "Conductor Nombre"
+  },
+  {
+   "fieldname": "columna_conductor",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "conductor_apellidos",
+   "fieldtype": "Data",
+   "label": "Conductor Apellidos"
+  },
+  {
+   "fieldname": "conductor_numero_licencia",
+   "fieldtype": "Data",
+   "label": "Conductor Número Licencia"
+  },
+  {
+   "fieldname": "seccion_origen_destino",
+   "fieldtype": "Section Break",
+   "label": "Punto de Partida / Llegada"
+  },
+  {
+   "fieldname": "punto_de_partida_ubigeo",
+   "fieldtype": "Data",
+   "label": "Punto de Partida Ubigeo"
+  },
+  {
+   "fieldname": "punto_de_partida_direccion",
+   "fieldtype": "Small Text",
+   "label": "Punto de Partida Dirección"
+  },
+  {
+   "fieldname": "punto_de_partida_codigo_establecimiento_sunat",
+   "fieldtype": "Data",
+   "label": "Punto de Partida Código Establecimiento SUNAT"
+  },
+  {
+   "fieldname": "columna_origen",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "punto_de_llegada_ubigeo",
+   "fieldtype": "Data",
+   "label": "Punto de Llegada Ubigeo"
+  },
+  {
+   "fieldname": "punto_de_llegada_direccion",
+   "fieldtype": "Small Text",
+   "label": "Punto de Llegada Dirección"
+  },
+  {
+   "fieldname": "punto_de_llegada_codigo_establecimiento_sunat",
+   "fieldtype": "Data",
+   "label": "Punto de Llegada Código Establecimiento SUNAT"
+  },
+  {
+   "fieldname": "seccion_automatizacion",
+   "fieldtype": "Section Break",
+   "label": "Configuración"
+  },
+  {
+   "default": "0",
+   "fieldname": "enviar_automaticamente_al_cliente",
+   "fieldtype": "Check",
+   "label": "Enviar Automáticamente al Cliente"
+  },
+  {
+   "default": "0",
+   "fieldname": "omitir_validacion_campos_obligatorios",
+   "fieldtype": "Check",
+   "label": "Omitir Validación de Campos Obligatorios"
+  },
+  {
+   "fieldname": "formato_de_pdf",
+   "fieldtype": "Select",
+   "label": "Formato de PDF",
+   "options": "\nA4\nA5\nTICKET"
+  },
+  {
+   "fieldname": "seccion_items",
+   "fieldtype": "Section Break",
+   "label": "Ítems"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Ítems",
+   "options": "Nubefact Guia de Remision Item"
+  },
+  {
+   "fieldname": "seccion_documentos_relacionados",
+   "fieldtype": "Section Break",
+   "label": "Documentos Relacionados"
+  },
+  {
+   "fieldname": "documento_relacionado",
+   "fieldtype": "Table",
+   "label": "Documento Relacionado",
+   "options": "Nubefact Guia de Remision Documento Relacionado"
+  },
+  {
+   "fieldname": "seccion_vehiculos_secundarios",
+   "fieldtype": "Section Break",
+   "label": "Vehículos Secundarios"
+  },
+  {
+   "fieldname": "vehiculos_secundarios",
+   "fieldtype": "Table",
+   "label": "Vehículos Secundarios",
+   "options": "Nubefact Guia de Remision Vehiculo Secundario"
+  },
+  {
+   "fieldname": "seccion_conductores_secundarios",
+   "fieldtype": "Section Break",
+   "label": "Conductores Secundarios"
+  },
+  {
+   "fieldname": "conductores_secundarios",
+   "fieldtype": "Table",
+   "label": "Conductores Secundarios",
+   "options": "Nubefact Guia de Remision Conductor Secundario"
+  },
+  {
+   "fieldname": "seccion_informacion_adicional",
+   "fieldtype": "Section Break",
+   "label": "Información Adicional"
+  },
+  {
+   "fieldname": "observaciones",
+   "fieldtype": "Text",
+   "label": "Observaciones"
+  },
+  {
+   "fieldname": "datos_crudos",
+   "fieldtype": "JSON",
+   "label": "Datos Crudos"
+  },
+  {
+   "fieldname": "seccion_sunat",
+   "fieldtype": "Section Break",
+   "label": "Estado SUNAT"
+  },
+  {
+   "default": "0",
+   "fieldname": "aceptada_por_sunat",
+   "fieldtype": "Check",
+   "label": "Aceptada por SUNAT",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "ultima_consulta_sunat",
+   "fieldtype": "Datetime",
+   "label": "Última Consulta SUNAT",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_responsecode",
+   "fieldtype": "Data",
+   "label": "SUNAT Responsecode",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_description",
+   "fieldtype": "Text",
+   "label": "SUNAT Description",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_note",
+   "fieldtype": "Text",
+   "label": "SUNAT Note",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sunat_soap_error",
+   "fieldtype": "Text",
+   "label": "SUNAT SOAP Error",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "mensaje_error",
+   "fieldtype": "Text",
+   "label": "Mensaje de Error",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "columna_sunat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "enlace",
+   "fieldtype": "Data",
+   "label": "Enlace",
+   "no_copy": 1,
+   "options": "URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "enlace_del_pdf",
+   "fieldtype": "Data",
+   "label": "Enlace del PDF",
+   "no_copy": 1,
+   "options": "URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "enlace_del_xml",
+   "fieldtype": "Data",
+   "label": "Enlace del XML",
+   "no_copy": 1,
+   "options": "URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "enlace_del_cdr",
+   "fieldtype": "Data",
+   "label": "Enlace del CDR",
+   "no_copy": 1,
+   "options": "URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cadena_para_codigo_qr",
+   "fieldtype": "Data",
+   "label": "Cadena para Código QR",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "tab_mas_informacion",
+   "fieldtype": "Tab Break",
+   "label": "Más Información"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Nubefact",
+   "link_doctype": "Nubefact API Log",
+   "link_fieldname": "referencia_guia_de_remision"
+  }
+ ],
+ "modified": "2026-02-27 12:09:20.905590",
+ "modified_by": "Administrator",
+ "module": "Nubefact",
+ "name": "Nubefact Guia de Remision",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Blue",
+   "title": "Borrador"
+  },
+  {
+   "color": "Orange",
+   "title": "Pendiente de Respuesta"
+  },
+  {
+   "color": "Green",
+   "title": "Aceptada"
+  },
+  {
+   "color": "Red",
+   "title": "Error"
+  }
+ ],
+ "title_field": "titulo",
+ "track_changes": 1
+}

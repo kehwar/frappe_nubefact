@@ -14,7 +14,7 @@ from nubefact.nubefact.doctype.nubefact_local.nubefact_local import get_request_
 def make_request(
     payload: dict[str, Any],
     local: str,
-    reference_delivery_note: str | None = None,
+    referencia_guia_de_remision: str | None = None,
     reference_invoice: str | None = None,
     timeout: int = 60,
 ) -> Any:
@@ -71,7 +71,7 @@ def make_request(
             operacion=operacion,
             local=local_doc.name,
             ruta_api=url,
-            reference_delivery_note=reference_delivery_note,
+            referencia_guia_de_remision=referencia_guia_de_remision,
             reference_invoice=reference_invoice,
             request_timestamp=request_timestamp,
             request_payload=payload,

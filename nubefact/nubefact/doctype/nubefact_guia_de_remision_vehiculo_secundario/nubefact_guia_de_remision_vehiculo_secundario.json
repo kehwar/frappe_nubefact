@@ -5,16 +5,16 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "license_plate",
+  "placa_numero",
   "tuc",
-  "raw"
+  "datos_crudos"
  ],
  "fields": [
   {
-   "fieldname": "license_plate",
+   "fieldname": "placa_numero",
    "fieldtype": "Data",
    "in_list_view": 1,
-    "label": "License Plate"
+   "label": "Placa Número"
   },
   {
    "fieldname": "tuc",
@@ -23,9 +23,9 @@
    "label": "TUC"
   },
   {
-   "fieldname": "raw",
+   "fieldname": "datos_crudos",
    "fieldtype": "JSON",
-   "label": "Raw"
+   "label": "Datos Crudos"
   }
  ],
  "grid_page_length": 50,
@@ -35,7 +35,7 @@
  "modified": "2026-02-27 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nubefact",
- "name": "Nubefact Delivery Note Secondary Vehicle",
+ "name": "Nubefact Guia de Remision Vehiculo Secundario",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",

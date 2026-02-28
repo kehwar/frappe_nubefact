@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestNubefactDeliveryNote(FrappeTestCase):
-	pass
+class TestNubefactGuiaDeRemision(FrappeTestCase):
+    pass

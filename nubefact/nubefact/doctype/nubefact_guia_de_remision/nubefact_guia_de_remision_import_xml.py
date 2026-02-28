@@ -11,15 +11,15 @@ def parse_import_despatch_xml_payload(text: str) -> dict[str, Any]:
     try:
         root = ET.fromstring(text)
     except ET.ParseError:
-        frappe.throw("Invalid XML format.")
+        frappe.throw("Formato XML inválido.")
 
     root_name = _xml_local_name(root.tag)
     if root_name == "ApplicationResponse":
         frappe.throw(
-            "CDR XML cannot be used to create a Delivery Note. Use DespatchAdvice XML."
+            "El XML CDR no se puede usar para crear una guía. Use XML DespatchAdvice."
         )
     if root_name != "DespatchAdvice":
-        frappe.throw("Unsupported XML type. Expected SUNAT DespatchAdvice XML.")
+        frappe.throw("Tipo de XML no soportado. Se esperaba XML SUNAT DespatchAdvice.")
 
     full_number = _xml_get_nested_text(root, ["ID"])
     series, number = _split_series_number(full_number)
