@@ -10,7 +10,7 @@ from frappe.model.document import Document
 from frappe.model.naming import append_number_if_name_exists
 from frappe.utils import cint, cstr, now_datetime
 
-from nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice_schema import (
+from nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion_schema import (
     CREDIT_NOTE_REQUIRED_FIELDS,
     DEBIT_NOTE_REQUIRED_FIELDS,
     DELIVERY_REFERENCE_REQUIRED_FIELDS,
@@ -47,12 +47,12 @@ _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
 }
 
 
-class NubefactInvoice(Document):
+class NubefactFacturacion(Document):
 
     def autoname(self):
         timestamp = now_datetime()
         self.name = append_number_if_name_exists(
-            "Nubefact Invoice", timestamp.strftime("%Y%m%d-%H%M%S-%f")
+            "Nubefact Facturacion", timestamp.strftime("%Y%m%d-%H%M%S-%f")
         )
 
     def validate(self):
@@ -219,43 +219,43 @@ class NubefactInvoice(Document):
         require_fields(
             self,
             REQUIRED_FIELDS,
-            "Required fields are missing for Invoice submission.",
+            "Faltan campos obligatorios para el envío del comprobante.",
         )
 
         if not self.items:
-            frappe.throw("At least one item is required for Invoice submission.")
+            frappe.throw("Se requiere al menos un ítem para el envío del comprobante.")
 
-        self._validate_required_child_rows(self.items, ITEM_REQUIRED_FIELDS, "Items")
+        self._validate_required_child_rows(self.items, ITEM_REQUIRED_FIELDS, "Ítems")
         self._validate_required_child_rows(
             self.delivery_references,
             DELIVERY_REFERENCE_REQUIRED_FIELDS,
-            "Delivery Guides",
+            "Guías de entrega",
         )
         self._validate_required_child_rows(
             self.credit_installments,
             PAYMENT_INSTALLMENT_REQUIRED_FIELDS,
-            "Credit Sale Installments",
+            "Cuotas de venta al crédito",
         )
 
         if cstr(self.document_type) in {"3", "4"}:
             require_fields(
                 self,
                 NOTE_REFERENCE_REQUIRED_FIELDS,
-                "Credit/Debit notes require modified document reference fields.",
+                "Las notas de crédito/débito requieren campos de referencia del documento modificado.",
             )
 
         if cstr(self.document_type) == "3":
             require_fields(
                 self,
                 CREDIT_NOTE_REQUIRED_FIELDS,
-                "Credit notes require a reason.",
+                "Las notas de crédito requieren un motivo.",
             )
 
         if cstr(self.document_type) == "4":
             require_fields(
                 self,
                 DEBIT_NOTE_REQUIRED_FIELDS,
-                "Debit notes require a reason.",
+                "Las notas de débito requieren un motivo.",
             )
 
     def _validate_required_child_rows(
@@ -326,11 +326,13 @@ class NubefactInvoice(Document):
 
 @frappe.whitelist()
 def send_to_nubefact(name: str):
-    doc = frappe.get_doc("Nubefact Invoice", name)
+    doc = frappe.get_doc("Nubefact Facturacion Comprobante", name)
     doc.check_permission("write")
 
     if doc.status not in {"Draft", "Error"}:
-        frappe.throw("Only Draft or Error invoices can be sent to Nubefact.")
+        frappe.throw(
+            "Solo los comprobantes en estado Borrador o Error pueden enviarse a Nubefact."
+        )
 
     try:
         doc.run_method("validate")
@@ -358,27 +360,31 @@ def send_to_nubefact(name: str):
 
 @frappe.whitelist()
 def refresh_sunat_status(name: str):
-    doc = frappe.get_doc("Nubefact Invoice", name)
+    doc = frappe.get_doc("Nubefact Facturacion Comprobante", name)
     doc.check_permission("read")
     return _refresh_sunat_status_doc(doc)
 
 
 @frappe.whitelist()
 def void_in_nubefact(name: str, reason: str):
-    doc = frappe.get_doc("Nubefact Invoice", name)
+    doc = frappe.get_doc("Nubefact Facturacion Comprobante", name)
     doc.check_permission("write")
 
     if doc.status not in {"Accepted", "Pending Response"}:
-        frappe.throw("Only Accepted or Pending Response invoices can be voided.")
+        frappe.throw(
+            "Solo los comprobantes Aceptados o con Respuesta Pendiente pueden anularse."
+        )
 
     if cint(doc.voided):
-        frappe.throw("This invoice is already voided.")
+        frappe.throw("Este comprobante ya está anulado.")
 
     if not cstr(reason or "").strip():
-        frappe.throw("A void reason is required.")
+        frappe.throw("Se requiere un motivo de anulación.")
 
     if not doc.number:
-        frappe.throw("Cannot void invoice because document number is missing.")
+        frappe.throw(
+            "No se puede anular el comprobante porque falta el número de documento."
+        )
 
     try:
         response = make_request(
@@ -413,7 +419,7 @@ def void_in_nubefact(name: str, reason: str):
 
 def poll_pending_invoices():
     pending_names = frappe.get_all(
-        "Nubefact Invoice",
+        "Nubefact Facturacion Comprobante",
         filters={"status": "Pending Response", "accepted_by_sunat": 0},
         pluck="name",
         limit=20,
@@ -422,17 +428,17 @@ def poll_pending_invoices():
 
     for name in pending_names:
         try:
-            doc = frappe.get_doc("Nubefact Invoice", name)
+            doc = frappe.get_doc("Nubefact Facturacion", name)
             _refresh_sunat_status_doc(doc)
-        except Exception:
+        except Exception as e:
             frappe.log_error(
-                title=f"Nubefact Invoice SUNAT refresh failed: {name}",
+                title=f"Nubefact Facturacion: falló la actualización SUNAT para {name}",
                 message=frappe.get_traceback(),
             )
 
 
 def _request_extract_and_save_response(
-    doc: NubefactInvoice, payload: dict[str, Any]
+    doc: NubefactFacturacion, payload: dict[str, Any]
 ) -> dict[str, Any]:
     response = make_request(
         payload=payload,
@@ -447,10 +453,12 @@ def _request_extract_and_save_response(
     return values
 
 
-def _refresh_sunat_status_doc(doc: NubefactInvoice) -> dict[str, Any]:
+def _refresh_sunat_status_doc(doc: NubefactFacturacion) -> dict[str, Any]:
 
     if not doc.number:
-        frappe.throw("Cannot refresh SUNAT status because document number is missing.")
+        frappe.throw(
+            "No se puede actualizar el estado SUNAT porque falta el número de documento."
+        )
 
     return _request_extract_and_save_response(
         doc,
@@ -464,7 +472,7 @@ def _refresh_sunat_status_doc(doc: NubefactInvoice) -> dict[str, Any]:
 
 
 def _save_response_status(
-    doc: NubefactInvoice, values: dict[str, Any]
+    doc: NubefactFacturacion, values: dict[str, Any]
 ) -> dict[str, Any]:
     if not values:
         return {}

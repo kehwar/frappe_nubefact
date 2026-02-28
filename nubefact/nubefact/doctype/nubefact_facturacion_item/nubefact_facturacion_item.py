@@ -4,5 +4,5 @@
 from frappe.model.document import Document
 
 
-class NubefactInvoicePaymentInstallment(Document):
+class NubefactFacturacionItem(Document):
     pass

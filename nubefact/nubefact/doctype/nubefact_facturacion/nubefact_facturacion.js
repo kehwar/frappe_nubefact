@@ -1,14 +1,14 @@
 // Copyright (c) 2026, Erick W.R. and contributors
 // For license information, please see license.txt
 
-frappe.ui.form.on("Nubefact Invoice", {
+frappe.ui.form.on("Nubefact Facturacion", {
 	refresh(frm) {
 		if (["Pending Response", "Voided"].includes(frm.doc.status || "Draft")) {
 			frm.disable_form();
 		}
 
 		if (!frm.is_new()) {
-			const watcher = nubefact.get_watcher(frm, "nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice.refresh_sunat_status");
+			const watcher = nubefact.get_watcher(frm, "nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.refresh_sunat_status");
 			watcher.on_refresh();
 			watcher.schedule_if_needed();
 
@@ -52,19 +52,19 @@ frappe.ui.form.on("Nubefact Invoice", {
 	},
 	open_send_dialog(frm) {
 		frappe.confirm(
-			__("Confirm sending this Invoice to Nubefact."),
+			__("Confirmar el envío de este comprobante a Nubefact."),
 			async () => {
 				if (frm.is_dirty()) {
 					await frm.save();
 				}
 
 				const { message } = await frappe.call({
-					method: "nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice.send_to_nubefact",
+					method: "nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.send_to_nubefact",
 					args: {
 						name: frm.doc.name,
 					},
 					freeze: true,
-					freeze_message: __("Sending to Nubefact..."),
+					freeze_message: __("Enviando a Nubefact..."),
 				});
 
 				await frm.reload_doc();
@@ -72,8 +72,8 @@ frappe.ui.form.on("Nubefact Invoice", {
 				const has_error = message?.status === "Error";
 				frappe.show_alert({
 					message: has_error
-						? __("Invoice send failed. Status updated to Error")
-						: __("Invoice sent to Nubefact"),
+						? __("El envío del comprobante falló. Estado actualizado a Error")
+						: __("Comprobante enviado a Nubefact"),
 					indicator: has_error ? "red" : "green",
 				});
 			}
@@ -81,25 +81,25 @@ frappe.ui.form.on("Nubefact Invoice", {
 	},
 	open_void_dialog(frm) {
 		const dialog = new frappe.ui.Dialog({
-			title: __("Void Invoice in Nubefact"),
+			title: __("Anular comprobante en Nubefact"),
 			fields: [
 				{
 					fieldname: "reason",
 					fieldtype: "Small Text",
-					label: __("Void Reason"),
+					label: __("Motivo de anulación"),
 					reqd: 1,
 				},
 			],
-			primary_action_label: __("Void"),
+			primary_action_label: __("Anular"),
 			primary_action: async (values) => {
 				const { message } = await frappe.call({
-					method: "nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice.void_in_nubefact",
+					method: "nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.void_in_nubefact",
 					args: {
 						name: frm.doc.name,
 						reason: values.reason,
 					},
 					freeze: true,
-					freeze_message: __("Sending void request to Nubefact..."),
+					freeze_message: __("Enviando solicitud de anulación a Nubefact..."),
 				});
 
 				dialog.hide();
@@ -108,8 +108,8 @@ frappe.ui.form.on("Nubefact Invoice", {
 				const has_error = message?.status === "Error";
 				frappe.show_alert({
 					message: has_error
-						? __("Invoice void failed. Status updated to Error")
-						: __("Invoice void request sent"),
+						? __("La anulación del comprobante falló. Estado actualizado a Error")
+						: __("Solicitud de anulación del comprobante enviada"),
 					indicator: has_error ? "red" : "green",
 				});
 			},

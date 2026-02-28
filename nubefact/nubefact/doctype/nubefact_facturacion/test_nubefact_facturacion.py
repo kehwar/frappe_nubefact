@@ -4,5 +4,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestNubefactInvoice(FrappeTestCase):
+class TestNubefactFacturacion(FrappeTestCase):
     pass

@@ -63,7 +63,7 @@
    "fieldname": "reference_invoice",
    "fieldtype": "Link",
     "label": "Factura de referencia",
-   "options": "Nubefact Invoice",
+   "options": "Nubefact Facturacion",
    "read_only": 1
   },
   {

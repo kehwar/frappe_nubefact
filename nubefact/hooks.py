@@ -171,7 +171,7 @@ scheduler_events = {
     "cron": {
         "*/5 * * * *": [
             "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.consultar_guias_pendientes",
-            "nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice.poll_pending_invoices",
+            "nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.poll_pending_invoices",
         ]
     }
 }

@@ -14,19 +14,19 @@
    "fieldname": "guide_type",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Guide Type",
-    "options": "1\n2"
+   "label": "Tipo de Guía",
+   "options": "1\n2"
   },
   {
    "fieldname": "guide_series_number",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Guide Series and Number"
+   "label": "Serie y Número de Guía"
   },
   {
    "fieldname": "raw",
    "fieldtype": "JSON",
-   "label": "Raw"
+   "label": "Raw (JSON Crudo)"
   }
  ],
  "grid_page_length": 50,
@@ -36,7 +36,7 @@
  "modified": "2026-02-27 13:54:35.853305",
  "modified_by": "Administrator",
  "module": "Nubefact",
- "name": "Nubefact Invoice Delivery Reference",
+ "name": "Nubefact Facturacion Guia Relacionada",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",

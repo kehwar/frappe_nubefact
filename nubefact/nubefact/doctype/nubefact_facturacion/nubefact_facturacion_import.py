@@ -18,9 +18,9 @@ def create_invoice_from_import_file(file_name: str) -> str:
     if source_name.endswith(".json"):
         payload = parse_import_json_payload(text)
     else:
-        frappe.throw("Unsupported file type. Only JSON files are allowed.")
+        frappe.throw("Tipo de archivo no soportado. Solo se permiten archivos JSON.")
 
-    doc = frappe.new_doc("Nubefact Invoice")
+    doc = frappe.new_doc("Nubefact Facturacion")
     apply_import_payload_to_doc(doc, payload)
     doc.insert()
     return doc.name
@@ -30,7 +30,7 @@ def create_invoice_from_import_file(file_name: str) -> str:
 def create_invoice_from_import_json_text(json_payload: str) -> str:
     payload = parse_import_json_payload(cstr(json_payload or ""))
 
-    doc = frappe.new_doc("Nubefact Invoice")
+    doc = frappe.new_doc("Nubefact Facturacion")
     apply_import_payload_to_doc(doc, payload)
     doc.insert()
     return doc.name
@@ -233,10 +233,10 @@ def parse_import_json_payload(text: str) -> dict[str, Any]:
     try:
         payload = json.loads(text)
     except json.JSONDecodeError:
-        frappe.throw("Invalid JSON format.")
+        frappe.throw("Formato JSON inválido.")
 
     if not isinstance(payload, dict):
-        frappe.throw("JSON payload must be an object.")
+        frappe.throw("El payload JSON debe ser un objeto.")
 
     return payload
 

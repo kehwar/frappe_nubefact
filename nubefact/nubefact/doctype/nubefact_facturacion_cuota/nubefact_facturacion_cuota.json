@@ -7,14 +7,33 @@
  "field_order": [
   "installment_number",
   "payment_date",
-    "amount",
-    "raw"
+  "amount",
+  "raw"
  ],
  "fields": [
-  {"fieldname": "installment_number", "fieldtype": "Int", "in_list_view": 1, "label": "Installment Number"},
-  {"fieldname": "payment_date", "fieldtype": "Date", "in_list_view": 1, "label": "Payment Date"},
-    {"fieldname": "amount", "fieldtype": "Currency", "in_list_view": 1, "label": "Amount"},
-    {"fieldname": "raw", "fieldtype": "JSON", "label": "Raw"}
+  {
+   "fieldname": "installment_number",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Número de Cuota"
+  },
+  {
+   "fieldname": "payment_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Fecha de Pago"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Importe"
+  },
+  {
+   "fieldname": "raw",
+   "fieldtype": "JSON",
+   "label": "Raw (JSON Crudo)"
+  }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
@@ -23,7 +42,7 @@
  "modified": "2026-02-27 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nubefact",
- "name": "Nubefact Invoice Payment Installment",
+ "name": "Nubefact Facturacion Cuota",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",
