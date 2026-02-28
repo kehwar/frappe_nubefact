@@ -5,7 +5,6 @@ class NubefactWatcher {
 		this.frm = frm;
 		this.api_method = api_method;
 		this.poll_interval_ms = options.poll_interval_ms || 5000;
-		this.pending_status = options.pending_status || "Pendiente de Aceptacion";
 		this.initialized = false;
 		this.in_flight = false;
 		this.current_poll_promise = null;
@@ -27,7 +26,7 @@ class NubefactWatcher {
 	}
 
 	is_pending_response() {
-		return this.frm.doc.status === this.pending_status;
+		return !this.frm.doc.pdf_url;
 	}
 
 	can_poll() {
