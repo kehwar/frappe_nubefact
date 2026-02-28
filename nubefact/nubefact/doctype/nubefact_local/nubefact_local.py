@@ -8,27 +8,27 @@ from frappe.utils import cstr
 DEFAULT_BASE_URL = "https://api.nubefact.com/api/v1"
 
 
-class NubefactBranch(Document):
+class NubefactLocal(Document):
     pass
 
 
-def get_origin_values(branch: str | None) -> dict[str, str | None]:
-    branch_doc = frappe.get_doc("Nubefact Branch", branch) if branch else None
+def get_origin_values(local: str | None) -> dict[str, str | None]:
+    local_doc = frappe.get_doc("Nubefact Local", local) if local else None
 
-    branch_origin_ubigeo = cstr(branch_doc.ubigeo).strip() if branch_doc else None
-    branch_origin_address = cstr(branch_doc.address).strip() if branch_doc else None
-    branch_origin_sunat_code = (
-        cstr(branch_doc.sunat_code).strip() if branch_doc else None
+    local_origin_ubigeo = cstr(local_doc.ubigeo).strip() if local_doc else None
+    local_origin_address = cstr(local_doc.direccion).strip() if local_doc else None
+    local_origin_sunat_code = (
+        cstr(local_doc.codigo_sunat).strip() if local_doc else None
     )
 
     return {
-        "origin_ubigeo": branch_origin_ubigeo,
-        "origin_address": branch_origin_address,
-        "origin_sunat_code": branch_origin_sunat_code,
+        "origin_ubigeo": local_origin_ubigeo,
+        "origin_address": local_origin_address,
+        "origin_sunat_code": local_origin_sunat_code,
     }
 
 
-def get_last_used_branch_for_user(
+def get_last_used_local_for_user(
     *, doctype: str, user: str | None = None, exclude_name: str | None = None
 ) -> str | None:
     if not cstr(doctype).strip():
@@ -41,26 +41,26 @@ def get_last_used_branch_for_user(
 
     filters = {
         "owner": cstr(user or frappe.session.user).strip(),
-        "branch": ["is", "set"],
+        "local": ["is", "set"],
     }
 
     if exclude_name:
         filters["name"] = ["!=", exclude_name]
 
-    last_branch = frappe.get_all(
+    last_local = frappe.get_all(
         doctype,
         filters=filters,
-        pluck="branch",
+        pluck="local",
         order_by="modified desc",
         limit=1,
     )
 
-    return last_branch[0] if last_branch else None
+    return last_local[0] if last_local else None
 
 
 def _build_request_url(route: str | None) -> str:
     if not route:
-        frappe.throw("Nubefact Branch Route is required.")
+        frappe.throw("Nubefact Local Route is required.")
 
     clean_route = route.strip()
     if clean_route.startswith("http://") or clean_route.startswith("https://"):
@@ -69,11 +69,11 @@ def _build_request_url(route: str | None) -> str:
     return f"{DEFAULT_BASE_URL}/{clean_route.lstrip('/')}"
 
 
-def get_request_config(branch: str) -> tuple[Document, str, str]:
-    branch_doc = frappe.get_doc("Nubefact Branch", branch)
-    url = _build_request_url(branch_doc.api_route)
-    token = branch_doc.get_password("api_token")
+def get_request_config(local: str) -> tuple[Document, str, str]:
+    local_doc = frappe.get_doc("Nubefact Local", local)
+    url = _build_request_url(local_doc.ruta_api)
+    token = local_doc.get_password("token_api")
     if not token:
-        frappe.throw("Nubefact Branch Token is required.")
+        frappe.throw("Nubefact Local Token is required.")
 
-    return branch_doc, url, token
+    return local_doc, url, token

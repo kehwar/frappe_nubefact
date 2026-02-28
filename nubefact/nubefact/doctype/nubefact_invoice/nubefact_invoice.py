@@ -10,9 +10,6 @@ from frappe.model.document import Document
 from frappe.model.naming import append_number_if_name_exists
 from frappe.utils import cint, cstr, now_datetime
 
-from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
-    get_last_used_branch_for_user,
-)
 from nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice_schema import (
     CREDIT_NOTE_REQUIRED_FIELDS,
     DEBIT_NOTE_REQUIRED_FIELDS,
@@ -21,6 +18,9 @@ from nubefact.nubefact.doctype.nubefact_invoice.nubefact_invoice_schema import (
     NOTE_REFERENCE_REQUIRED_FIELDS,
     PAYMENT_INSTALLMENT_REQUIRED_FIELDS,
     REQUIRED_FIELDS,
+)
+from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
+    get_last_used_local_for_user,
 )
 from nubefact.utils import (
     apply_raw_payload_overrides,
@@ -65,15 +65,15 @@ class NubefactInvoice(Document):
             self._validate_required_fields()
 
     def _set_inferred_values(self):
-        if not cstr(self.branch or "").strip():
-            last_branch = get_last_used_branch_for_user(
+        if not cstr(self.local or "").strip():
+            last_local = get_last_used_local_for_user(
                 doctype=self.doctype,
                 user=frappe.session.user,
                 exclude_name=self.name,
             )
 
-            if last_branch:
-                self.branch = last_branch
+            if last_local:
+                self.local = last_local
 
         self.title = self._compose_title()
 
@@ -390,7 +390,7 @@ def void_in_nubefact(name: str, reason: str):
                 "motivo": reason,
                 "codigo_unico": doc.name,
             },
-            branch=doc.branch,
+            local=doc.local,
             reference_invoice=doc.name,
         )
         values = doc._extract_void_response_values(response)
@@ -436,7 +436,7 @@ def _request_extract_and_save_response(
 ) -> dict[str, Any]:
     response = make_request(
         payload=payload,
-        branch=doc.branch,
+        local=doc.local,
         reference_invoice=doc.name,
     )
     values = doc._extract_response_values(response)

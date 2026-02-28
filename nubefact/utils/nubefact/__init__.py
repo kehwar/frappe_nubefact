@@ -8,12 +8,12 @@ import requests
 from frappe.utils import now_datetime
 
 from nubefact.nubefact.doctype.nubefact_api_log.nubefact_api_log import create_api_log
-from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import get_request_config
+from nubefact.nubefact.doctype.nubefact_local.nubefact_local import get_request_config
 
 
 def make_request(
     payload: dict[str, Any],
-    branch: str,
+    local: str,
     reference_delivery_note: str | None = None,
     reference_invoice: str | None = None,
     timeout: int = 60,
@@ -25,10 +25,10 @@ def make_request(
     if not operation:
         frappe.throw("Operation is required in payload field 'operacion'.")
 
-    if not branch:
-        frappe.throw("Branch is required to call Nubefact API.")
+    if not local:
+        frappe.throw("Local is required to call Nubefact API.")
 
-    branch_doc, url, token = get_request_config(branch)
+    local_doc, url, token = get_request_config(local)
 
     headers = {
         "Authorization": token,
@@ -73,7 +73,7 @@ def make_request(
         response_timestamp = now_datetime()
         log_name = create_api_log(
             operation=operation,
-            branch=branch_doc.name,
+            local=local_doc.name,
             api_route=url,
             reference_delivery_note=reference_delivery_note,
             reference_invoice=reference_invoice,

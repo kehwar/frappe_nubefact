@@ -6,7 +6,7 @@
  "field_order": [
   "request_details_section",
   "operation",
-  "branch",
+  "local",
   "reference_delivery_note",
   "reference_invoice",
   "column_break_requests",
@@ -39,11 +39,11 @@
    "read_only": 1
   },
   {
-   "fieldname": "branch",
+  "fieldname": "local",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Branch",
-   "options": "Nubefact Branch",
+  "label": "Local",
+  "options": "Nubefact Local",
    "read_only": 1
   },
   {

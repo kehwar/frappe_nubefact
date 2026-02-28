@@ -25,7 +25,7 @@ class NubefactAPILog(Document):
 
 def create_api_log(
     operation: str,
-    branch: str,
+    local: str,
     api_route: str,
     reference_delivery_note: str | None,
     reference_invoice: str | None,
@@ -43,7 +43,7 @@ def create_api_log(
     doc = {
         "doctype": "Nubefact API Log",
         "operation": operation,
-        "branch": branch,
+        "local": local,
         "api_route": api_route,
         "reference_delivery_note": reference_delivery_note,
         "reference_invoice": reference_invoice,

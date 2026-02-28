@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestNubefactBranch(FrappeTestCase):
-	pass
+class TestNubefactLocal(FrappeTestCase):
+    pass

@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"-RwVt73tGz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Nubefact</span>\",\"col\":12}},{\"id\":\"2xIc677rZX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Note\",\"col\":3}},{\"id\":\"Kl6jVGsko2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Invoice\",\"col\":3}},{\"id\":\"GTS_YtriSf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":12}},{\"id\":\"2axOKOnBOX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nubefact Branch\",\"col\":3}},{\"id\":\"-o_SYuVJH-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nubefact Api Log\",\"col\":3}}]",
+ "content": "[{\"id\":\"-RwVt73tGz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Nubefact</span>\",\"col\":12}},{\"id\":\"2xIc677rZX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Note\",\"col\":3}},{\"id\":\"Kl6jVGsko2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Invoice\",\"col\":3}},{\"id\":\"GTS_YtriSf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":12}},{\"id\":\"2axOKOnBOX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nubefact Local\",\"col\":3}},{\"id\":\"-o_SYuVJH-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nubefact Api Log\",\"col\":3}}]",
  "creation": "2026-02-26 21:54:56.814818",
  "custom_blocks": [],
  "docstatus": 0,
@@ -36,8 +36,8 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Nubefact Branch",
-   "link_to": "Nubefact Branch",
+    "label": "Nubefact Local",
+    "link_to": "Nubefact Local",
    "stats_filter": "[]",
    "type": "DocType"
   },

@@ -8,39 +8,39 @@
  "field_order": [
   "title",
   "company",
-  "location_section",
-  "state",
-  "city",
-  "county",
+    "ubicacion_section",
+    "departamento",
+    "provincia",
+    "distrito",
   "ubigeo",
-  "column_break_location",
-  "address",
-  "sunat_code",
+    "column_break_ubicacion",
+    "direccion",
+    "codigo_sunat",
   "api_section",
-  "api_route",
-  "column_break_duba",
-  "api_token"
+    "ruta_api",
+    "column_break_api",
+    "token_api"
  ],
  "fields": [
   {
-   "fieldname": "api_route",
+     "fieldname": "ruta_api",
    "fieldtype": "Data",
-   "label": "API Route"
+     "label": "Ruta API"
   },
   {
-   "fieldname": "api_token",
+     "fieldname": "token_api",
    "fieldtype": "Password",
-   "label": "API Token"
+     "label": "Token API"
   },
   {
-   "fieldname": "location_section",
+     "fieldname": "ubicacion_section",
    "fieldtype": "Section Break",
-   "label": "Location"
+     "label": "Ubicación"
   },
   {
-   "fieldname": "address",
+     "fieldname": "direccion",
    "fieldtype": "Small Text",
-   "label": "Address"
+     "label": "Dirección"
   },
   {
    "fieldname": "ubigeo",
@@ -48,28 +48,28 @@
    "label": "Ubigeo"
   },
   {
-   "fieldname": "sunat_code",
+    "fieldname": "codigo_sunat",
    "fieldtype": "Data",
-   "label": "SUNAT Code"
+    "label": "Código SUNAT"
   },
   {
-   "fieldname": "column_break_location",
+    "fieldname": "column_break_ubicacion",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "state",
+    "fieldname": "departamento",
    "fieldtype": "Data",
-   "label": "State"
+    "label": "Departamento"
   },
   {
-   "fieldname": "city",
+    "fieldname": "provincia",
    "fieldtype": "Data",
-   "label": "City"
+    "label": "Provincia"
   },
   {
-   "fieldname": "county",
+    "fieldname": "distrito",
    "fieldtype": "Data",
-   "label": "County"
+    "label": "Distrito"
   },
   {
    "fieldname": "title",
@@ -83,7 +83,7 @@
    "label": "API"
   },
   {
-   "fieldname": "column_break_duba",
+    "fieldname": "column_break_api",
    "fieldtype": "Column Break"
   },
   {
@@ -99,7 +99,7 @@
  "modified": "2026-02-27 12:09:39.728417",
  "modified_by": "Administrator",
  "module": "Nubefact",
- "name": "Nubefact Branch",
+ "name": "Nubefact Local",
  "naming_rule": "Random",
  "owner": "Administrator",
  "permissions": [

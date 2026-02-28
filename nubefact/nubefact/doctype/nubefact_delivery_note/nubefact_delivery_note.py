@@ -10,12 +10,6 @@ from frappe.model.document import Document
 from frappe.model.naming import append_number_if_name_exists
 from frappe.utils import cint, cstr, now_datetime
 
-from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
-    get_last_used_branch_for_user,
-)
-from nubefact.nubefact.doctype.nubefact_branch.nubefact_branch import (
-    get_origin_values as get_branch_origin_values,
-)
 from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_schema import (
     DRIVER_REQUIRED_FIELDS,
     ITEM_REQUIRED_FIELDS,
@@ -26,6 +20,12 @@ from nubefact.nubefact.doctype.nubefact_delivery_note.nubefact_delivery_note_sch
     SECONDARY_VEHICLE_REQUIRED_FIELDS,
     TYPE_7_REQUIRED_FIELDS,
     TYPE_8_RECIPIENT_REQUIRED_FIELDS,
+)
+from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
+    get_last_used_local_for_user,
+)
+from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
+    get_origin_values as get_local_origin_values,
 )
 from nubefact.utils import (
     apply_raw_payload_overrides,
@@ -70,21 +70,21 @@ class NubefactDeliveryNote(Document):
             self._validate_required_fields()
 
     def _set_inferred_values(self):
-        if not cstr(self.branch or "").strip():
-            last_branch = get_last_used_branch_for_user(
+        if not cstr(self.local or "").strip():
+            last_local = get_last_used_local_for_user(
                 doctype=self.doctype,
                 user=frappe.session.user,
                 exclude_name=self.name,
             )
 
-            if last_branch:
-                self.branch = last_branch
+            if last_local:
+                self.local = last_local
 
-        branch_origin_values = get_branch_origin_values(self.branch)
+        local_origin_values = get_local_origin_values(self.local)
         inferred_origin_fields = (
-            ("origin_ubigeo", branch_origin_values.get("origin_ubigeo")),
-            ("origin_address", branch_origin_values.get("origin_address")),
-            ("origin_sunat_code", branch_origin_values.get("origin_sunat_code")),
+            ("origin_ubigeo", local_origin_values.get("origin_ubigeo")),
+            ("origin_address", local_origin_values.get("origin_address")),
+            ("origin_sunat_code", local_origin_values.get("origin_sunat_code")),
         )
 
         for fieldname, inferred_value in inferred_origin_fields:
@@ -381,7 +381,7 @@ def _request_extract_and_save_response(
 ) -> dict[str, Any]:
     response = make_request(
         payload=payload,
-        branch=doc.branch,
+        local=doc.local,
         reference_delivery_note=doc.name,
     )
     values = doc._extract_response_values(response)
