@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"-RwVt73tGz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Nubefact</span>\",\"col\":12}},{\"id\":\"rGHcNn0D7x\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nubefact Guia De Remision\",\"col\":3}},{\"id\":\"GTS_YtriSf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":12}},{\"id\":\"-o_SYuVJH-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nubefact Api Log\",\"col\":3}},{\"id\":\"8C4DCrEEbK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nubefact Local\",\"col\":3}}]",
+ "content": "[{\"id\":\"-RwVt73tGz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Nubefact</span>\",\"col\":12}},{\"id\":\"rGHcNn0D7x\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Guia De Remision\",\"col\":3}},{\"id\":\"rfM3xlCgUn\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Facturacion\",\"col\":3}},{\"id\":\"GTS_YtriSf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":12}},{\"id\":\"8C4DCrEEbK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Local\",\"col\":3}},{\"id\":\"-o_SYuVJH-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Logs\",\"col\":3}}]",
  "creation": "2026-02-26 21:54:56.814818",
  "custom_blocks": [],
  "docstatus": 0,
@@ -13,7 +13,7 @@
  "is_hidden": 0,
  "label": "Nubefact",
  "links": [],
- "modified": "2026-02-27 23:22:24.172169",
+ "modified": "2026-02-28 10:05:26.728989",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact",
@@ -28,24 +28,32 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Nubefact Guia De Remision",
-    "link_to": "Nubefact Guia De Remision",
+   "label": "Guia De Remision",
+   "link_to": "Nubefact Guia De Remision",
    "stats_filter": "[]",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Nubefact Api Log",
-   "link_to": "Nubefact API Log",
+   "label": "Facturacion",
+   "link_to": "Nubefact Facturacion",
    "stats_filter": "[]",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Nubefact Local",
+   "label": "Local",
    "link_to": "Nubefact Local",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Logs",
+   "link_to": "Nubefact API Log",
    "stats_filter": "[]",
    "type": "DocType"
   }
