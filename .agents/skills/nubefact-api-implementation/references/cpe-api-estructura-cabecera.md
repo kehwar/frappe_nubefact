@@ -73,19 +73,6 @@
 | tipo_de_nota_de_credito | 1 = ANULACIÓN DE LA OPERACIÓN 2 = ANULACIÓN POR ERROR EN EL RUC 3 = CORRECCIÓN POR ERROR EN LA DESCRIPCIÓN 4 = DESCUENTO GLOBAL 5 = DESCUENTO POR ÍTEM 6 = DEVOLUCIÓN TOTAL 7 = DEVOLUCIÓN POR ÍTEM 8 = BONIFICACIÓN 9 = DISMINUCIÓN EN EL VALOR 10= OTROS CONCEPTOS 11= AJUSTES AFECTOS AL IVAP 12 = AJUSTES DE OPERACIONES DE EXPORTACIÓN 13 = AJUSTES - MONTOS Y/O FECHAS DE PAGO | Integer | Condicional | 1 hasta 2 |
 | tipo_de_nota_de_debito | 1 = INTERESES POR MORA 2 = AUMENTO DE VALOR 3 = PENALIDADES 4= AJUSTES AFECTOS AL IVAP 5 = AJUSTES DE OPERACIONES DE EXPORTACIÓN | Integer | Condicional | 1 exacto |
 
-## Sección 7 — Envío, control y datos comerciales
-
-| ATRIBUTO | VALOR | TIPO DE DATO | REQUISITO | LONGITUD |
-| :---- | :---- | :---- | :---- | :---- |
-| enviar_automaticamente_a_la_sunat | false = FALSO (En minúsculas) true = VERDADERO (En minúsculas) | Boolean | Condicional | Hasta 5 |
-| enviar_automaticamente_al_cliente | false = FALSO (En minúsculas) true = VERDADERO (En minúsculas) | Boolean | Condicional | Hasta 5 |
-| codigo_unico | Usarlo sólo si deseas que controlemos la generación de documentos. Código único generado y asignado por tu sistema. Por ejemplo puede estar compuesto por el tipo de documento, serie y número correlativo. | String | Opcional | 1 hasta 20 |
-| observaciones | Texto de 0 hasta 1000 caracteres. Si se desea saltos de línea para la representación impresa o PDF usar <br>. Ejemplo: XXXXX <br> YYYYYY | Text | Opcional | Hasta 5 |
-| condiciones_de_pago | Ejemplo: CRÉDITO 15 DÍAS | String | Opcional | 1 hasta 250 |
-| medio_de_pago | Ejemplo: TARJETA VISA OP: 232231 Nota: Si es al Crédito, se debe de usar “venta_al_credito” | String | Opcional | 1 hasta 250 |
-| placa_vehiculo | Ejemplo: ALF-321 | String | Opcional | 1 hasta 8 |
-| orden_compra_servicio | Ejemplo: 21344 | String | Opcional | 1 hasta 20 |
-
 ## Sección 8 — Detracción (general)
 
 | ATRIBUTO | VALOR | TIPO DE DATO | REQUISITO | LONGITUD |
@@ -108,13 +95,6 @@
 | val_ref_serv_trans | Valor Referencia del servicio de Transporte (SOLO EN TIPO DETRACCIÓN DE TRANSPORTE DE CARGA) | Numeric | Condicional | 1 hasta 12 enteros, hasta con 2 decimales |
 | val_ref_carga_efec | Valor Referencial Carga Efectiva (SOLO EN TIPO DETRACCIÓN DE TRANSPORTE DE CARGA) | Numeric | Condicional | 1 hasta 12 enteros, hasta con 2 decimales |
 | val_ref_carga_util | Valor Referencial Carga Útil (SOLO EN TIPO DETRACCIÓN DE TRANSPORTE DE CARGA) | Numeric | Condicional | 1 hasta 12 enteros, hasta con 2 decimales |
-
-## Sección 10 — Detalles del tramo y vehículo
-
-> Recuerde que por el momento estos datos son opcionales para las operaciones de detracción 1004 - Transporte de carga; de usarse uno, debe completar todos para que se creen las etiquetas debidamente en el XML.
-
-| ATRIBUTO | VALOR | TIPO DE DATO | REQUISITO | LONGITUD |
-| :---- | :---- | :---- | :---- | :---- |
 | punto_origen_viaje | Punto de origen del viaje (SOLO EN TIPO DETRACCIÓN DE TRANSPORTE DE CARGA - Opcional): http://www.sunat.gob.pe/legislacion/superin/2018/anexoI-254-2018.pdf | Integer | Condicional | 6 exactos |
 | punto_destino_viaje | Punto de destino del viaje (SOLO EN TIPO DETRACCIÓN DE TRANSPORTE DE CARGA - Opcional): http://www.sunat.gob.pe/legislacion/superin/2018/anexoI-254-2018.pdf | Integer | Condicional | 6 exactos |
 | descripcion_tramo | Descripción del tramo (SOLO EN TIPO DETRACCIÓN DE TRANSPORTE DE CARGA - Opcional) | String | Condicional | 1 hasta 100 |
@@ -126,7 +106,7 @@
 | val_pre_ref_carga_util_nominal | Valor preliminar referencial por carga útil nominal (tratándose de más de 1 vehículo) (SOLO EN TIPO DETRACCIÓN DE TRANSPORTE DE CARGA - Opcional) | Numeric | Condicional | 1 hasta 12 enteros, hasta con 2 decimales |
 | indicador_aplicacion_retorno_vacio | Indicador de aplicación de factor de retorno al vacío (SOLO EN TIPO DETRACCIÓN DE TRANSPORTE DE CARGA - Opcional) | Boolean | Condicional | Hasta 5 |
 
-## Sección 11 — Detracción (recursos hidrobiológicos)
+## Sección 10 — Detracción (recursos hidrobiológicos)
 
 | ATRIBUTO | VALOR | TIPO DE DATO | REQUISITO | LONGITUD |
 | :---- | :---- | :---- | :---- | :---- |
@@ -137,17 +117,25 @@
 | cantidad_especie_vendida | Cantidad de la especie vendida (SOLO EN TIPO DETRACCIÓN DE RECURSOS HIDROBIOLÓGICOS) | Numeric | Condicional | 12 enteros, hasta con 2 decimales |
 | fecha_de_descarga | Fecha de descarga (SOLO EN TIPO DETRACCIÓN DE RECURSOS HIDROBIOLÓGICOS). Formato AAAA-MM-DD. Ejemplo: 2020-05-22 | Date | Condicional | 10 exactos |
 
-## Sección 12 — Formato y regímenes especiales
+## Sección 11 — Otras características del comprobante
 
 | ATRIBUTO | VALOR | TIPO DE DATO | REQUISITO | LONGITUD |
 | :---- | :---- | :---- | :---- | :---- |
+| enviar_automaticamente_a_la_sunat | false = FALSO (En minúsculas) true = VERDADERO (En minúsculas) | Boolean | Condicional | Hasta 5 |
+| enviar_automaticamente_al_cliente | false = FALSO (En minúsculas) true = VERDADERO (En minúsculas) | Boolean | Condicional | Hasta 5 |
+| codigo_unico | Usarlo sólo si deseas que controlemos la generación de documentos. Código único generado y asignado por tu sistema. Por ejemplo puede estar compuesto por el tipo de documento, serie y número correlativo. | String | Opcional | 1 hasta 20 |
 | formato_de_pdf | Formato de PDF que se desea generar para la representación, si se deja en blanco se genera el formato definido por defecto en NUBEFACT. Se puede elegir entre A4, A5 o TICKET. | String | Opcional | 2 hasta 5 |
+| condiciones_de_pago | Ejemplo: CRÉDITO 15 DÍAS | String | Opcional | 1 hasta 250 |
 | generado_por_contingencia | Si está comunicando un comprobante emitido en contingencia debería ser true (en minúsculas). | Boolean | Opcional | Hasta 5 |
 | bienes_region_selva | Si el producto es un bien de la región selva debería ser true | Boolean | Opcional | Hasta 5 |
 | servicios_region_selva | Si el producto es un servicio de la región selva debería ser true | Boolean | Opcional | Hasta 5 |
 | nubecont_tipo_de_venta_codigo | Código del Tipo de Venta registrado en NubeCont, debes enviar el código correcto, de otro modo NubeCont las rechazará. | String | Opcional | Hasta 5 |
+| medio_de_pago | Ejemplo: TARJETA VISA OP: 232231 Nota: Si es al Crédito, se debe de usar “venta_al_credito” | String | Opcional | 1 hasta 250 |
+| orden_compra_servicio | Ejemplo: 21344 | String | Opcional | 1 hasta 20 |
+| placa_vehiculo | Ejemplo: ALF-321 | String | Opcional | 1 hasta 8 |
+| observaciones | Texto de 0 hasta 1000 caracteres. Si se desea saltos de línea para la representación impresa o PDF usar <br>. Ejemplo: XXXXX <br> YYYYYY | Text | Opcional | Hasta 5 |
 
-## Sección 13 — Estructuras anidadas
+## Sección 12 — Estructuras anidadas
 
 | ATRIBUTO | VALOR | TIPO DE DATO | REQUISITO | LONGITUD |
 | :---- | :---- | :---- | :---- | :---- |
