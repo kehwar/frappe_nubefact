@@ -38,6 +38,18 @@ Minimal skill scaffold for NubeFact API work in this repository.
 - `references/doctype-nubefact-invoice-schema.md` — `Nubefact Invoice` DocType schema/specification.
 - `references/doctype-nubefact-invoice-guide.md` — `Nubefact Invoice` workflow guide (how to fill fields correctly by scenario).
 
+### CPE API Structure Tables (from `assets/cpe-manual-google-doc.md`)
+
+- `references/cpe-api-structure-header.md` — ESTRUCTURA PARA GENERAR FACTURAS, BOLETAS Y NOTAS — CABECERA DEL DOCUMENTO.
+- `references/cpe-api-structure-items.md` — PARA ITEMS O LÍNEAS DEL DOCUMENTO.
+- `references/cpe-api-structure-guides.md` — PARA GUÍAS.
+- `references/cpe-api-structure-credit-sale.md` — PARA VENTA AL CRÉDITO.
+- `references/cpe-api-structure-consult.md` — ESTRUCTURA PARA CONSULTAR FACTURAS, BOLETAS Y NOTAS.
+- `references/cpe-api-structure-response.md` — ESTRUCTURA DE RESPUESTA DE NUBEFACT PARA FACTURAS, BOLETAS, NOTAS.
+- `references/cpe-api-structure-annul-generate.md` — ESTRUCTURA PARA GENERAR ANULACIÓN O COMUNICACIÓN DE BAJA.
+- `references/cpe-api-structure-annul-consult.md` — ESTRUCTURA PARA CONSULTAR ANULACIÓN O COMUNICACIÓN DE BAJA.
+- `references/cpe-api-structure-annul-response.md` — ESTRUCTURA DE LA RESPUESTA DE NUBEFACT PARA ANULACIÓN O COMUNICACIÓN DE BAJA.
+
 ### GRE API Structure Tables (from `assets/gre-manual-google-doc.md`)
 
 - `references/gre-api-structure-header.md` — ESTRUCTURA PARA GENERAR GUÍA DE REMISIÓN REMITENTE — CABECERA DEL DOCUMENTO.
