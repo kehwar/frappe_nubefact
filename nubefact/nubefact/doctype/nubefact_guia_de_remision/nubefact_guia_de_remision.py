@@ -7,7 +7,7 @@ from typing import Any
 
 import frappe
 from frappe.model.document import Document
-from frappe.model.naming import append_number_if_name_exists
+from frappe.model.naming import getseries
 from frappe.utils import cint, cstr, now_datetime
 
 from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision_schema import (
@@ -55,9 +55,9 @@ _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
 class NubefactGuiadeRemision(Document):
 
     def autoname(self):
-        timestamp = now_datetime()
-        self.name = append_number_if_name_exists(
-            "Nubefact Guia de Remision", timestamp.strftime("%Y%m%d-")
+        series_prefix = f"GRE-{frappe.utils.now_datetime().strftime('%Y')}-"
+        self.name = series_prefix + getseries(
+            f"NubefactGuiadeRemision::{series_prefix}", 6
         )
 
     def validate(self):
@@ -106,7 +106,9 @@ class NubefactGuiadeRemision(Document):
 
     def _compose_title(self, numero: Any | None = None) -> str:
         serie = cstr(self.serie or "").strip()
-        numero_texto = cstr((self.numero if numero is None else numero) or "").strip()
+        numero_texto = (
+            cstr((self.numero if numero is None else numero) or "").strip().zfill(6)
+        )
         return f"{serie}-{numero_texto}" if (serie or numero_texto) else ""
 
     def _build_generate_payload(self) -> dict[str, Any]:
