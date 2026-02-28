@@ -5,15 +5,6 @@ description: Minimal starter skill for implementing and extending NubeFact API i
 
 # NubeFact API Implementation
 
-Minimal skill scaffold for NubeFact API work in this repository.
-
-## Use this skill when
-
-- Implementing new NubeFact API endpoints
-- Refactoring API request/response handling
-- Adding authentication and header handling
-- Creating reusable payload builder utilities
-
 ## Minimal workflow
 
 1. Identify the API requirement and expected payload/response.
@@ -25,6 +16,8 @@ Minimal skill scaffold for NubeFact API work in this repository.
 
 - Keep changes small and isolated.
 - Prefer explicit request and response schemas.
+- English is the primary language across this skill (instructions, workflow notes, and general implementation guidance).
+- To reduce implementation friction and avoid an unnecessary complex mapping step, DocType names and API-facing field names are intentionally defined in Spanish, following NubeFact API requirements.
 - Expand this skill with references/scripts as the integration grows.
 
 ## References
@@ -74,7 +67,7 @@ All example files in `assets/` folder:
 - `cpe-manual-google-doc.{md,pdf}` — JSON API v1 source material
 - `gre-manual-google-doc.{md,pdf}` — Guía de Remisión API source material
 
-## Original docs
+## Source material links
 
 - API (JSON v1): https://docs.google.com/document/d/1QWWSILBbjd4MDkJl7vCkL2RZvkPh0IC7Wa67BvoYIhA
 - Guia de Remision API: https://docs.google.com/document/d/1GCmIJNJVmuOD3LC0itdhdTu6260nJBIEmOwFdnIu5II
