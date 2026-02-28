@@ -49,6 +49,9 @@ _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
     "enlace_del_xml": "",
     "enlace_del_cdr": "",
     "cadena_para_codigo_qr": "",
+    "pdf_zip_base64": "",
+    "xml_zip_base64": "",
+    "cdr_zip_base64": "",
 }
 
 
@@ -187,11 +190,21 @@ class NubefactGuiaDeRemision(Document):
                     "transportista_documento_numero": self.transportista_documento_numero,
                     "transportista_denominacion": self.transportista_denominacion,
                     "transportista_placa_numero": self.transportista_placa_numero,
+                    "tuc_vehiculo_principal": self.tuc_vehiculo_principal,
                     "conductor_documento_tipo": self.conductor_documento_tipo,
                     "conductor_documento_numero": self.conductor_documento_numero,
+                    "conductor_denominacion": self.conductor_denominacion,
                     "conductor_nombre": self.conductor_nombre,
                     "conductor_apellidos": self.conductor_apellidos,
                     "conductor_numero_licencia": self.conductor_numero_licencia,
+                    "mtc": self.mtc,
+                    "sunat_envio_indicador": self.sunat_envio_indicador,
+                    "subcontratador_documento_tipo": self.subcontratador_documento_tipo,
+                    "subcontratador_documento_numero": self.subcontratador_documento_numero,
+                    "subcontratador_denominacion": self.subcontratador_denominacion,
+                    "pagador_servicio_documento_tipo_identidad": self.pagador_servicio_documento_tipo_identidad,
+                    "pagador_servicio_documento_numero_identidad": self.pagador_servicio_documento_numero_identidad,
+                    "pagador_servicio_denominacion": self.pagador_servicio_denominacion,
                 }
             )
         )
@@ -348,6 +361,9 @@ class NubefactGuiaDeRemision(Document):
             "enlace_del_xml": cstr(response.get("enlace_del_xml") or ""),
             "enlace_del_cdr": cstr(response.get("enlace_del_cdr") or ""),
             "cadena_para_codigo_qr": cstr(response.get("cadena_para_codigo_qr") or ""),
+            "pdf_zip_base64": cstr(response.get("pdf_zip_base64") or ""),
+            "xml_zip_base64": cstr(response.get("xml_zip_base64") or ""),
+            "cdr_zip_base64": cstr(response.get("cdr_zip_base64") or ""),
         }
 
 

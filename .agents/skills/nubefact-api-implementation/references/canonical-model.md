@@ -11,7 +11,7 @@ This index describes the canonical NubeFact Frappe model and links to per-DocTyp
 | Nubefact Branch | ✅ Implemented | Active credentials container per branch/company. Uses `api_route` + `api_token`. |
 | Nubefact API Log | ✅ Implemented | Request/response logging active. Uses `status` (`Success`/`Error`) and script-based naming from `request_timestamp`. Uses `branch` and `reference_delivery_note` links (not generic dynamic link). |
 | Request API Utility (`make_request`) | ✅ Implemented | Sends POST requests, handles errors, and writes API log entries. |
-| Nubefact Delivery Note | ✅ Implemented | DocType with submit/query flow active. `send_to_nubefact`, `refresh_sunat_status`, and `poll_pending_delivery_notes` are fully implemented. |
+| Nubefact Delivery Note | ✅ Implemented | Active submit/query flow. `enviar_a_nubefact`, `refrescar_estado_sunat`, and `consultar_guias_pendientes` are fully implemented. All GRE API fields including `tuc_vehiculo_principal`, `conductor_denominacion`, `mtc`, `sunat_envio_indicador`, subcontractor, and service payer fields are present. Response fields `pdf_zip_base64`, `xml_zip_base64`, `cdr_zip_base64` included. |
 | Nubefact Invoice | ✅ Implemented | Submit/query/void flow active. `send_to_nubefact`, `refresh_sunat_status`, `void_in_nubefact`, and `poll_pending_invoices` are implemented. |
 
 ---
@@ -20,9 +20,10 @@ This index describes the canonical NubeFact Frappe model and links to per-DocTyp
 
 1. [Nubefact Branch](./doctype-nubefact-branch.md)
 2. [Nubefact API Log](./doctype-nubefact-api-log.md)
-3. [Nubefact Delivery Note](./doctype-nubefact-delivery-note.md)
-4. [Nubefact Invoice Schema](./doctype-nubefact-invoice-schema.md)
-5. [Nubefact Invoice Guide](./doctype-nubefact-invoice-guide.md)
+3. [Nubefact Local](./doctype-nubefact-local.md)
+4. [Nubefact Guia De Remision](./doctype-nubefact-guia-de-remision.md)
+5. [Nubefact Invoice Schema](./doctype-nubefact-invoice-schema.md)
+6. [Nubefact Invoice Guide](./doctype-nubefact-invoice-guide.md)
 
 ---
 
