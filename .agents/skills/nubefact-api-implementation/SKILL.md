@@ -25,7 +25,7 @@ description: Minimal starter skill for implementing and extending NubeFact API i
 - `references/canonical-model.md` — Canonical model index and shared implementation notes.
 - `references/cpe-examples.md` — CPE examples index grouped by document/operation.
 - `references/gre-examples.md` — GRE examples index grouped by document/operation.
-- `references/doctype-nubefact-branch.md` — `Nubefact Branch` DocType specification.
+- `references/doctype-nubefact-local.md` — `Nubefact Local` DocType specification.
 - `references/doctype-nubefact-api-log.md` — `Nubefact API Log` DocType specification.
 - `references/doctype-nubefact-guia-remision-schema.md` — `Nubefact Guía de Remisión` (main) DocType schema/specification.
 - `references/doctype-nubefact-guia-remision-item-schema.md` — `Nubefact Guía de Remisión Ítem` child DocType schema/specification.
