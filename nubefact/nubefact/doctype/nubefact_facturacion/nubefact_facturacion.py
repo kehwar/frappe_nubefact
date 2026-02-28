@@ -336,7 +336,7 @@ class NubefactFacturacion(Document):
 
 @frappe.whitelist()
 def send_to_nubefact(name: str):
-    doc = frappe.get_doc("Nubefact Facturacion Comprobante", name)
+    doc = frappe.get_doc("Nubefact Facturacion", name)
     doc.check_permission("write")
 
     if doc.status not in {"Borrador", "Error"}:
@@ -370,14 +370,14 @@ def send_to_nubefact(name: str):
 
 @frappe.whitelist()
 def refresh_sunat_status(name: str):
-    doc = frappe.get_doc("Nubefact Facturacion Comprobante", name)
+    doc = frappe.get_doc("Nubefact Facturacion", name)
     doc.check_permission("read")
     return _refresh_sunat_status_doc(doc)
 
 
 @frappe.whitelist()
 def void_in_nubefact(name: str, reason: str):
-    doc = frappe.get_doc("Nubefact Facturacion Comprobante", name)
+    doc = frappe.get_doc("Nubefact Facturacion", name)
     doc.check_permission("write")
 
     if doc.status not in {"Aceptado", "Pendiente de Respuesta"}:
@@ -429,7 +429,7 @@ def void_in_nubefact(name: str, reason: str):
 
 def poll_pending_invoices():
     pending_names = frappe.get_all(
-        "Nubefact Facturacion Comprobante",
+        "Nubefact Facturacion",
         filters={"status": "Pendiente de Respuesta", "accepted_by_sunat": 0},
         pluck="name",
         limit=20,

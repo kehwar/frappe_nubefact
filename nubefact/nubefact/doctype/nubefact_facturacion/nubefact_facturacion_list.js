@@ -86,7 +86,7 @@ async function import_invoice_from_file(allowedFileTypes, options = {}) {
 					indicator: "green",
 				});
 
-				frappe.set_route("Form", "Nubefact Facturacion Comprobante", invoiceName);
+				frappe.set_route("Form", "Nubefact Facturacion", invoiceName);
 			} catch (error) {
 				frappe.msgprint({
 					title: __("Importación fallida"),
