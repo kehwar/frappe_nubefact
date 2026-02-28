@@ -30,6 +30,7 @@ def crear_guia_de_remision_desde_archivo(file_name: str) -> str:
 
     doc = frappe.new_doc("Nubefact Guia de Remision")
     apply_import_payload_to_doc(doc, payload)
+    doc.flags.ignore_validate = True
     doc.insert()
     return doc.name
 
@@ -40,6 +41,7 @@ def crear_guia_de_remision_desde_json(json_payload: str) -> str:
 
     doc = frappe.new_doc("Nubefact Guia de Remision")
     apply_import_payload_to_doc(doc, payload)
+    doc.flags.ignore_validate = True
     doc.insert()
     return doc.name
 
