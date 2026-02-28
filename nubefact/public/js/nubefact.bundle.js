@@ -26,7 +26,7 @@ class NubefactWatcher {
 	}
 
 	is_pending_response() {
-		return !this.frm.doc.pdf_url;
+		return !this.frm.doc.enlace_del_pdf;
 	}
 
 	can_poll() {
