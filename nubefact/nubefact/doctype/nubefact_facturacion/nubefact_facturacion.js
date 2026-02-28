@@ -3,7 +3,9 @@
 
 frappe.ui.form.on("Nubefact Facturacion", {
 	refresh(frm) {
-		if (["Pendiente de Respuesta", "Anulado"].includes(frm.doc.status || "Borrador")) {
+		frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
+
+		if (["Pendiente de Respuesta", "Aceptado", "Anulado"].includes(frm.doc.status || "Borrador")) {
 			frm.disable_form();
 		}
 
@@ -122,6 +124,15 @@ frappe.ui.form.on("Nubefact Facturacion", {
 		dialog.show();
 	},
 });
+
+function format_error_message_banner(errorMessage) {
+	const sanitizedMessage = frappe.utils.escape_html((errorMessage || "").trim());
+	if (!sanitizedMessage) {
+		return "";
+	}
+
+	return sanitizedMessage.replace(/\r?\n/g, "<br>");
+}
 
 function download_file_from_url(frm, fieldname, label) {
 	const url = frm.doc[fieldname];

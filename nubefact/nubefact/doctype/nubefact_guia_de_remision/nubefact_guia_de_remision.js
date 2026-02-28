@@ -3,6 +3,8 @@
 
 frappe.ui.form.on("Nubefact Guia De Remision", {
 	refresh(frm) {
+		frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
+
 		if (["Pendiente de Respuesta", "Aceptada"].includes(frm.doc.status || "Borrador")) {
 			frm.disable_form();
 		}
@@ -220,6 +222,15 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 		dialog.show();
 	},
 });
+
+function format_error_message_banner(errorMessage) {
+	const sanitizedMessage = frappe.utils.escape_html((errorMessage || "").trim());
+	if (!sanitizedMessage) {
+		return "";
+	}
+
+	return sanitizedMessage.replace(/\r?\n/g, "<br>");
+}
 
 function download_file_from_url(frm, fieldname, label) {
 	const url = frm.doc[fieldname];
