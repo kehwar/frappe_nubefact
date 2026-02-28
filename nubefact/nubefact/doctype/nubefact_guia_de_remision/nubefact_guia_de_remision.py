@@ -57,7 +57,7 @@ class NubefactGuiadeRemision(Document):
     def autoname(self):
         timestamp = now_datetime()
         self.name = append_number_if_name_exists(
-            "Nubefact Guia de Remision", timestamp.strftime("%Y%m%d-%H%M%S-%f")
+            "Nubefact Guia de Remision", timestamp.strftime("%Y%m%d-")
         )
 
     def validate(self):
