@@ -5,176 +5,180 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "document_section",
+  "identificacion_section",
   "title",
-  "document_type",
-  "series",
-  "number",
-  "column_break_document",
-  "issue_date",
-  "due_date",
+  "operacion",
+  "tipo_de_comprobante",
+  "serie",
+  "numero",
+  "status",
+  "column_break_identificacion",
+  "fecha_de_emision",
+  "fecha_de_vencimiento",
   "sunat_transaction",
   "local",
-  "client_section",
-  "client_document_type",
-  "client_document_number",
-  "client_name",
-  "column_break_client",
-  "client_address",
-  "client_email",
-  "client_email_1",
-  "client_email_2",
-  "amounts_section",
-  "currency",
-  "exchange_rate",
-  "igv_percentage",
-  "column_break_amounts",
-  "global_discount",
-  "total_discount",
-  "total_advance",
-  "total_free",
-  "total_other_charges",
-  "total_isc",
-  "total",
-  "column_break_yczn",
-  "total_taxable",
-  "total_unaffected",
-  "total_exempt",
+  "cliente_section",
+  "cliente_tipo_de_documento",
+  "cliente_numero_de_documento",
+  "cliente_denominacion",
+  "column_break_cliente",
+  "cliente_direccion",
+  "cliente_email",
+  "cliente_email_1",
+  "cliente_email_2",
+  "totales_section",
+  "moneda",
+  "tipo_de_cambio",
+  "porcentaje_de_igv",
+  "column_break_totales",
+  "descuento_global",
+  "total_descuento",
+  "total_anticipo",
+  "total_gravada",
+  "total_inafecta",
+  "total_exonerada",
   "total_igv",
+  "total_gratuita",
+  "total_otros_cargos",
+  "total_isc",
+  "total_impuestos_bolsas",
+  "total",
+  "percepcion_retencion_section",
+  "percepcion_tipo",
+  "percepcion_base_imponible",
+  "total_percepcion",
+  "total_incluido_percepcion",
+  "column_break_percepcion_retencion",
+  "retencion_tipo",
+  "retencion_base_imponible",
+  "total_retencion",
+  "notas_section",
+  "documento_que_se_modifica_tipo",
+  "documento_que_se_modifica_serie",
+  "documento_que_se_modifica_numero",
+  "column_break_notas",
+  "tipo_de_nota_de_credito",
+  "tipo_de_nota_de_debito",
+  "detraccion_section",
+  "detraccion",
+  "detraccion_tipo",
+  "detraccion_total",
+  "detraccion_porcentaje",
+  "medio_de_pago_detraccion",
+  "column_break_detraccion",
+  "ubigeo_origen",
+  "direccion_origen",
+  "ubigeo_destino",
+  "direccion_destino",
+  "detalle_viaje",
+  "val_ref_serv_trans",
+  "val_ref_carga_efec",
+  "val_ref_carga_util",
+  "ruta_vehiculo_section",
+  "punto_origen_viaje",
+  "punto_destino_viaje",
+  "descripcion_tramo",
+  "val_ref_carga_efec_tramo_virtual",
+  "column_break_ruta_vehiculo",
+  "configuracion_vehicular",
+  "carga_util_tonel_metricas",
+  "carga_efec_tonel_metricas",
+  "val_ref_tonel_metrica",
+  "val_pre_ref_carga_util_nominal",
+  "indicador_aplicacion_retorno_vacio",
+  "recursos_hidrobiologicos_section",
+  "matricula_emb_pesquera",
+  "nombre_emb_pesquera",
+  "descripcion_tipo_especie_vendida",
+  "lugar_de_descarga",
+  "cantidad_especie_vendida",
+  "fecha_de_descarga",
+  "pago_entrega_section",
+  "condiciones_de_pago",
+  "medio_de_pago",
+  "placa_vehiculo",
+  "orden_compra_servicio",
   "items_section",
   "items",
-  "payment_section",
-  "payment_terms",
-  "payment_method",
-  "column_break_yuhb",
-  "credit_installments",
-  "additional_info_section",
-  "remarks",
-  "column_break_spgj",
-  "purchase_order",
-  "vehicle_license_plate",
-  "delivery_references",
-  "mas_impuestos_tab",
-  "perception_section",
-  "perception_type",
-  "perception_base",
-  "total_perception",
-  "total_with_perception",
-  "column_break_perception",
-  "withholding_type",
-  "withholding_base",
-  "total_retention",
-  "total_plastic_bag_tax",
-  "more_info_tab",
-  "settings_section",
-  "auto_send_to_sunat",
-  "auto_send_to_client",
-  "skip_required_fields_validation",
-  "pdf_format",
-  "generated_by_contingency",
-  "goods_from_jungle",
-  "services_from_jungle",
-  "nubecont_sale_type_code",
-  "unique_code",
-  "column_break_yfrd",
-  "raw",
+  "guias",
+  "venta_al_credito",
+  "configuracion_section",
+  "enviar_automaticamente_a_la_sunat",
+  "enviar_automaticamente_al_cliente",
+  "formato_de_pdf",
+  "codigo_unico",
+  "skip_field_validation",
+  "generado_por_contingencia",
+  "bienes_region_selva",
+  "servicios_region_selva",
+  "nubecont_tipo_de_venta_codigo",
+  "adicional_section",
+  "observaciones",
+  "json_crudo",
   "sunat_section",
-  "status",
-  "accepted_by_sunat",
+  "aceptada_por_sunat",
   "last_sunat_check",
-  "sunat_response_code",
-  "sunat_response_message",
+  "sunat_responsecode",
+  "sunat_description",
   "sunat_note",
   "sunat_soap_error",
   "error_message",
   "column_break_sunat",
-  "link_url",
-  "pdf_url",
-  "xml_url",
-  "cdr_url",
-  "qr_url",
-  "void_section",
-  "voided",
-  "void_date",
-  "void_reason",
-  "column_break_void",
-  "void_status",
-  "void_ticket",
-  "tab_4_tab",
-  "note_reference_section",
-  "base_document_type",
-  "base_document_series",
-  "base_document_number",
-  "column_break_note_reference",
-  "credit_note_reason",
-  "debit_note_reason",
-  "detraccion_tab",
-  "detraction_section",
-  "subject_to_detraction",
-  "detraction_type",
-  "detraction_total",
-  "detraction_percentage",
-  "detraction_payment_method",
-  "detraction_column_break",
-  "origin_ubigeo",
-  "origin_address",
-  "destination_ubigeo",
-  "destination_address",
-  "trip_detail",
-  "transport_reference_value",
-  "effective_load_reference_value",
-  "useful_load_reference_value",
-  "detraction_fishing_section",
-  "fishing_vessel_registration",
-  "fishing_vessel_name",
-  "sold_species_type_description",
-  "unloading_place",
-  "sold_species_quantity",
-  "unloading_date",
-  "detraction_route_section",
-  "trip_origin_point",
-  "trip_destination_point",
-  "route_description",
-  "virtual_section_effective_load_reference_value",
-  "vehicle_configuration",
-  "vehicle_useful_load_metric_tons",
-  "vehicle_effective_load_metric_tons",
-  "reference_value_per_metric_ton",
-  "nominal_useful_load_preliminary_reference_value",
-  "empty_return_application_indicator",
-  "tab_6_tab"
+  "enlace",
+  "enlace_del_pdf",
+  "enlace_del_xml",
+  "enlace_del_cdr",
+  "cadena_para_codigo_qr",
+  "codigo_hash",
+  "codigo_de_barras",
+  "pdf_zip_base64",
+  "xml_zip_base64",
+  "cdr_zip_base64",
+  "anulacion_section",
+  "anulado",
+  "fecha_de_anulacion",
+  "motivo",
+  "estado_de_anulacion",
+  "sunat_ticket_numero"
  ],
  "fields": [
   {
-   "fieldname": "document_section",
+   "fieldname": "identificacion_section",
    "fieldtype": "Section Break",
-   "label": "Tipo de Documento"
+   "label": "Identificación del Comprobante"
   },
   {
    "fieldname": "title",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "T\u00edtulo",
+   "label": "Título",
    "read_only": 1
   },
   {
-   "fieldname": "document_type",
+   "default": "generar_comprobante",
+   "fieldname": "operacion",
+   "fieldtype": "Data",
+   "label": "Operación",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tipo_de_comprobante",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Tipo de Comprobante",
    "options": "1\n2\n3\n4"
   },
   {
-   "fieldname": "series",
+   "fieldname": "serie",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Serie"
   },
   {
-   "fieldname": "number",
+   "fieldname": "numero",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "N\u00famero",
+   "label": "Número",
    "no_copy": 1
   },
   {
@@ -188,24 +192,24 @@
    "read_only": 1
   },
   {
-   "fieldname": "column_break_document",
+   "fieldname": "column_break_identificacion",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "issue_date",
+   "fieldname": "fecha_de_emision",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Fecha de Emisi\u00f3n"
+   "label": "Fecha de Emisión"
   },
   {
-   "fieldname": "due_date",
+   "fieldname": "fecha_de_vencimiento",
    "fieldtype": "Date",
    "label": "Fecha de Vencimiento"
   },
   {
    "fieldname": "sunat_transaction",
    "fieldtype": "Select",
-   "label": "Tipo de Transacci\u00f3n SUNAT",
+   "label": "Tipo de Transacción SUNAT",
    "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35"
   },
   {
@@ -215,86 +219,105 @@
    "options": "Nubefact Local"
   },
   {
-   "fieldname": "client_section",
+   "fieldname": "cliente_section",
    "fieldtype": "Section Break",
-   "label": "Informaci\u00f3n del Cliente"
+   "label": "Datos del Cliente"
   },
   {
-   "fieldname": "client_document_type",
+   "fieldname": "cliente_tipo_de_documento",
    "fieldtype": "Select",
    "label": "Tipo de Documento del Cliente",
    "options": "6\n1\n-\n4\n7\nA\nB\n0\nG"
   },
   {
-   "fieldname": "client_document_number",
+   "fieldname": "cliente_numero_de_documento",
    "fieldtype": "Data",
-   "label": "N\u00famero de Documento del Cliente"
+   "label": "Número de Documento del Cliente"
   },
   {
-   "fieldname": "client_name",
+   "fieldname": "cliente_denominacion",
    "fieldtype": "Data",
-   "label": "Nombre del Cliente"
+   "label": "Denominación del Cliente"
   },
   {
-   "fieldname": "column_break_client",
+   "fieldname": "column_break_cliente",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "client_address",
+   "fieldname": "cliente_direccion",
    "fieldtype": "Small Text",
-   "label": "Direcci\u00f3n del Cliente"
+   "label": "Dirección del Cliente"
   },
   {
-   "fieldname": "client_email",
+   "fieldname": "cliente_email",
    "fieldtype": "Data",
    "label": "Email del Cliente"
   },
   {
-   "fieldname": "client_email_1",
+   "fieldname": "cliente_email_1",
    "fieldtype": "Data",
    "label": "Email del Cliente 1"
   },
   {
-   "fieldname": "client_email_2",
+   "fieldname": "cliente_email_2",
    "fieldtype": "Data",
    "label": "Email del Cliente 2"
   },
   {
-   "fieldname": "currency",
+   "fieldname": "totales_section",
+   "fieldtype": "Section Break",
+   "label": "Totales e Impuestos"
+  },
+  {
+   "fieldname": "moneda",
    "fieldtype": "Select",
    "label": "Moneda",
    "options": "1\n2\n3\n4"
   },
   {
-   "fieldname": "exchange_rate",
+   "fieldname": "tipo_de_cambio",
    "fieldtype": "Float",
    "label": "Tipo de Cambio"
   },
   {
    "default": "18",
-   "fieldname": "igv_percentage",
+   "fieldname": "porcentaje_de_igv",
    "fieldtype": "Float",
    "label": "Porcentaje de IGV"
   },
   {
-   "fieldname": "amounts_section",
-   "fieldtype": "Section Break",
-   "label": "Montos"
+   "fieldname": "column_break_totales",
+   "fieldtype": "Column Break"
   },
   {
-   "fieldname": "total_taxable",
+   "fieldname": "descuento_global",
    "fieldtype": "Currency",
-   "label": "Total Gravado"
+   "label": "Descuento Global"
   },
   {
-   "fieldname": "total_unaffected",
+   "fieldname": "total_descuento",
    "fieldtype": "Currency",
-   "label": "Total Inafecto"
+   "label": "Total Descuento"
   },
   {
-   "fieldname": "total_exempt",
+   "fieldname": "total_anticipo",
    "fieldtype": "Currency",
-   "label": "Total Exonerado"
+   "label": "Total Anticipo"
+  },
+  {
+   "fieldname": "total_gravada",
+   "fieldtype": "Currency",
+   "label": "Total Gravada"
+  },
+  {
+   "fieldname": "total_inafecta",
+   "fieldtype": "Currency",
+   "label": "Total Inafecta"
+  },
+  {
+   "fieldname": "total_exonerada",
+   "fieldtype": "Currency",
+   "label": "Total Exonerada"
   },
   {
    "fieldname": "total_igv",
@@ -302,31 +325,12 @@
    "label": "Total IGV"
   },
   {
-   "fieldname": "column_break_amounts",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "global_discount",
+   "fieldname": "total_gratuita",
    "fieldtype": "Currency",
-   "label": "Descuento Global"
+   "label": "Total Gratuita"
   },
   {
-   "fieldname": "total_discount",
-   "fieldtype": "Currency",
-   "label": "Total Descuento"
-  },
-  {
-   "fieldname": "total_advance",
-   "fieldtype": "Currency",
-   "label": "Total Anticipo"
-  },
-  {
-   "fieldname": "total_free",
-   "fieldtype": "Currency",
-   "label": "Total Gratuito"
-  },
-  {
-   "fieldname": "total_other_charges",
+   "fieldname": "total_otros_cargos",
    "fieldtype": "Currency",
    "label": "Total Otros Cargos"
   },
@@ -336,388 +340,387 @@
    "label": "Total ISC"
   },
   {
+   "fieldname": "total_impuestos_bolsas",
+   "fieldtype": "Currency",
+   "label": "Total Impuesto Bolsas Plásticas"
+  },
+  {
    "fieldname": "total",
    "fieldtype": "Currency",
    "label": "Total"
   },
   {
-   "fieldname": "perception_section",
+   "fieldname": "percepcion_retencion_section",
    "fieldtype": "Section Break",
-   "label": "Percepci\u00f3n y Retenci\u00f3n"
+   "label": "Percepción y Retención"
   },
   {
-   "fieldname": "perception_type",
+   "fieldname": "percepcion_tipo",
    "fieldtype": "Data",
-   "label": "Tipo de Percepci\u00f3n"
+   "label": "Tipo de Percepción"
   },
   {
-   "fieldname": "perception_base",
+   "fieldname": "percepcion_base_imponible",
    "fieldtype": "Currency",
-   "label": "Base Imponible de Percepci\u00f3n"
+   "label": "Base Imponible de Percepción"
   },
   {
-   "fieldname": "total_perception",
+   "fieldname": "total_percepcion",
    "fieldtype": "Currency",
-   "label": "Total Percepci\u00f3n"
+   "label": "Total Percepción"
   },
   {
-   "fieldname": "total_with_perception",
+   "fieldname": "total_incluido_percepcion",
    "fieldtype": "Currency",
-   "label": "Total con Percepci\u00f3n"
+   "label": "Total Incluido Percepción"
   },
   {
-   "fieldname": "column_break_perception",
+   "fieldname": "column_break_percepcion_retencion",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "withholding_type",
+   "fieldname": "retencion_tipo",
    "fieldtype": "Data",
-   "label": "Tipo de Retenci\u00f3n"
+   "label": "Tipo de Retención"
   },
   {
-   "fieldname": "withholding_base",
+   "fieldname": "retencion_base_imponible",
    "fieldtype": "Currency",
-   "label": "Base Imponible de Retenci\u00f3n"
+   "label": "Base Imponible de Retención"
   },
   {
-   "fieldname": "total_retention",
+   "fieldname": "total_retencion",
    "fieldtype": "Currency",
-   "label": "Total Retenci\u00f3n"
+   "label": "Total Retención"
   },
   {
-   "fieldname": "total_plastic_bag_tax",
-   "fieldtype": "Currency",
-   "label": "Total Impuesto Bolsas Pl\u00e1sticas"
-  },
-  {
-   "fieldname": "detraction_section",
+   "fieldname": "notas_section",
    "fieldtype": "Section Break",
-   "label": "Detracci\u00f3n"
+   "label": "Notas de Crédito / Débito"
   },
   {
-   "default": "0",
-   "fieldname": "subject_to_detraction",
-   "fieldtype": "Check",
-   "label": "Sujeto a Detracci\u00f3n"
-  },
-  {
-   "fieldname": "detraction_type",
-   "fieldtype": "Select",
-   "label": "Tipo de Detracci\u00f3n",
-   "options": "\n001\n002\n003\n004\n005\n007\n008\n009\n010\n011\n012\n013\n014\n015\n016\n017\n019\n020\n021\n022\n023\n024\n025\n026\n027\n028\n030\n031\n032\n034\n035\n036\n037\n039\n040\n041\n044\n045\n099"
-  },
-  {
-   "fieldname": "detraction_total",
-   "fieldtype": "Currency",
-   "label": "Total de Detracci\u00f3n"
-  },
-  {
-   "fieldname": "detraction_percentage",
-   "fieldtype": "Float",
-   "label": "Porcentaje de Detracci\u00f3n"
-  },
-  {
-   "fieldname": "detraction_payment_method",
-   "fieldtype": "Select",
-   "label": "Medio de Pago de Detracci\u00f3n",
-   "options": "\n001\n002\n003\n004\n005\n006\n007\n008\n009\n010\n011\n012\n013\n101\n102\n103\n104\n105\n106\n107\n108\n999"
-  },
-  {
-   "fieldname": "detraction_column_break",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "origin_ubigeo",
-   "fieldtype": "Data",
-   "label": "Ubigeo de Origen"
-  },
-  {
-   "fieldname": "origin_address",
-   "fieldtype": "Data",
-   "label": "Direcci\u00f3n de Origen"
-  },
-  {
-   "fieldname": "destination_ubigeo",
-   "fieldtype": "Data",
-   "label": "Ubigeo de Destino"
-  },
-  {
-   "fieldname": "destination_address",
-   "fieldtype": "Data",
-   "label": "Direcci\u00f3n de Destino"
-  },
-  {
-   "fieldname": "trip_detail",
-   "fieldtype": "Data",
-   "label": "Detalle del Viaje"
-  },
-  {
-   "fieldname": "transport_reference_value",
-   "fieldtype": "Currency",
-   "label": "Valor Referencial del Servicio de Transporte"
-  },
-  {
-   "fieldname": "effective_load_reference_value",
-   "fieldtype": "Currency",
-   "label": "Valor Referencial de Carga Efectiva"
-  },
-  {
-   "fieldname": "useful_load_reference_value",
-   "fieldtype": "Currency",
-   "label": "Valor Referencial de Carga \u00datil"
-  },
-  {
-   "fieldname": "detraction_route_section",
-   "fieldtype": "Section Break",
-   "label": "Ruta y Veh\u00edculo de Detracci\u00f3n"
-  },
-  {
-   "fieldname": "trip_origin_point",
-   "fieldtype": "Data",
-   "label": "Punto de Origen del Viaje"
-  },
-  {
-   "fieldname": "trip_destination_point",
-   "fieldtype": "Data",
-   "label": "Punto de Destino del Viaje"
-  },
-  {
-   "fieldname": "route_description",
-   "fieldtype": "Data",
-   "label": "Descripci\u00f3n del Tramo"
-  },
-  {
-   "fieldname": "virtual_section_effective_load_reference_value",
-   "fieldtype": "Currency",
-   "label": "Valor Preliminar Referencial sobre Carga Efectiva"
-  },
-  {
-   "fieldname": "vehicle_configuration",
-   "fieldtype": "Data",
-   "label": "Configuraci\u00f3n Vehicular"
-  },
-  {
-   "fieldname": "vehicle_useful_load_metric_tons",
-   "fieldtype": "Float",
-   "label": "Carga \u00datil en Toneladas M\u00e9tricas"
-  },
-  {
-   "fieldname": "vehicle_effective_load_metric_tons",
-   "fieldtype": "Float",
-   "label": "Carga Efectiva en Toneladas M\u00e9tricas"
-  },
-  {
-   "fieldname": "reference_value_per_metric_ton",
-   "fieldtype": "Float",
-   "label": "Valor Referencial por Tonelada M\u00e9trica"
-  },
-  {
-   "fieldname": "nominal_useful_load_preliminary_reference_value",
-   "fieldtype": "Currency",
-   "label": "Valor Preliminar Referencial de Carga \u00datil Nominal"
-  },
-  {
-   "default": "0",
-   "fieldname": "empty_return_application_indicator",
-   "fieldtype": "Check",
-   "label": "Indicador de Aplicaci\u00f3n de Retorno Vac\u00edo"
-  },
-  {
-   "fieldname": "detraction_fishing_section",
-   "fieldtype": "Section Break",
-   "label": "Datos de Pesca para Detracci\u00f3n"
-  },
-  {
-   "fieldname": "fishing_vessel_registration",
-   "fieldtype": "Data",
-   "label": "Matr\u00edcula de Embarcaci\u00f3n Pesquera"
-  },
-  {
-   "fieldname": "fishing_vessel_name",
-   "fieldtype": "Data",
-   "label": "Nombre de Embarcaci\u00f3n Pesquera"
-  },
-  {
-   "fieldname": "sold_species_type_description",
-   "fieldtype": "Data",
-   "label": "Descripci\u00f3n del Tipo de Especie Vendida"
-  },
-  {
-   "fieldname": "unloading_place",
-   "fieldtype": "Data",
-   "label": "Lugar de Descarga"
-  },
-  {
-   "fieldname": "sold_species_quantity",
-   "fieldtype": "Float",
-   "label": "Cantidad de Especie Vendida"
-  },
-  {
-   "fieldname": "unloading_date",
-   "fieldtype": "Date",
-   "label": "Fecha de Descarga"
-  },
-  {
-   "fieldname": "note_reference_section",
-   "fieldtype": "Section Break",
-   "label": "Referencias de Nota de Cr\u00e9dito/D\u00e9bito"
-  },
-  {
-   "fieldname": "base_document_type",
+   "fieldname": "documento_que_se_modifica_tipo",
    "fieldtype": "Select",
    "label": "Tipo de Documento que se Modifica",
    "options": "1\n2"
   },
   {
-   "fieldname": "base_document_series",
+   "fieldname": "documento_que_se_modifica_serie",
    "fieldtype": "Data",
    "label": "Serie del Documento que se Modifica"
   },
   {
-   "fieldname": "base_document_number",
+   "fieldname": "documento_que_se_modifica_numero",
    "fieldtype": "Int",
-   "label": "N\u00famero del Documento que se Modifica"
+   "label": "Número del Documento que se Modifica"
   },
   {
-   "fieldname": "column_break_note_reference",
+   "fieldname": "column_break_notas",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "credit_note_reason",
+   "fieldname": "tipo_de_nota_de_credito",
    "fieldtype": "Select",
-   "label": "Motivo de Nota de Cr\u00e9dito",
+   "label": "Motivo de Nota de Crédito",
    "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13"
   },
   {
-   "fieldname": "debit_note_reason",
+   "fieldname": "tipo_de_nota_de_debito",
    "fieldtype": "Select",
-   "label": "Motivo de Nota de D\u00e9bito",
+   "label": "Motivo de Nota de Débito",
    "options": "\n1\n2\n3\n4\n5"
   },
   {
-   "fieldname": "payment_section",
+   "fieldname": "detraccion_section",
+   "fieldtype": "Section Break",
+   "label": "Detracción"
+  },
+  {
+   "default": "0",
+   "fieldname": "detraccion",
+   "fieldtype": "Check",
+   "label": "Sujeto a Detracción"
+  },
+  {
+   "fieldname": "detraccion_tipo",
+   "fieldtype": "Select",
+   "label": "Tipo de Detracción",
+   "options": "\n001\n002\n003\n004\n005\n007\n008\n009\n010\n011\n012\n013\n014\n015\n016\n017\n019\n020\n021\n022\n023\n024\n025\n026\n027\n028\n030\n031\n032\n034\n035\n036\n037\n039\n040\n041\n044\n045\n099"
+  },
+  {
+   "fieldname": "detraccion_total",
+   "fieldtype": "Currency",
+   "label": "Total de Detracción"
+  },
+  {
+   "fieldname": "detraccion_porcentaje",
+   "fieldtype": "Float",
+   "label": "Porcentaje de Detracción"
+  },
+  {
+   "fieldname": "medio_de_pago_detraccion",
+   "fieldtype": "Select",
+   "label": "Medio de Pago de Detracción",
+   "options": "\n001\n002\n003\n004\n005\n006\n007\n008\n009\n010\n011\n012\n013\n101\n102\n103\n104\n105\n106\n107\n108\n999"
+  },
+  {
+   "fieldname": "column_break_detraccion",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ubigeo_origen",
+   "fieldtype": "Data",
+   "label": "Ubigeo de Origen"
+  },
+  {
+   "fieldname": "direccion_origen",
+   "fieldtype": "Data",
+   "label": "Dirección de Origen"
+  },
+  {
+   "fieldname": "ubigeo_destino",
+   "fieldtype": "Data",
+   "label": "Ubigeo de Destino"
+  },
+  {
+   "fieldname": "direccion_destino",
+   "fieldtype": "Data",
+   "label": "Dirección de Destino"
+  },
+  {
+   "fieldname": "detalle_viaje",
+   "fieldtype": "Data",
+   "label": "Detalle del Viaje"
+  },
+  {
+   "fieldname": "val_ref_serv_trans",
+   "fieldtype": "Currency",
+   "label": "Valor Referencial del Servicio de Transporte"
+  },
+  {
+   "fieldname": "val_ref_carga_efec",
+   "fieldtype": "Currency",
+   "label": "Valor Referencial de Carga Efectiva"
+  },
+  {
+   "fieldname": "val_ref_carga_util",
+   "fieldtype": "Currency",
+   "label": "Valor Referencial de Carga Útil"
+  },
+  {
+   "fieldname": "ruta_vehiculo_section",
+   "fieldtype": "Section Break",
+   "label": "Ruta y Vehículo"
+  },
+  {
+   "fieldname": "punto_origen_viaje",
+   "fieldtype": "Data",
+   "label": "Punto de Origen del Viaje"
+  },
+  {
+   "fieldname": "punto_destino_viaje",
+   "fieldtype": "Data",
+   "label": "Punto de Destino del Viaje"
+  },
+  {
+   "fieldname": "descripcion_tramo",
+   "fieldtype": "Data",
+   "label": "Descripción del Tramo"
+  },
+  {
+   "fieldname": "val_ref_carga_efec_tramo_virtual",
+   "fieldtype": "Currency",
+   "label": "Valor Preliminar Referencial de Carga Efectiva"
+  },
+  {
+   "fieldname": "column_break_ruta_vehiculo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "configuracion_vehicular",
+   "fieldtype": "Data",
+   "label": "Configuración Vehicular"
+  },
+  {
+   "fieldname": "carga_util_tonel_metricas",
+   "fieldtype": "Float",
+   "label": "Carga Útil en Toneladas Métricas"
+  },
+  {
+   "fieldname": "carga_efec_tonel_metricas",
+   "fieldtype": "Float",
+   "label": "Carga Efectiva en Toneladas Métricas"
+  },
+  {
+   "fieldname": "val_ref_tonel_metrica",
+   "fieldtype": "Float",
+   "label": "Valor Referencial por Tonelada Métrica"
+  },
+  {
+   "fieldname": "val_pre_ref_carga_util_nominal",
+   "fieldtype": "Currency",
+   "label": "Valor Preliminar Referencial de Carga Útil Nominal"
+  },
+  {
+   "default": "0",
+   "fieldname": "indicador_aplicacion_retorno_vacio",
+   "fieldtype": "Check",
+   "label": "Indicador de Aplicación de Retorno Vacío"
+  },
+  {
+   "fieldname": "recursos_hidrobiologicos_section",
+   "fieldtype": "Section Break",
+   "label": "Detracción Recursos Hidrobiológicos"
+  },
+  {
+   "fieldname": "matricula_emb_pesquera",
+   "fieldtype": "Data",
+   "label": "Matrícula de Embarcación Pesquera"
+  },
+  {
+   "fieldname": "nombre_emb_pesquera",
+   "fieldtype": "Data",
+   "label": "Nombre de Embarcación Pesquera"
+  },
+  {
+   "fieldname": "descripcion_tipo_especie_vendida",
+   "fieldtype": "Data",
+   "label": "Descripción del Tipo de Especie Vendida"
+  },
+  {
+   "fieldname": "lugar_de_descarga",
+   "fieldtype": "Data",
+   "label": "Lugar de Descarga"
+  },
+  {
+   "fieldname": "cantidad_especie_vendida",
+   "fieldtype": "Float",
+   "label": "Cantidad de Especie Vendida"
+  },
+  {
+   "fieldname": "fecha_de_descarga",
+   "fieldtype": "Date",
+   "label": "Fecha de Descarga"
+  },
+  {
+   "fieldname": "pago_entrega_section",
    "fieldtype": "Section Break",
    "label": "Pago y Entrega"
   },
   {
-   "fieldname": "payment_terms",
+   "fieldname": "condiciones_de_pago",
    "fieldtype": "Small Text",
    "label": "Condiciones de Pago"
   },
   {
-   "fieldname": "payment_method",
+   "fieldname": "medio_de_pago",
    "fieldtype": "Data",
    "label": "Medio de Pago"
   },
   {
-   "fieldname": "vehicle_license_plate",
+   "fieldname": "placa_vehiculo",
    "fieldtype": "Data",
-   "label": "Placa del Veh\u00edculo"
+   "label": "Placa del Vehículo"
   },
   {
-   "fieldname": "purchase_order",
+   "fieldname": "orden_compra_servicio",
    "fieldtype": "Data",
-   "label": "Orden de Compra"
+   "label": "Orden de Compra / Servicio"
   },
   {
    "fieldname": "items_section",
    "fieldtype": "Section Break",
-   "label": "\u00cdtems"
+   "label": "Ítems"
   },
   {
    "fieldname": "items",
    "fieldtype": "Table",
-   "label": "\u00cdtems",
+   "label": "Ítems",
    "options": "Nubefact Facturacion Item"
   },
   {
-   "fieldname": "delivery_references",
+   "fieldname": "guias",
    "fieldtype": "Table",
-   "label": "Referencias de Gu\u00edas",
+   "label": "Guías Relacionadas",
    "options": "Nubefact Facturacion Guia Relacionada"
   },
   {
-   "fieldname": "credit_installments",
+   "fieldname": "venta_al_credito",
    "fieldtype": "Table",
-   "label": "Cuotas de Venta al Cr\u00e9dito",
+   "label": "Venta al Crédito",
    "options": "Nubefact Facturacion Cuota"
   },
   {
-   "fieldname": "additional_info_section",
+   "fieldname": "configuracion_section",
    "fieldtype": "Section Break",
-   "label": "Informaci\u00f3n Adicional"
-  },
-  {
-   "fieldname": "remarks",
-   "fieldtype": "Text",
-   "label": "Observaciones"
-  },
-  {
-   "fieldname": "raw",
-   "fieldtype": "JSON",
-   "label": "Raw (JSON Crudo)"
-  },
-  {
-   "fieldname": "more_info_tab",
-   "fieldtype": "Tab Break",
-   "label": "M\u00e1s Informaci\u00f3n"
-  },
-  {
-   "fieldname": "settings_section",
-   "fieldtype": "Section Break",
-   "label": "Configuraci\u00f3n"
+   "label": "Configuración"
   },
   {
    "default": "1",
-   "fieldname": "auto_send_to_sunat",
+   "fieldname": "enviar_automaticamente_a_la_sunat",
    "fieldtype": "Check",
-   "label": "Env\u00edo Autom\u00e1tico a SUNAT"
+   "label": "Envío Automático a SUNAT"
   },
   {
    "default": "0",
-   "fieldname": "auto_send_to_client",
+   "fieldname": "enviar_automaticamente_al_cliente",
    "fieldtype": "Check",
-   "label": "Env\u00edo Autom\u00e1tico al Cliente"
+   "label": "Envío Automático al Cliente"
   },
   {
-   "fieldname": "unique_code",
-   "fieldtype": "Data",
-   "label": "C\u00f3digo \u00danico"
-  },
-  {
-   "default": "0",
-   "fieldname": "skip_required_fields_validation",
-   "fieldtype": "Check",
-   "label": "Omitir Validaci\u00f3n de Campos Requeridos"
-  },
-  {
-   "fieldname": "pdf_format",
+   "fieldname": "formato_de_pdf",
    "fieldtype": "Select",
    "label": "Formato PDF",
    "options": "\nA4\nA5\nTICKET"
   },
   {
+   "fieldname": "codigo_unico",
+   "fieldtype": "Data",
+   "label": "Código Único"
+  },
+  {
    "default": "0",
-   "fieldname": "generated_by_contingency",
+   "fieldname": "skip_field_validation",
+   "fieldtype": "Check",
+   "label": "Omitir Validación de Campos Requeridos"
+  },
+  {
+   "default": "0",
+   "fieldname": "generado_por_contingencia",
    "fieldtype": "Check",
    "label": "Generado por Contingencia"
   },
   {
    "default": "0",
-   "fieldname": "goods_from_jungle",
+   "fieldname": "bienes_region_selva",
    "fieldtype": "Check",
    "label": "Bienes de la Selva"
   },
   {
    "default": "0",
-   "fieldname": "services_from_jungle",
+   "fieldname": "servicios_region_selva",
    "fieldtype": "Check",
    "label": "Servicios de la Selva"
   },
   {
-   "fieldname": "nubecont_sale_type_code",
+   "fieldname": "nubecont_tipo_de_venta_codigo",
    "fieldtype": "Data",
-   "label": "C\u00f3digo de Tipo de Venta NubeCont"
+   "label": "Código de Tipo de Venta NubeCont"
+  },
+  {
+   "fieldname": "adicional_section",
+   "fieldtype": "Section Break",
+   "label": "Información Adicional"
+  },
+  {
+   "fieldname": "observaciones",
+   "fieldtype": "Text",
+   "label": "Observaciones"
+  },
+  {
+   "fieldname": "json_crudo",
+   "fieldtype": "JSON",
+   "label": "JSON Crudo"
   },
   {
    "fieldname": "sunat_section",
@@ -726,7 +729,7 @@
   },
   {
    "default": "0",
-   "fieldname": "accepted_by_sunat",
+   "fieldname": "aceptada_por_sunat",
    "fieldtype": "Check",
    "label": "Aceptada por SUNAT",
    "no_copy": 1,
@@ -735,21 +738,21 @@
   {
    "fieldname": "last_sunat_check",
    "fieldtype": "Datetime",
-   "label": "\u00daltima Consulta SUNAT",
+   "label": "Última Consulta SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
   {
-   "fieldname": "sunat_response_code",
+   "fieldname": "sunat_responsecode",
    "fieldtype": "Data",
-   "label": "C\u00f3digo de Respuesta SUNAT",
+   "label": "Código de Respuesta SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
   {
-   "fieldname": "sunat_response_message",
+   "fieldname": "sunat_description",
    "fieldtype": "Text",
-   "label": "Mensaje de Respuesta SUNAT",
+   "label": "Descripción SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
@@ -779,120 +782,114 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "link_url",
+   "fieldname": "enlace",
    "fieldtype": "Data",
-   "label": "URL de Enlace",
+   "label": "Enlace",
    "no_copy": 1,
    "options": "URL",
    "read_only": 1
   },
   {
-   "fieldname": "pdf_url",
+   "fieldname": "enlace_del_pdf",
    "fieldtype": "Data",
-   "label": "URL del PDF",
+   "label": "Enlace del PDF",
    "no_copy": 1,
    "options": "URL",
    "read_only": 1
   },
   {
-   "fieldname": "xml_url",
+   "fieldname": "enlace_del_xml",
    "fieldtype": "Data",
-   "label": "URL del XML",
+   "label": "Enlace del XML",
    "no_copy": 1,
    "options": "URL",
    "read_only": 1
   },
   {
-   "fieldname": "cdr_url",
+   "fieldname": "enlace_del_cdr",
    "fieldtype": "Data",
-   "label": "URL del CDR",
+   "label": "Enlace del CDR",
    "no_copy": 1,
    "options": "URL",
    "read_only": 1
   },
   {
-   "fieldname": "qr_url",
-   "fieldtype": "Data",
-   "label": "URL del QR",
+   "fieldname": "cadena_para_codigo_qr",
+   "fieldtype": "Text",
+   "label": "Cadena para Código QR",
    "no_copy": 1,
    "read_only": 1
   },
   {
-   "fieldname": "void_section",
+   "fieldname": "codigo_hash",
+   "fieldtype": "Data",
+   "label": "Código Hash",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "codigo_de_barras",
+   "fieldtype": "Text",
+   "label": "Código de Barras",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "pdf_zip_base64",
+   "fieldtype": "Long Text",
+   "label": "PDF ZIP Base64",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "xml_zip_base64",
+   "fieldtype": "Long Text",
+   "label": "XML ZIP Base64",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cdr_zip_base64",
+   "fieldtype": "Long Text",
+   "label": "CDR ZIP Base64",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "anulacion_section",
    "fieldtype": "Section Break",
-   "label": "Informaci\u00f3n de Anulaci\u00f3n"
+   "label": "Información de Anulación"
   },
   {
    "default": "0",
-   "fieldname": "voided",
+   "fieldname": "anulado",
    "fieldtype": "Check",
    "label": "Anulado",
    "read_only": 1
   },
   {
-   "fieldname": "void_date",
+   "fieldname": "fecha_de_anulacion",
    "fieldtype": "Date",
-   "label": "Fecha de Anulaci\u00f3n",
+   "label": "Fecha de Anulación",
    "read_only": 1
   },
   {
-   "fieldname": "void_reason",
+   "fieldname": "motivo",
    "fieldtype": "Small Text",
-   "label": "Motivo de Anulaci\u00f3n",
-   "read_only": 1
+   "label": "Motivo de Anulación"
   },
   {
-   "fieldname": "column_break_void",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "void_status",
+   "fieldname": "estado_de_anulacion",
    "fieldtype": "Select",
-   "label": "Estado de Anulaci\u00f3n",
+   "label": "Estado de Anulación",
    "options": "\nPendiente\nAceptada\nRechazada",
    "read_only": 1
   },
   {
-   "fieldname": "void_ticket",
+   "fieldname": "sunat_ticket_numero",
    "fieldtype": "Data",
-   "label": "Ticket de Anulaci\u00f3n",
+   "label": "Ticket SUNAT",
    "read_only": 1
-  },
-  {
-   "fieldname": "column_break_yfrd",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_yczn",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "mas_impuestos_tab",
-   "fieldtype": "Tab Break",
-   "label": "Mas Impuestos"
-  },
-  {
-   "fieldname": "column_break_yuhb",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_spgj",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "tab_4_tab",
-   "fieldtype": "Tab Break",
-   "label": "Nota Debito/Credito"
-  },
-  {
-   "fieldname": "detraccion_tab",
-   "fieldtype": "Tab Break",
-   "label": "Detraccion"
-  },
-  {
-   "fieldname": "tab_6_tab",
-   "fieldtype": "Tab Break",
-   "label": "Tab 6"
   }
  ],
  "grid_page_length": 50,
@@ -927,7 +924,7 @@
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
  "show_title_field_in_link": 1,
- "sort_field": "issue_date",
+ "sort_field": "fecha_de_emision",
  "sort_order": "DESC",
  "states": [
   {

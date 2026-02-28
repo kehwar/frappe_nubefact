@@ -32,18 +32,24 @@ from nubefact.utils import (
 )
 
 _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
-    "accepted_by_sunat": 0,
+    "aceptada_por_sunat": 0,
     "last_sunat_check": None,
-    "sunat_response_code": "",
-    "sunat_response_message": "",
+    "sunat_responsecode": "",
+    "sunat_description": "",
     "sunat_note": "",
     "sunat_soap_error": "",
     "error_message": "",
-    "link_url": "",
-    "pdf_url": "",
-    "xml_url": "",
-    "cdr_url": "",
-    "qr_url": "",
+    "enlace": "",
+    "enlace_del_pdf": "",
+    "enlace_del_xml": "",
+    "enlace_del_cdr": "",
+    "cadena_para_codigo_qr": "",
+    "pdf_zip_base64": "",
+    "xml_zip_base64": "",
+    "cdr_zip_base64": "",
+    "codigo_hash": "",
+    "codigo_de_barras": "",
+    "sunat_ticket_numero": "",
 }
 
 
@@ -76,7 +82,7 @@ class NubefactFacturacion(Document):
 
     def validate(self):
 
-        if not cint(getattr(self, "skip_required_fields_validation", 0)):
+        if not cint(getattr(self, "skip_field_validation", 0)):
             self._validate_required_fields()
 
     def _set_inferred_values(self):
@@ -93,8 +99,8 @@ class NubefactFacturacion(Document):
         self.title = self._compose_title()
 
     def _compose_title(self, number: Any | None = None) -> str:
-        series = cstr(self.series or "").strip()
-        number_text = cstr((self.number if number is None else number) or "").strip()
+        series = cstr(self.serie or "").strip()
+        number_text = cstr((self.numero if number is None else number) or "").strip()
         return f"{series}-{number_text}" if (series or number_text) else ""
 
     def _build_generate_payload(self) -> dict[str, Any]:
@@ -129,79 +135,128 @@ class NubefactFacturacion(Document):
 
         payload: dict[str, Any] = {
             "operacion": "generar_comprobante",
-            "tipo_de_comprobante": cint(self.document_type),
-            "serie": self.series,
-            "cliente_tipo_de_documento": cstr(self.client_document_type),
-            "cliente_numero_de_documento": self.client_document_number,
-            "cliente_denominacion": self.client_name,
-            "cliente_direccion": self.client_address,
-            "fecha_de_emision": to_nubefact_date(self.issue_date),
-            "moneda": cstr(self.currency),
-            "porcentaje_de_igv": cstr(self.igv_percentage),
+            "tipo_de_comprobante": cint(self.tipo_de_comprobante),
+            "serie": self.serie,
+            "cliente_tipo_de_documento": cstr(self.cliente_tipo_de_documento),
+            "cliente_numero_de_documento": self.cliente_numero_de_documento,
+            "cliente_denominacion": self.cliente_denominacion,
+            "cliente_direccion": self.cliente_direccion,
+            "fecha_de_emision": to_nubefact_date(self.fecha_de_emision),
+            "moneda": cstr(self.moneda),
+            "porcentaje_de_igv": cstr(self.porcentaje_de_igv),
             "total_igv": cstr(self.total_igv),
             "total": cstr(self.total),
-            "enviar_automaticamente_a_la_sunat": bool(cint(self.auto_send_to_sunat)),
-            "enviar_automaticamente_al_cliente": bool(cint(self.auto_send_to_client)),
-            "formato_de_pdf": cstr(self.pdf_format or ""),
+            "enviar_automaticamente_a_la_sunat": bool(
+                cint(self.enviar_automaticamente_a_la_sunat)
+            ),
+            "enviar_automaticamente_al_cliente": bool(
+                cint(self.enviar_automaticamente_al_cliente)
+            ),
+            "formato_de_pdf": cstr(self.formato_de_pdf or ""),
             "items": items_payload,
         }
 
         payload.update(
             omit_empty_values(
                 {
-                    "numero": self.number,
+                    "numero": self.numero,
                     "sunat_transaction": cstr(self.sunat_transaction),
                     "fecha_de_vencimiento": (
-                        to_nubefact_date(self.due_date) if self.due_date else None
+                        to_nubefact_date(self.fecha_de_vencimiento)
+                        if self.fecha_de_vencimiento
+                        else None
                     ),
-                    "cliente_email": self.client_email,
-                    "cliente_email_1": self.client_email_1,
-                    "cliente_email_2": self.client_email_2,
-                    "total_gravada": cstr(self.total_taxable),
-                    "total_inafecta": cstr(self.total_unaffected),
-                    "total_exonerada": cstr(self.total_exempt),
-                    "total_descuento": cstr(self.total_discount),
-                    "total_anticipo": cstr(self.total_advance),
-                    "total_gratuita": cstr(self.total_free),
-                    "total_otros_cargos": cstr(self.total_other_charges),
-                    "descuento_global": cstr(self.global_discount),
-                    "tipo_de_cambio": cstr(self.exchange_rate),
-                    "percepcion_tipo": self.perception_type,
-                    "percepcion_base_imponible": cstr(self.perception_base),
+                    "cliente_email": self.cliente_email,
+                    "cliente_email_1": self.cliente_email_1,
+                    "cliente_email_2": self.cliente_email_2,
+                    "total_gravada": cstr(self.total_gravada),
+                    "total_inafecta": cstr(self.total_inafecta),
+                    "total_exonerada": cstr(self.total_exonerada),
+                    "total_descuento": cstr(self.total_descuento),
+                    "total_anticipo": cstr(self.total_anticipo),
+                    "total_gratuita": cstr(self.total_gratuita),
+                    "total_otros_cargos": cstr(self.total_otros_cargos),
+                    "descuento_global": cstr(self.descuento_global),
+                    "tipo_de_cambio": cstr(self.tipo_de_cambio),
+                    "percepcion_tipo": self.percepcion_tipo,
+                    "percepcion_base_imponible": cstr(self.percepcion_base_imponible),
                     "total_percepcion": cstr(self.total_perception),
-                    "total_incluido_percepcion": cstr(self.total_with_perception),
-                    "retencion_tipo": self.withholding_type,
-                    "retencion_base_imponible": cstr(self.withholding_base),
+                    "total_incluido_percepcion": cstr(self.total_incluido_percepcion),
+                    "retencion_tipo": self.retencion_tipo,
+                    "retencion_base_imponible": cstr(self.retencion_base_imponible),
                     "total_retencion": cstr(self.total_retention),
-                    "total_impuestos_bolsas": cstr(self.total_plastic_bag_tax),
-                    "detraccion": bool(cint(self.subject_to_detraction)),
-                    "tipo_de_nota_de_credito": cstr(self.credit_note_reason),
-                    "tipo_de_nota_de_debito": cstr(self.debit_note_reason),
-                    "condiciones_de_pago": self.payment_terms,
-                    "medio_de_pago": self.payment_method,
-                    "placa_vehiculo": self.vehicle_license_plate,
-                    "orden_compra_servicio": self.purchase_order,
-                    "observaciones": self.remarks,
-                    "codigo_unico": self.name,
+                    "total_impuestos_bolsas": cstr(self.total_impuestos_bolsas),
+                    "detraccion": bool(cint(self.detraccion)),
+                    "tipo_de_nota_de_credito": cstr(self.tipo_de_nota_de_credito),
+                    "tipo_de_nota_de_debito": cstr(self.tipo_de_nota_de_debito),
+                    "condiciones_de_pago": self.condiciones_de_pago,
+                    "medio_de_pago": self.medio_de_pago,
+                    "placa_vehiculo": self.placa_vehiculo,
+                    "orden_compra_servicio": self.orden_compra_servicio,
+                    "observaciones": self.observaciones,
+                    "codigo_unico": self.codigo_unico or self.name,
                     "generado_por_contingencia": bool(
-                        cint(self.generated_by_contingency)
+                        cint(self.generado_por_contingencia)
                     ),
-                    "bienes_region_selva": bool(cint(self.goods_from_jungle)),
-                    "servicios_region_selva": bool(cint(self.services_from_jungle)),
+                    "bienes_region_selva": bool(cint(self.bienes_region_selva)),
+                    "servicios_region_selva": bool(cint(self.servicios_region_selva)),
+                    "nubecont_tipo_de_venta_codigo": self.nubecont_tipo_de_venta_codigo,
+                    "detraccion_tipo": cstr(self.detraccion_tipo),
+                    "detraccion_total": cstr(self.detraccion_total),
+                    "detraccion_porcentaje": cstr(self.detraccion_porcentaje),
+                    "medio_de_pago_detraccion": cstr(self.medio_de_pago_detraccion),
+                    "ubigeo_origen": self.ubigeo_origen,
+                    "direccion_origen": self.direccion_origen,
+                    "ubigeo_destino": self.ubigeo_destino,
+                    "direccion_destino": self.direccion_destino,
+                    "detalle_viaje": self.detalle_viaje,
+                    "val_ref_serv_trans": cstr(self.val_ref_serv_trans),
+                    "val_ref_carga_efec": cstr(self.val_ref_carga_efec),
+                    "val_ref_carga_util": cstr(self.val_ref_carga_util),
+                    "punto_origen_viaje": self.punto_origen_viaje,
+                    "punto_destino_viaje": self.punto_destino_viaje,
+                    "descripcion_tramo": self.descripcion_tramo,
+                    "val_ref_carga_efec_tramo_virtual": cstr(
+                        self.val_ref_carga_efec_tramo_virtual
+                    ),
+                    "configuracion_vehicular": self.configuracion_vehicular,
+                    "carga_util_tonel_metricas": cstr(self.carga_util_tonel_metricas),
+                    "carga_efec_tonel_metricas": cstr(self.carga_efec_tonel_metricas),
+                    "val_ref_tonel_metrica": cstr(self.val_ref_tonel_metrica),
+                    "val_pre_ref_carga_util_nominal": cstr(
+                        self.val_pre_ref_carga_util_nominal
+                    ),
+                    "indicador_aplicacion_retorno_vacio": bool(
+                        cint(self.indicador_aplicacion_retorno_vacio)
+                    ),
+                    "matricula_emb_pesquera": self.matricula_emb_pesquera,
+                    "nombre_emb_pesquera": self.nombre_emb_pesquera,
+                    "descripcion_tipo_especie_vendida": self.descripcion_tipo_especie_vendida,
+                    "lugar_de_descarga": self.lugar_de_descarga,
+                    "cantidad_especie_vendida": cstr(self.cantidad_especie_vendida),
+                    "fecha_de_descarga": (
+                        to_nubefact_date(self.fecha_de_descarga)
+                        if self.fecha_de_descarga
+                        else None
+                    ),
                 }
             )
         )
 
-        if cstr(self.document_type) in {"3", "4"}:
+        if cstr(self.tipo_de_comprobante) in {"3", "4"}:
             payload.update(
                 {
-                    "documento_que_se_modifica_tipo": cstr(self.base_document_type),
-                    "documento_que_se_modifica_serie": self.base_document_series,
-                    "documento_que_se_modifica_numero": cstr(self.base_document_number),
+                    "documento_que_se_modifica_tipo": cstr(
+                        self.documento_que_se_modifica_tipo
+                    ),
+                    "documento_que_se_modifica_serie": self.documento_que_se_modifica_serie,
+                    "documento_que_se_modifica_numero": cstr(
+                        self.documento_que_se_modifica_numero
+                    ),
                 }
             )
 
-        if self.delivery_references:
+        if self.guias:
             payload["guias"] = [
                 apply_raw_payload_overrides(
                     {
@@ -211,10 +266,10 @@ class NubefactFacturacion(Document):
                     row.raw,
                     f"delivery references row #{row.idx}",
                 )
-                for row in self.delivery_references
+                for row in self.guias
             ]
 
-        if self.credit_installments:
+        if self.venta_al_credito:
             payload["venta_al_credito"] = [
                 apply_raw_payload_overrides(
                     {
@@ -225,10 +280,10 @@ class NubefactFacturacion(Document):
                     row.raw,
                     f"credit installments row #{row.idx}",
                 )
-                for row in self.credit_installments
+                for row in self.venta_al_credito
             ]
 
-        return apply_raw_payload_overrides(payload, self.raw, "invoice")
+        return apply_raw_payload_overrides(payload, self.json_crudo, "invoice")
 
     def _validate_required_fields(self):
         require_fields(
@@ -242,31 +297,31 @@ class NubefactFacturacion(Document):
 
         self._validate_required_child_rows(self.items, ITEM_REQUIRED_FIELDS, "Ítems")
         self._validate_required_child_rows(
-            self.delivery_references,
+            self.guias,
             DELIVERY_REFERENCE_REQUIRED_FIELDS,
             "Guías de entrega",
         )
         self._validate_required_child_rows(
-            self.credit_installments,
+            self.venta_al_credito,
             PAYMENT_INSTALLMENT_REQUIRED_FIELDS,
             "Cuotas de venta al crédito",
         )
 
-        if cstr(self.document_type) in {"3", "4"}:
+        if cstr(self.tipo_de_comprobante) in {"3", "4"}:
             require_fields(
                 self,
                 NOTE_REFERENCE_REQUIRED_FIELDS,
                 "Las notas de crédito/débito requieren campos de referencia del documento modificado.",
             )
 
-        if cstr(self.document_type) == "3":
+        if cstr(self.tipo_de_comprobante) == "3":
             require_fields(
                 self,
                 CREDIT_NOTE_REQUIRED_FIELDS,
                 "Las notas de crédito requieren un motivo.",
             )
 
-        if cstr(self.document_type) == "4":
+        if cstr(self.tipo_de_comprobante) == "4":
             require_fields(
                 self,
                 DEBIT_NOTE_REQUIRED_FIELDS,
@@ -291,25 +346,37 @@ class NubefactFacturacion(Document):
             return {}
 
         accepted_by_sunat = 1 if response.get("aceptada_por_sunat") else 0
-        number = response.get("numero") or self.number
+        number = response.get("numero") or self.numero
         title = self._compose_title(number)
 
         return {
-            "number": number,
+            "numero": number,
             "title": title,
             "status": "Aceptada" if accepted_by_sunat else "Pendiente de Aceptacion",
-            "accepted_by_sunat": accepted_by_sunat,
+            "aceptada_por_sunat": accepted_by_sunat,
             "last_sunat_check": now_datetime(),
-            "sunat_response_code": cstr(response.get("sunat_responsecode") or ""),
-            "sunat_response_message": cstr(response.get("sunat_description") or ""),
+            "sunat_responsecode": cstr(response.get("sunat_responsecode") or ""),
+            "sunat_description": cstr(response.get("sunat_description") or ""),
             "sunat_note": cstr(response.get("sunat_note") or ""),
             "sunat_soap_error": cstr(response.get("sunat_soap_error") or ""),
             "error_message": cstr(response.get("sunat_soap_error") or ""),
-            "link_url": cstr(response.get("enlace") or ""),
-            "pdf_url": cstr(response.get("enlace_del_pdf") or ""),
-            "xml_url": cstr(response.get("enlace_del_xml") or ""),
-            "cdr_url": cstr(response.get("enlace_del_cdr") or ""),
-            "qr_url": cstr(response.get("cadena_para_codigo_qr") or ""),
+            "enlace": cstr(response.get("enlace") or ""),
+            "enlace_del_pdf": cstr(response.get("enlace_del_pdf") or ""),
+            "enlace_del_xml": cstr(response.get("enlace_del_xml") or ""),
+            "enlace_del_cdr": cstr(response.get("enlace_del_cdr") or ""),
+            "cadena_para_codigo_qr": cstr(response.get("cadena_para_codigo_qr") or ""),
+            "pdf_zip_base64": cstr(response.get("pdf_zip_base64") or ""),
+            "xml_zip_base64": cstr(response.get("xml_zip_base64") or ""),
+            "cdr_zip_base64": cstr(response.get("cdr_zip_base64") or ""),
+            "codigo_hash": cstr(response.get("codigo_hash") or ""),
+            "codigo_de_barras": cstr(response.get("codigo_de_barras") or ""),
+            "sunat_ticket_numero": cstr(
+                response.get("sunat_ticket_numero")
+                or response.get("ticket")
+                or response.get("ticket_numero")
+                or response.get("numero_ticket")
+                or ""
+            ),
         }
 
     def _extract_void_response_values(self, response: Any) -> dict[str, Any]:
@@ -325,13 +392,13 @@ class NubefactFacturacion(Document):
         accepted = 1 if response.get("aceptada_por_sunat") else 0
 
         return {
-            "voided": 1 if accepted else 0,
-            "void_date": now_datetime().date(),
-            "void_ticket": ticket,
-            "void_status": "Aceptada" if accepted else "Pendiente",
+            "anulado": 1 if accepted else 0,
+            "fecha_de_anulacion": now_datetime().date(),
+            "sunat_ticket_numero": ticket,
+            "estado_de_anulacion": "Aceptada" if accepted else "Pendiente",
             "status": "Anulada" if accepted else self.status,
-            "sunat_response_code": cstr(response.get("sunat_responsecode") or ""),
-            "sunat_response_message": cstr(response.get("sunat_description") or ""),
+            "sunat_responsecode": cstr(response.get("sunat_responsecode") or ""),
+            "sunat_description": cstr(response.get("sunat_description") or ""),
             "sunat_note": cstr(response.get("sunat_note") or ""),
             "sunat_soap_error": cstr(response.get("sunat_soap_error") or ""),
             "error_message": cstr(response.get("sunat_soap_error") or ""),
@@ -362,7 +429,7 @@ def send_to_nubefact(name: str):
         error_message = cstr(exc)
         values = {
             "status": "Error",
-            "accepted_by_sunat": 0,
+            "aceptada_por_sunat": 0,
             "last_sunat_check": now_datetime(),
             "error_message": error_message,
         }
@@ -391,13 +458,13 @@ def void_in_nubefact(name: str, reason: str):
             "Solo los comprobantes en estado Aceptada o Pendiente de Aceptacion pueden anularse."
         )
 
-    if cint(doc.voided):
+    if cint(doc.anulado):
         frappe.throw("Este comprobante ya está anulado.")
 
     if not cstr(reason or "").strip():
         frappe.throw("Se requiere un motivo de anulación.")
 
-    if not doc.number:
+    if not doc.numero:
         frappe.throw(
             "No se puede anular el comprobante porque falta el número de documento."
         )
@@ -406,25 +473,25 @@ def void_in_nubefact(name: str, reason: str):
         response = make_request(
             payload={
                 "operacion": "generar_anulacion",
-                "tipo_de_comprobante": cint(doc.document_type),
-                "serie": doc.series,
-                "numero": cstr(doc.number),
+                "tipo_de_comprobante": cint(doc.tipo_de_comprobante),
+                "serie": doc.serie,
+                "numero": cstr(doc.numero),
                 "motivo": reason,
-                "codigo_unico": doc.name,
+                "codigo_unico": doc.codigo_unico or doc.name,
             },
             local=doc.local,
             reference_invoice=doc.name,
         )
         values = doc._extract_void_response_values(response)
         if values:
-            values["void_reason"] = reason
+            values["motivo"] = reason
             _save_response_status(doc, values)
     except Exception as exc:
         frappe.db.rollback()
         values = {
             "status": "Error",
             "error_message": cstr(exc),
-            "void_status": "Rechazada",
+            "estado_de_anulacion": "Rechazada",
             "last_sunat_check": now_datetime(),
         }
         _save_response_status(doc, values)
@@ -436,7 +503,7 @@ def void_in_nubefact(name: str, reason: str):
 def poll_pending_invoices():
     pending_names = frappe.get_all(
         "Nubefact Facturacion",
-        filters={"status": "Pendiente de Aceptacion", "accepted_by_sunat": 0},
+        filters={"status": "Pendiente de Aceptacion", "aceptada_por_sunat": 0},
         pluck="name",
         limit=20,
         order_by="modified asc",
@@ -471,7 +538,7 @@ def _request_extract_and_save_response(
 
 def _refresh_sunat_status_doc(doc: NubefactFacturacion) -> dict[str, Any]:
 
-    if not doc.number:
+    if not doc.numero:
         frappe.throw(
             "No se puede actualizar el estado SUNAT porque falta el número de documento."
         )
@@ -480,9 +547,9 @@ def _refresh_sunat_status_doc(doc: NubefactFacturacion) -> dict[str, Any]:
         doc,
         payload={
             "operacion": "consultar_comprobante",
-            "tipo_de_comprobante": cint(doc.document_type),
-            "serie": doc.series,
-            "numero": cstr(doc.number),
+            "tipo_de_comprobante": cint(doc.tipo_de_comprobante),
+            "serie": doc.serie,
+            "numero": cstr(doc.numero),
         },
     )
 

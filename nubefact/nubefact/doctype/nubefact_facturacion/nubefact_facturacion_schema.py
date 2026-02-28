@@ -12,15 +12,15 @@ Ruta: .agents/skills/nubefact-api-implementation/references/
 """
 
 REQUIRED_FIELDS = [
-    "document_type",
-    "series",
-    "issue_date",
-    "client_document_type",
-    "client_document_number",
-    "client_name",
-    "client_address",
-    "currency",
-    "igv_percentage",
+    "tipo_de_comprobante",
+    "serie",
+    "fecha_de_emision",
+    "cliente_tipo_de_documento",
+    "cliente_numero_de_documento",
+    "cliente_denominacion",
+    "cliente_direccion",
+    "moneda",
+    "porcentaje_de_igv",
     "total_igv",
     "total",
 ]
@@ -43,10 +43,10 @@ DELIVERY_REFERENCE_REQUIRED_FIELDS = ["guide_type", "guide_series_number"]
 PAYMENT_INSTALLMENT_REQUIRED_FIELDS = ["installment_number", "payment_date", "amount"]
 
 NOTE_REFERENCE_REQUIRED_FIELDS = [
-    "base_document_type",
-    "base_document_series",
-    "base_document_number",
+    "documento_que_se_modifica_tipo",
+    "documento_que_se_modifica_serie",
+    "documento_que_se_modifica_numero",
 ]
 
-CREDIT_NOTE_REQUIRED_FIELDS = ["credit_note_reason"]
-DEBIT_NOTE_REQUIRED_FIELDS = ["debit_note_reason"]
+CREDIT_NOTE_REQUIRED_FIELDS = ["tipo_de_nota_de_credito"]
+DEBIT_NOTE_REQUIRED_FIELDS = ["tipo_de_nota_de_debito"]
