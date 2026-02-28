@@ -38,6 +38,15 @@ Minimal skill scaffold for NubeFact API work in this repository.
 - `references/doctype-nubefact-invoice-schema.md` — `Nubefact Invoice` DocType schema/specification.
 - `references/doctype-nubefact-invoice-guide.md` — `Nubefact Invoice` workflow guide (how to fill fields correctly by scenario).
 
+### GRE API Structure Tables (from `assets/gre-manual-google-doc.md`)
+
+- `references/gre-api-structure-header.md` — ESTRUCTURA PARA GENERAR GUÍA DE REMISIÓN REMITENTE — CABECERA DEL DOCUMENTO.
+- `references/gre-api-structure-items.md` — PARA ITEMS O LÍNEAS DEL DOCUMENTO.
+- `references/gre-api-structure-related-documents.md` — PARA DOCUMENTOS RELACIONADOS AL DOCUMENTO.
+- `references/gre-api-structure-secondary-vehicles.md` — PARA VEHÍCULOS SECUNDARIOS (opcional, máx. 2).
+- `references/gre-api-structure-secondary-drivers.md` — PARA CONDUCTORES SECUNDARIOS (opcional, máx. 2).
+- `references/gre-api-structure-response.md` — ESTRUCTURA DE RESPUESTA DE NUBEFACT.
+
 ## Example assets
 
 All example files in `assets/` folder:
