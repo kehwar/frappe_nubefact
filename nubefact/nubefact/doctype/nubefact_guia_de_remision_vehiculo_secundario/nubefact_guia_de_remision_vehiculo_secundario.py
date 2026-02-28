@@ -5,4 +5,9 @@ from frappe.model.document import Document
 
 
 class NubefactGuiadeRemisionVehiculoSecundario(Document):
+    """Vehículos secundarios utilizados en el transporte (remolques, carretas, etc.).
+
+    Referencia GRE API: .agents/skills/nubefact-api-implementation/references/gre-api-estructura-vehiculos-secundarios.md
+    """
+
     pass
