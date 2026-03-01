@@ -11,6 +11,7 @@ This index describes the canonical NubeFact Frappe model and links to per-DocTyp
 | Nubefact Local | ✅ Implemented | Active credentials container per local/company. Uses `ruta_api` + `token_api`. |
 | Nubefact API Log | ✅ Implemented | Request/response logging active. Uses `status` (`Success`/`Error`) and script-based naming from `request_timestamp`. Uses `local` and `reference_invoice` links. |
 | Request API Utility (`make_request`) | ✅ Implemented | Sends POST requests, handles errors, and writes API log entries. |
+| Nubefact Guia De Remision | ✅ Implemented | Active submit/query flow. `enviar_a_nubefact`, `refrescar_estado_sunat`, and `consultar_guias_pendientes` are fully implemented. All GRE API fields including `tuc_vehiculo_principal`, `conductor_denominacion`, `mtc`, `sunat_envio_indicador`, subcontractor, and service payer fields are present. Response fields stored: `enlace`, `enlace_del_pdf`, `enlace_del_xml`, `enlace_del_cdr`, `cadena_para_codigo_qr`. |
 | Nubefact Facturacion | ✅ Implemented | Submit/query/void flow active. `send_to_nubefact`, `refresh_sunat_status`, `void_in_nubefact`, and `poll_pending_invoices` are implemented. Child tables: Item, Guia Relacionada, Cuota. |
 
 ---
@@ -18,7 +19,8 @@ This index describes the canonical NubeFact Frappe model and links to per-DocTyp
 ## DocType References
 
 1. [Nubefact Local](./doctype-nubefact-local.md)
-2. [Nubefact Facturacion](./doctype-nubefact-facturacion.md)
+2. [Nubefact Guia De Remision](./doctype-nubefact-guia-de-remision.md)
+3. [Nubefact Facturacion](./doctype-nubefact-facturacion.md)
 
 ---
 
