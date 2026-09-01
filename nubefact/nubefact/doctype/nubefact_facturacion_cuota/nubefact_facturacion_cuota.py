@@ -7,7 +7,7 @@ from frappe.model.document import Document
 class NubefactFacturacionCuota(Document):
     """Cuotas de pago para ventas al crédito.
 
-    Referencia CPE API: .agents/skills/nubefact-api-implementation/references/cpe-api-estructura-venta-credito.md
+    Referencia CPE API: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
     """
 
     pass

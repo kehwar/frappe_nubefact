@@ -9,7 +9,7 @@ Referencias GRE API:
 - Vehículos secundarios: gre-api-estructura-vehiculos-secundarios.md
 - Conductores secundarios: gre-api-estructura-conductores-secundarios.md
 
-Ruta: .agents/skills/nubefact-api-implementation/references/
+Ruta: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
 """
 
 

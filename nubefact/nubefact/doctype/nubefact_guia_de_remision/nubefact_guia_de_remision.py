@@ -64,7 +64,7 @@ class NubefactGuiaDeRemision(Document):
     - Conductores secundarios: gre-api-estructura-conductores-secundarios.md
     - Respuesta de consulta: gre-api-estructura-respuesta.md
 
-    Ruta: .agents/skills/nubefact-api-implementation/references/
+    Ruta: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
     """
 
     def autoname(self):

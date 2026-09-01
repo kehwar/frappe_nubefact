@@ -8,7 +8,7 @@ Referencias CPE API:
 - Guías relacionadas: cpe-api-estructura-guias.md
 - Cuotas (venta al crédito): cpe-api-estructura-venta-credito.md
 
-Ruta: .agents/skills/nubefact-api-implementation/references/
+Ruta: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
 """
 
 REQUIRED_FIELDS = [

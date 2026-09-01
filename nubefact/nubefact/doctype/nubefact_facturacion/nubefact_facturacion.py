@@ -66,7 +66,7 @@ class NubefactFacturacion(Document):
     - Generacion de anulacion: cpe-api-estructura-anulacion-generar.md
     - Respuesta de anulacion: cpe-api-estructura-anulacion-respuesta.md
 
-    Ruta: .agents/skills/nubefact-api-implementation/references/
+    Ruta: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
     """
 
     def autoname(self):
