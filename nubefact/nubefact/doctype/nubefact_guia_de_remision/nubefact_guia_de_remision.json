@@ -13,6 +13,7 @@
   "columna_documento",
   "fecha_de_emision",
   "fecha_de_inicio_de_traslado",
+  "fecha_de_entrega_al_transportista",
   "local",
   "seccion_cliente",
   "cliente_tipo_de_documento",
@@ -94,13 +95,19 @@
   "sunat_description",
   "sunat_note",
   "sunat_soap_error",
+  "nota_importante",
   "error_message",
   "columna_sunat",
   "enlace",
   "enlace_del_pdf",
   "enlace_del_xml",
   "enlace_del_cdr",
-  "cadena_para_codigo_qr"
+  "pdf_zip_base64",
+  "xml_zip_base64",
+  "cdr_zip_base64",
+  "cadena_para_codigo_qr",
+  "codigo_hash",
+  "codigo_de_barras"
  ],
  "fields": [
   {
@@ -149,7 +156,8 @@
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "N\u00famero",
-   "no_copy": 1
+   "no_copy": 1,
+   "reqd": 1
   },
   {
    "fieldname": "columna_documento",
@@ -165,6 +173,13 @@
    "fieldname": "fecha_de_inicio_de_traslado",
    "fieldtype": "Date",
    "label": "Fecha de Inicio de Traslado"
+  },
+  {
+   "description": "Obligatoria para GRE Remitente con transporte p\u00fablico. El ejemplo oficial tipo 8 tambi\u00e9n la incluye, por lo que se conserva como opcional para ese tipo.",
+   "fieldname": "fecha_de_entrega_al_transportista",
+   "fieldtype": "Date",
+   "label": "Fecha de Entrega de Bienes al Transportista",
+   "mandatory_depends_on": "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'"
   },
   {
    "fieldname": "seccion_cliente",
@@ -241,7 +256,7 @@
    "fieldname": "motivo_de_traslado",
    "fieldtype": "Select",
    "label": "Motivo de Traslado",
-   "options": "01\n02\n04\n05\n06\n07\n08\n09\n13\n14\n18\n19"
+   "options": "01\n02\n03\n04\n05\n06\n07\n08\n09\n13\n14\n17\n18"
   },
   {
    "fieldname": "motivo_de_traslado_otros_descripcion",
@@ -284,7 +299,7 @@
    "fieldname": "transportista_documento_tipo",
    "fieldtype": "Select",
    "label": "Transportista Documento Tipo",
-   "options": "6\n1\n4\n7\nA\n0"
+   "options": "6"
   },
   {
    "fieldname": "transportista_documento_numero",
@@ -315,7 +330,7 @@
    "fieldname": "conductor_documento_tipo",
    "fieldtype": "Select",
    "label": "Conductor Documento Tipo",
-   "options": "1\n4\n7"
+   "options": "1\n4\n7\nA\n0"
   },
   {
    "fieldname": "conductor_documento_numero",
@@ -355,7 +370,7 @@
    "fieldname": "sunat_envio_indicador",
    "fieldtype": "Select",
    "label": "SUNAT Env\u00edo Indicador",
-   "options": "\n01\n02\n03\n04\n05\n06"
+   "options": "\n01\n02\n03\n04\n05\n06\n07"
   },
   {
    "fieldname": "seccion_subcontratador",
@@ -459,15 +474,16 @@
   },
   {
    "default": "0",
+   "description": "Escape hatch avanzado: omite todas las validaciones GRE de campos, formatos y aplicabilidad.",
    "fieldname": "skip_field_validation",
    "fieldtype": "Check",
-   "label": "Omitir Validaci\u00f3n de Campos Obligatorios"
+   "label": "Omitir Todas las Validaciones GRE"
   },
   {
    "fieldname": "formato_de_pdf",
    "fieldtype": "Select",
    "label": "Formato de PDF",
-   "options": "\nA4\nA5\nTICKET"
+   "options": "\nA4\nTICKET"
   },
   {
    "fieldname": "seccion_items",
@@ -577,6 +593,13 @@
    "read_only": 1
   },
   {
+   "fieldname": "nota_importante",
+   "fieldtype": "Text",
+   "label": "Nota Importante de NubeFact",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "error_message",
    "fieldtype": "Text",
    "label": "Mensaje de Error",
@@ -620,9 +643,44 @@
    "read_only": 1
   },
   {
+   "fieldname": "pdf_zip_base64",
+   "fieldtype": "Long Text",
+   "label": "PDF ZIP Base64",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "xml_zip_base64",
+   "fieldtype": "Long Text",
+   "label": "XML ZIP Base64",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cdr_zip_base64",
+   "fieldtype": "Long Text",
+   "label": "CDR ZIP Base64",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "cadena_para_codigo_qr",
    "fieldtype": "Data",
    "label": "Cadena para C\u00f3digo QR",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "codigo_hash",
+   "fieldtype": "Data",
+   "label": "C\u00f3digo Hash",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "codigo_de_barras",
+   "fieldtype": "Long Text",
+   "label": "C\u00f3digo de Barras",
    "no_copy": 1,
    "read_only": 1
   },

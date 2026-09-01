@@ -18,7 +18,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Documento Tipo",
-   "options": "1\n4\n7"
+   "options": "1\n4\n7\nA\n0"
   },
   {
    "fieldname": "documento_numero",

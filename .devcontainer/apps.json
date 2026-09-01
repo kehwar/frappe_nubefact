@@ -1,0 +1,16 @@
+[
+  {
+    "app_name": "frappe",
+    "repository_directory": "frappe",
+    "url": "https://github.com/frappe/frappe.git",
+    "branch": "version-15",
+    "revision": "edae775dd36b6c4ad7acab10230262bd74040765"
+  },
+  {
+    "app_name": "erpnext",
+    "repository_directory": "erpnext",
+    "url": "https://github.com/frappe/erpnext.git",
+    "branch": "version-15",
+    "revision": "945e825bee3d0d645f6cb59bcaab90fcbfb98ce3"
+  }
+]

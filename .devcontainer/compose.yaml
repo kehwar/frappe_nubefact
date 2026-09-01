@@ -1,0 +1,81 @@
+name: ${COMPOSE_PROJECT_NAME:?Set COMPOSE_PROJECT_NAME in .devcontainer/.env}
+
+services:
+  mariadb:
+    image: docker.io/mariadb:10.6@sha256:92e50059ea0a5965a33ef751970eab37d421b91ebbd01ac909039cffe159e574
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+      - --max-allowed-packet=512M
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .devcontainer/.env}
+      MARIADB_ROOT_HOST: "%"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -uroot -p$$MARIADB_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  redis-cache:
+    image: docker.io/redis:7-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis-queue:
+    image: docker.io/redis:7-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  developer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BENCH_IMAGE: ${BENCH_IMAGE:-docker.io/frappe/bench:latest@sha256:f0b9ec3dd99187af91e83787847dcb0c6c178d551cd22d3f52814d69604d8b25}
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.10.13}
+        NODE_VERSION: ${NODE_VERSION:-18.20.8}
+    init: true
+    command: sleep infinity
+    working_dir: ${HOST_WORKSPACE_PATH:?Set HOST_WORKSPACE_PATH in .devcontainer/.env}
+    environment:
+      SHELL: /bin/bash
+      BENCH_ROOT: /workspace/development/frappe-bench
+      APP_SOURCE: ${HOST_WORKSPACE_PATH:?Set HOST_WORKSPACE_PATH in .devcontainer/.env}
+      SITE_NAME: ${SITE_NAME:-development.localhost}
+      DB_HOST: mariadb
+      DB_PORT: "3306"
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .devcontainer/.env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .devcontainer/.env}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+    volumes:
+      - bench-data:/workspace/development
+      - type: bind
+        source: ${HOST_WORKSPACE_PATH:?Set HOST_WORKSPACE_PATH in .devcontainer/.env}
+        target: ${HOST_WORKSPACE_PATH:?Set HOST_WORKSPACE_PATH in .devcontainer/.env}
+        consistency: cached
+      - type: bind
+        source: ${HOST_WORKSPACE_PATH:?Set HOST_WORKSPACE_PATH in .devcontainer/.env}
+        target: /workspace/development/frappe-bench/apps/nubefact
+        consistency: cached
+    ports:
+      - "8000:8000"
+
+volumes:
+  bench-data:
+  mariadb-data:
