@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "title",
   "company",
   "local",
   "column_break_series",
@@ -14,6 +15,12 @@
   "ultimo_numero_asignado"
  ],
  "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Título",
+   "read_only": 1
+  },
   {
    "fieldname": "company",
    "fieldtype": "Link",
@@ -35,7 +42,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Código de tipo de comprobante SUNAT/NubeFact.",
+   "description": "Código de tipo de comprobante NubeFact.",
    "fieldname": "tipo_de_comprobante",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -90,7 +97,9 @@
   }
  ],
  "sort_field": "modified",
+ "show_title_field_in_link": 1,
  "sort_order": "DESC",
  "states": [],
+ "title_field": "title",
  "track_changes": 1
 }

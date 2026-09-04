@@ -27,9 +27,24 @@ SERIES_PREFIXES_BY_DOCUMENT_TYPE = {
 	"7": "T",
 	"8": "V",
 }
+# NubeFact uses provider-specific document type codes; titles use SUNAT Catálogo 01 codes.
+SUNAT_DOCUMENT_TYPE_BY_NUBEFACT_TYPE = {
+	"1": "01",  # Factura
+	"2": "03",  # Boleta de venta
+	"3": "07",  # Nota de crédito
+	"4": "08",  # Nota de débito
+	"7": "09",  # Guía de remisión remitente
+	"8": "31",  # Guía de remisión transportista
+}
 SUPPORTED_DOCTYPES = set(DOCTYPE_BY_DOCUMENT_TYPE.values())
 ISSUABLE_STATUSES = {"Borrador", "Error"}
 MAX_DOCUMENT_NUMBER = 99_999_999
+
+
+def compose_series_title(company: str, nubefact_document_type: str, series: str) -> str:
+	company_abbr = cstr(frappe.get_cached_value("Company", company, "abbr")).strip()
+	sunat_document_type = SUNAT_DOCUMENT_TYPE_BY_NUBEFACT_TYPE[cstr(nubefact_document_type).strip()]
+	return f"{company_abbr}-{sunat_document_type}-{cstr(series).strip().upper()}"
 
 
 class NubefactSeries(Document):
@@ -47,6 +62,7 @@ class NubefactSeries(Document):
 	def validate(self):
 		self._normalize_values()
 		self._validate_values()
+		self.title = compose_series_title(self.company, self.tipo_de_comprobante, self.serie)
 		self._validate_key_is_immutable()
 		self._validate_next_number_cannot_reuse_an_issued_number()
 
@@ -65,18 +81,14 @@ class NubefactSeries(Document):
 
 		expected_prefixes = SERIES_PREFIXES_BY_DOCUMENT_TYPE[self.tipo_de_comprobante]
 		if not re.fullmatch(rf"[{expected_prefixes}][A-Z0-9]{{3}}", self.serie):
-			frappe.throw(
-				f"La serie no corresponde al tipo de comprobante {self.tipo_de_comprobante}."
-			)
+			frappe.throw(f"La serie no corresponde al tipo de comprobante {self.tipo_de_comprobante}.")
 
 		local_company = frappe.db.get_value("Nubefact Local", self.local, "company")
 		if local_company != self.company:
 			frappe.throw("La compañía de la serie debe coincidir con la compañía del local.")
 
 		if self.is_new() and frappe.db.exists(self.doctype, self.name):
-			frappe.throw(
-				"Ya existe una Serie NubeFact para esta compañía, tipo de comprobante y serie."
-			)
+			frappe.throw("Ya existe una Serie NubeFact para esta compañía, tipo de comprobante y serie.")
 
 		duplicate = frappe.db.exists(
 			"Nubefact Series",
@@ -88,9 +100,7 @@ class NubefactSeries(Document):
 			},
 		)
 		if duplicate:
-			frappe.throw(
-				"Ya existe una Serie NubeFact para esta compañía, tipo de comprobante y serie."
-			)
+			frappe.throw("Ya existe una Serie NubeFact para esta compañía, tipo de comprobante y serie.")
 
 	def _validate_key_is_immutable(self):
 		if self.is_new():

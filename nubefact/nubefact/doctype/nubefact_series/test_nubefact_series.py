@@ -7,7 +7,10 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import random_string
 
-from nubefact.nubefact.doctype.nubefact_series.nubefact_series import allocate_document_number
+from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
+	allocate_document_number,
+	compose_series_title,
+)
 
 
 class TestNubefactSeries(FrappeTestCase):
@@ -26,6 +29,23 @@ class TestNubefactSeries(FrappeTestCase):
 			}
 		).insert()
 
+	def test_title_uses_sunat_document_type_codes(self):
+		company = self.make_company()
+		company_abbr = frappe.get_cached_value("Company", company, "abbr")
+		for nubefact_code, sunat_code, series in (
+			("1", "01", "F001"),
+			("2", "03", "B001"),
+			("3", "07", "F001"),
+			("4", "08", "F001"),
+			("7", "09", "T001"),
+			("8", "31", "V001"),
+		):
+			with self.subTest(nubefact_code=nubefact_code):
+				self.assertEqual(
+					compose_series_title(company, nubefact_code, series),
+					f"{company_abbr}-{sunat_code}-{series}",
+				)
+
 	def test_company_document_type_and_series_are_unique(self):
 		company = self.make_company()
 		local = self.make_local(company)
@@ -39,6 +59,8 @@ class TestNubefactSeries(FrappeTestCase):
 		}
 		series = frappe.get_doc(values).insert()
 
+		company_abbr = frappe.get_cached_value("Company", company, "abbr")
+		self.assertEqual(series.title, f"{company_abbr}-01-{series.serie}")
 		self.assertEqual(series.numero, 41)
 		with self.assertRaises(frappe.ValidationError):
 			frappe.get_doc({**values, "local": self.make_local(company).name}).insert()
@@ -62,7 +84,9 @@ class TestNubefactSeries(FrappeTestCase):
 						"tipo_de_comprobante": "7",
 						"serie": f"T{random_string(3).upper()}",
 					}
-				).insert().name,
+				)
+				.insert()
+				.name,
 				"skip_field_validation": 1,
 			}
 		).insert()
@@ -137,7 +161,9 @@ class TestNubefactSeries(FrappeTestCase):
 
 	def test_local_must_belong_to_company(self):
 		local = self.make_local()
-		other_company = frappe.get_all("Company", filters={"name": ["!=", local.company]}, pluck="name", limit=1)
+		other_company = frappe.get_all(
+			"Company", filters={"name": ["!=", local.company]}, pluck="name", limit=1
+		)
 		if not other_company:
 			self.skipTest("A second Company fixture is required")
 
