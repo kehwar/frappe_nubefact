@@ -1,7 +1,6 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "hash",
  "creation": "2026-02-26 21:15:09.310189",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -75,7 +74,7 @@
    "fieldname": "title",
    "fieldtype": "Data",
    "label": "Titulo",
-   "unique": 1
+   "reqd": 1
   },
   {
    "fieldname": "api_section",
@@ -90,7 +89,8 @@
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Compa\u00f1ia",
-   "options": "Company"
+   "options": "Company",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
@@ -105,7 +105,7 @@
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Local",
- "naming_rule": "Random",
+ "naming_rule": "By script",
  "owner": "Administrator",
  "permissions": [
   {
