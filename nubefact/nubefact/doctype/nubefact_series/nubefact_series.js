@@ -1,2 +1,12 @@
 // Copyright (c) 2026, Erick W.R. and contributors
 // For license information, please see license.txt
+
+frappe.ui.form.on("Nubefact Series", {
+	setup(frm) {
+		frm.set_query("local", () => ({
+			filters: {
+				company: frm.doc.company,
+			},
+		}));
+	},
+});
