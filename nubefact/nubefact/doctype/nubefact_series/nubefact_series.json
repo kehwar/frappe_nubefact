@@ -18,14 +18,14 @@
   {
    "fieldname": "title",
    "fieldtype": "Data",
-   "label": "Título",
+   "label": "T\u00edtulo",
    "read_only": 1
   },
   {
    "fieldname": "company",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Compañía",
+   "label": "Compa\u00f1\u00eda",
    "options": "Company",
    "reqd": 1
   },
@@ -42,7 +42,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Código de tipo de comprobante NubeFact.",
+   "description": "C\u00f3digo de tipo de comprobante NubeFact.",
    "fieldname": "tipo_de_comprobante",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -59,11 +59,11 @@
   },
   {
    "default": "1",
-   "description": "Próximo número que será asignado. Use este campo para establecer el número inicial.",
+   "description": "Pr\u00f3ximo n\u00famero que ser\u00e1 asignado. Use este campo para establecer el n\u00famero inicial.",
    "fieldname": "numero",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Próximo Número",
+   "label": "Pr\u00f3ximo N\u00famero",
    "reqd": 1
   },
   {
@@ -71,12 +71,22 @@
    "fieldname": "ultimo_numero_asignado",
    "fieldtype": "Int",
    "hidden": 1,
-   "label": "Último Número Asignado",
+   "label": "\u00daltimo N\u00famero Asignado",
    "read_only": 1
   }
  ],
  "grid_page_length": 50,
- "modified": "2026-09-03 00:00:00",
+ "links": [
+  {
+   "link_doctype": "Nubefact Guia De Remision",
+   "link_fieldname": "nubefact_series"
+  },
+  {
+   "link_doctype": "Nubefact Facturacion",
+   "link_fieldname": "nubefact_series"
+  }
+ ],
+ "modified": "2026-09-04 17:09:35.329044",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Series",
@@ -96,8 +106,10 @@
    "write": 1
   }
  ],
- "sort_field": "modified",
+ "row_format": "Dynamic",
+ "search_fields": "company, local",
  "show_title_field_in_link": 1,
+ "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
  "title_field": "title",
