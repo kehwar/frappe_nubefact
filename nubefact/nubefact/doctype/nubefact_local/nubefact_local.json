@@ -95,8 +95,13 @@
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-02-27 22:21:13.428546",
+ "links": [
+  {
+   "link_doctype": "Nubefact Series",
+   "link_fieldname": "local"
+  }
+ ],
+ "modified": "2026-09-04 16:48:24.957908",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Local",
