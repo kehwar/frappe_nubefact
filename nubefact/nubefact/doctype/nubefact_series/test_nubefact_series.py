@@ -46,6 +46,38 @@ class TestNubefactSeries(FrappeTestCase):
 					f"{company_abbr}-{sunat_code}-{series}",
 				)
 
+	def test_name_and_title_are_automatic_on_creation_and_editable_later(self):
+		company = self.make_company()
+		local = self.make_local(company)
+		series = frappe.get_doc(
+			{
+				"doctype": "Nubefact Series",
+				"title": "Ignored title on creation",
+				"company": company,
+				"local": local.name,
+				"tipo_de_comprobante": "1",
+				"serie": f"F{random_string(3).upper()}",
+				"numero": 1,
+			}
+		).insert()
+
+		company_abbr = frappe.get_cached_value("Company", company, "abbr")
+		automatic_title = f"{company_abbr}-01-{series.serie}"
+		self.assertEqual(series.title, automatic_title)
+		self.assertEqual(series.name, automatic_title)
+
+		custom_title = f"Custom title {random_string(8)}"
+		series.title = custom_title
+		series.save()
+		self.assertEqual(series.title, custom_title)
+		self.assertEqual(series.name, automatic_title)
+
+		custom_name = f"Custom series {random_string(8)}"
+		frappe.rename_doc(series.doctype, series.name, custom_name)
+		series = frappe.get_doc(series.doctype, custom_name)
+		self.assertEqual(series.name, custom_name)
+		self.assertEqual(series.title, custom_title)
+
 	def test_company_document_type_and_series_are_unique(self):
 		company = self.make_company()
 		local = self.make_local(company)
@@ -61,6 +93,7 @@ class TestNubefactSeries(FrappeTestCase):
 
 		company_abbr = frappe.get_cached_value("Company", company, "abbr")
 		self.assertEqual(series.title, f"{company_abbr}-01-{series.serie}")
+		self.assertEqual(series.name, series.title)
 		self.assertEqual(series.numero, 41)
 		with self.assertRaises(frappe.ValidationError):
 			frappe.get_doc({**values, "local": self.make_local(company).name}).insert()

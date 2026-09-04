@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 from typing import Any
 
@@ -54,15 +53,17 @@ class NubefactSeries(Document):
 	lets an administrator enter the desired initial number directly.
 	"""
 
-	def autoname(self):
+	def before_insert(self):
 		self._normalize_values()
-		key = "\x1f".join((self.company, self.tipo_de_comprobante, self.serie))
-		self.name = hashlib.sha256(key.encode()).hexdigest()
+		if self.tipo_de_comprobante in SUNAT_DOCUMENT_TYPE_BY_NUBEFACT_TYPE:
+			self.title = compose_series_title(self.company, self.tipo_de_comprobante, self.serie)
+
+	def autoname(self):
+		self.name = cstr(self.title).strip()
 
 	def validate(self):
 		self._normalize_values()
 		self._validate_values()
-		self.title = compose_series_title(self.company, self.tipo_de_comprobante, self.serie)
 		self._validate_key_is_immutable()
 		self._validate_next_number_cannot_reuse_an_issued_number()
 

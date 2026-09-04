@@ -10,15 +10,18 @@
   "company",
   "local",
   "nubefact_series",
+  "fecha_de_emision",
+  "columna_documento",
   "tipo_de_comprobante",
+  "tipo_de_transporte",
+  "column_break_bglr",
   "serie",
   "numero",
   "numero_asignado_automaticamente",
-  "columna_documento",
-  "fecha_de_emision",
-  "fecha_de_inicio_de_traslado",
-  "fecha_de_entrega_al_transportista",
+  "motivo_de_traslado",
+  "motivo_de_traslado_otros_descripcion",
   "seccion_cliente",
+  "column_break_meok",
   "cliente_tipo_de_documento",
   "cliente_numero_de_documento",
   "cliente_denominacion",
@@ -27,15 +30,10 @@
   "cliente_email",
   "cliente_email_1",
   "cliente_email_2",
-  "seccion_destinatario",
-  "destinatario_documento_tipo",
-  "destinatario_documento_numero",
-  "destinatario_denominacion",
   "seccion_traslado",
-  "motivo_de_traslado",
-  "motivo_de_traslado_otros_descripcion",
+  "fecha_de_entrega_al_transportista",
+  "fecha_de_inicio_de_traslado",
   "documento_relacionado_codigo",
-  "tipo_de_transporte",
   "peso_bruto_total",
   "peso_bruto_unidad_de_medida",
   "numero_de_bultos",
@@ -55,16 +53,10 @@
   "conductor_numero_licencia",
   "mtc",
   "sunat_envio_indicador",
-  "seccion_subcontratador",
-  "subcontratador_documento_tipo",
-  "subcontratador_documento_numero",
-  "columna_subcontratador",
-  "subcontratador_denominacion",
-  "seccion_pagador_servicio",
-  "pagador_servicio_documento_tipo_identidad",
-  "pagador_servicio_documento_numero_identidad",
-  "columna_pagador_servicio",
-  "pagador_servicio_denominacion",
+  "seccion_documentos_relacionados",
+  "documento_relacionado",
+  "seccion_items",
+  "items",
   "seccion_origen_destino",
   "punto_de_partida_ubigeo",
   "punto_de_partida_direccion",
@@ -73,10 +65,6 @@
   "punto_de_llegada_ubigeo",
   "punto_de_llegada_direccion",
   "punto_de_llegada_codigo_establecimiento_sunat",
-  "seccion_items",
-  "items",
-  "seccion_documentos_relacionados",
-  "documento_relacionado",
   "seccion_vehiculos_secundarios",
   "vehiculos_secundarios",
   "seccion_conductores_secundarios",
@@ -110,7 +98,22 @@
   "cdr_zip_base64",
   "cadena_para_codigo_qr",
   "codigo_hash",
-  "codigo_de_barras"
+  "codigo_de_barras",
+  "tab_transportista",
+  "seccion_destinatario",
+  "destinatario_documento_tipo",
+  "destinatario_documento_numero",
+  "destinatario_denominacion",
+  "seccion_subcontratador",
+  "subcontratador_documento_tipo",
+  "subcontratador_documento_numero",
+  "columna_subcontratador",
+  "subcontratador_denominacion",
+  "seccion_pagador_servicio",
+  "pagador_servicio_documento_tipo_identidad",
+  "pagador_servicio_documento_numero_identidad",
+  "columna_pagador_servicio",
+  "pagador_servicio_denominacion"
  ],
  "fields": [
   {
@@ -125,13 +128,13 @@
    "in_list_view": 1,
    "label": "Estado",
    "no_copy": 1,
-    "options": "Borrador\nEnviando\nPendiente de Aceptacion\nAceptada\nError",
+   "options": "Borrador\nEnviando\nPendiente de Aceptacion\nAceptada\nError",
    "read_only": 1
   },
   {
    "fieldname": "company",
    "fieldtype": "Link",
-   "label": "Compañía",
+   "label": "Compa\u00f1\u00eda",
    "options": "Company"
   },
   {
@@ -141,11 +144,12 @@
    "options": "Nubefact Local"
   },
   {
-   "description": "Controla la serie y asigna automáticamente el número al emitir.",
+   "description": "Controla la serie y asigna autom\u00e1ticamente el n\u00famero al emitir.",
    "fieldname": "nubefact_series",
    "fieldtype": "Link",
    "label": "Serie NubeFact",
-   "options": "Nubefact Series"
+   "options": "Nubefact Series",
+   "search_index": 1
   },
   {
    "fieldname": "tipo_de_comprobante",
@@ -169,7 +173,7 @@
    "read_only": 1
   },
   {
-   "description": "Se asigna automáticamente al emitir el documento en NubeFact.",
+   "description": "Se asigna autom\u00e1ticamente al emitir el documento en NubeFact.",
    "fieldname": "numero",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -182,7 +186,7 @@
    "fieldname": "numero_asignado_automaticamente",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Número Asignado Automáticamente",
+   "label": "N\u00famero Asignado Autom\u00e1ticamente",
    "no_copy": 1,
    "read_only": 1
   },
@@ -216,18 +220,18 @@
   {
    "fieldname": "cliente_tipo_de_documento",
    "fieldtype": "Select",
-   "label": "Cliente Tipo de Documento",
+   "label": "Tipo de Documento de Cliente",
    "options": "6\n1\n4\n7\nA\n0"
   },
   {
    "fieldname": "cliente_numero_de_documento",
    "fieldtype": "Data",
-   "label": "Cliente N\u00famero de Documento"
+   "label": "Numero de Documento de Cliente"
   },
   {
    "fieldname": "cliente_denominacion",
    "fieldtype": "Data",
-   "label": "Cliente Denominaci\u00f3n"
+   "label": "Razon Social de Cliente"
   },
   {
    "fieldname": "columna_cliente",
@@ -256,23 +260,23 @@
   {
    "fieldname": "seccion_destinatario",
    "fieldtype": "Section Break",
-   "label": "Destinatario (Tipo 8)"
+   "label": "Destinatario"
   },
   {
    "fieldname": "destinatario_documento_tipo",
    "fieldtype": "Select",
-   "label": "Destinatario Documento Tipo",
+   "label": "Tipo de Documento de Destinatario",
    "options": "6\n1\n4\n7\nA\n0"
   },
   {
    "fieldname": "destinatario_documento_numero",
    "fieldtype": "Data",
-   "label": "Destinatario Documento N\u00famero"
+   "label": "Numero de Documento de Destinatario"
   },
   {
    "fieldname": "destinatario_denominacion",
    "fieldtype": "Data",
-   "label": "Destinatario Denominaci\u00f3n"
+   "label": "Razon Social de Destinatario"
   },
   {
    "fieldname": "seccion_traslado",
@@ -286,9 +290,11 @@
    "options": "01\n02\n03\n04\n05\n06\n07\n08\n09\n13\n14\n17\n18"
   },
   {
+   "depends_on": "eval:doc.motivo_de_traslado=='13'",
    "fieldname": "motivo_de_traslado_otros_descripcion",
    "fieldtype": "Data",
-   "label": "Motivo de Traslado Otros Descripci\u00f3n"
+   "label": "Motivo de Traslado Otros Descripci\u00f3n",
+   "mandatory_depends_on": "eval:doc.motivo_de_traslado=='13'"
   },
   {
    "fieldname": "documento_relacionado_codigo",
@@ -524,6 +530,7 @@
    "options": "Nubefact Guia De Remision Item"
   },
   {
+   "collapsible": 1,
    "fieldname": "seccion_documentos_relacionados",
    "fieldtype": "Section Break",
    "label": "Documentos Relacionados"
@@ -535,6 +542,7 @@
    "options": "Nubefact Guia De Remision Documento Relacionado"
   },
   {
+   "collapsible": 1,
    "fieldname": "seccion_vehiculos_secundarios",
    "fieldtype": "Section Break",
    "label": "Veh\u00edculos Secundarios"
@@ -546,6 +554,7 @@
    "options": "Nubefact Guia De Remision Vehiculo Secundario"
   },
   {
+   "collapsible": 1,
    "fieldname": "seccion_conductores_secundarios",
    "fieldtype": "Section Break",
    "label": "Conductores Secundarios"
@@ -719,6 +728,19 @@
   {
    "fieldname": "column_break_otuj",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_bglr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_meok",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tab_transportista",
+   "fieldtype": "Tab Break",
+   "label": "Tipo Transportista"
   }
  ],
  "grid_page_length": 50,
@@ -730,7 +752,7 @@
    "link_fieldname": "referencia_guia_de_remision"
   }
  ],
- "modified": "2026-02-28 20:00:00.000000",
+ "modified": "2026-09-04 18:11:50.530393",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Guia De Remision",
@@ -762,7 +784,7 @@
   },
   {
    "color": "Orange",
-    "title": "Pendiente de Aceptacion"
+   "title": "Pendiente de Aceptacion"
   },
   {
    "color": "Green",

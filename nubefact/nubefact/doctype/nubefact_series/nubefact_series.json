@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "hash",
+ "allow_rename": 1,
  "creation": "2026-09-03 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -18,8 +18,7 @@
   {
    "fieldname": "title",
    "fieldtype": "Data",
-   "label": "T\u00edtulo",
-   "read_only": 1
+   "label": "T\u00edtulo"
   },
   {
    "fieldname": "company",
@@ -90,7 +89,7 @@
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Series",
- "naming_rule": "Random",
+ "naming_rule": "By script",
  "owner": "Administrator",
  "permissions": [
   {
