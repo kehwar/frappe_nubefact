@@ -73,15 +73,29 @@ def make_valid_gre(**overrides):
 
 class TestNubefactGuiaDeRemision(FrappeTestCase):
 	def make_local(self):
+		company = frappe.get_all("Company", pluck="name", limit=1)[0]
 		return frappe.get_doc(
 			{
 				"doctype": "Nubefact Local",
 				"title": f"Local GRE {random_string(8)}",
+				"company": company,
 				"ruta_api": "https://api.example.test/gre",
 				"token_api": "test-token",
 				"ubigeo": "150101",
 				"direccion": "ORIGEN DE PRUEBA",
 				"codigo_sunat": "0000",
+			}
+		).insert()
+
+	def make_series(self, local, *, numero=1):
+		return frappe.get_doc(
+			{
+				"doctype": "Nubefact Series",
+				"company": local.company,
+				"local": local.name,
+				"tipo_de_comprobante": "7",
+				"serie": f"T{random_string(3).upper()}",
+				"numero": numero,
 			}
 		).insert()
 
@@ -91,11 +105,11 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		response.json.return_value = payload
 		return response
 
-	def test_save_requires_numero(self):
-		doc = make_valid_gre(numero=None)
+	def test_draft_can_be_saved_without_numero(self):
+		doc = make_valid_gre(numero=None).insert()
 
-		with self.assertRaises(frappe.ValidationError):
-			doc.insert()
+		self.assertFalse(doc.numero)
+		self.assertEqual(doc.title, "TTT1-")
 
 	def test_public_remitente_requires_delivery_date(self):
 		doc = make_valid_gre(fecha_de_entrega_al_transportista=None)
@@ -277,15 +291,25 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 
 		self.assertEqual(doc._build_generate_payload()["serie"], "CUSTOM")
 
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
 	@patch("nubefact.utils.nubefact.requests.post")
-	def test_generate_and_query_rpc_persist_the_sunat_lifecycle(self, post):
+	def test_generate_and_query_rpc_persist_the_sunat_lifecycle(self, post, enqueue_files):
 		local = self.make_local()
-		doc = make_valid_gre(local=local.name).insert()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
 		post.side_effect = [
 			self.make_http_response(
 				{
 					"tipo_de_comprobante": 7,
-					"serie": "TTT1",
+					"serie": series.serie,
 					"numero": 1,
 					"aceptada_por_sunat": False,
 				}
@@ -293,7 +317,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			self.make_http_response(
 				{
 					"tipo_de_comprobante": 7,
-					"serie": "TTT1",
+					"serie": series.serie,
 					"numero": 1,
 					"aceptada_por_sunat": True,
 					"enlace_del_pdf": "https://files.example.test/guide.pdf",
@@ -303,6 +327,8 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 
 		generated = enviar_a_nubefact(doc.name)
 		self.assertEqual(generated["status"], "Pendiente de Aceptacion")
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 1)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 2)
 		first_request = post.call_args_list[0]
 		self.assertEqual(first_request.args[0], "https://api.example.test/gre")
 		self.assertEqual(first_request.kwargs["headers"]["Authorization"], "test-token")
@@ -311,6 +337,11 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			first_request.kwargs["json"]["fecha_de_entrega_al_transportista"],
 			getdate(add_days(nowdate(), 2)).strftime("%d-%m-%Y"),
 		)
+		self.assertEqual(
+			enqueue_files.call_args.kwargs["request_payload"]["operacion"],
+			"generar_guia",
+		)
+		self.assertEqual(enqueue_files.call_args.kwargs["response_payload"]["numero"], 1)
 
 		refreshed = refrescar_estado_sunat(doc.name)
 		self.assertEqual(refreshed["status"], "Aceptada")
@@ -319,12 +350,14 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			{
 				"operacion": "consultar_guia",
 				"tipo_de_comprobante": 7,
-				"serie": "TTT1",
+				"serie": series.serie,
 				"numero": "1",
 			},
 		)
 		persisted = frappe.get_doc(doc.doctype, doc.name)
 		self.assertEqual(persisted.status, "Aceptada")
+		self.assertIsNone(enqueue_files.call_args.kwargs["request_payload"])
+		self.assertIsNone(enqueue_files.call_args.kwargs["response_payload"])
 		self.assertEqual(
 			frappe.db.count("Nubefact API Log", {"referencia_guia_de_remision": doc.name}),
 			2,
@@ -333,7 +366,14 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 	@patch("nubefact.utils.nubefact.requests.post")
 	def test_generate_rpc_persists_base64_response_artifacts(self, post):
 		local = self.make_local()
-		doc = make_valid_gre(local=local.name).insert()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
 		post.return_value = self.make_http_response(
 			{
 				"numero": 1,
@@ -354,9 +394,17 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 	@patch("nubefact.utils.nubefact.requests.post")
 	def test_query_keeps_existing_base64_when_response_omits_artifacts(self, post):
 		local = self.make_local()
-		doc = make_valid_gre(local=local.name).insert()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
 		doc.db_set(
 			{
+				"numero": 1,
 				"status": "Pendiente de Aceptacion",
 				"pdf_zip_base64": "PDF-BASE64",
 				"xml_zip_base64": "XML-BASE64",
@@ -366,7 +414,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		post.return_value = self.make_http_response(
 			{
 				"tipo_de_comprobante": 7,
-				"serie": "TTT1",
+				"serie": series.serie,
 				"numero": 1,
 				"aceptada_por_sunat": True,
 			}

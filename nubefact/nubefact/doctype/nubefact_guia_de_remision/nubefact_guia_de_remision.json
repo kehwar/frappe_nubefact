@@ -7,14 +7,17 @@
  "field_order": [
   "seccion_documento",
   "title",
+  "company",
+  "local",
+  "nubefact_series",
   "tipo_de_comprobante",
   "serie",
   "numero",
+  "numero_asignado_automaticamente",
   "columna_documento",
   "fecha_de_emision",
   "fecha_de_inicio_de_traslado",
   "fecha_de_entrega_al_transportista",
-  "local",
   "seccion_cliente",
   "cliente_tipo_de_documento",
   "cliente_numero_de_documento",
@@ -122,14 +125,27 @@
    "in_list_view": 1,
    "label": "Estado",
    "no_copy": 1,
-    "options": "Borrador\nPendiente de Aceptacion\nAceptada\nError",
+    "options": "Borrador\nEnviando\nPendiente de Aceptacion\nAceptada\nError",
    "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Compañía",
+   "options": "Company"
   },
   {
    "fieldname": "local",
    "fieldtype": "Link",
    "label": "Local",
    "options": "Nubefact Local"
+  },
+  {
+   "description": "Controla la serie y asigna automáticamente el número al emitir.",
+   "fieldname": "nubefact_series",
+   "fieldtype": "Link",
+   "label": "Serie NubeFact",
+   "options": "Nubefact Series"
   },
   {
    "fieldname": "tipo_de_comprobante",
@@ -149,15 +165,26 @@
    "fieldname": "serie",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Serie"
+   "label": "Serie",
+   "read_only": 1
   },
   {
+   "description": "Se asigna automáticamente al emitir el documento en NubeFact.",
    "fieldname": "numero",
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "N\u00famero",
    "no_copy": 1,
-   "reqd": 1
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "numero_asignado_automaticamente",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Número Asignado Automáticamente",
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "columna_documento",

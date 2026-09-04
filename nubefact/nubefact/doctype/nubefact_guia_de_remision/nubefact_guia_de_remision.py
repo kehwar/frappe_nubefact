@@ -39,6 +39,12 @@ from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
 from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
 	get_origin_values as get_local_origin_values,
 )
+from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
+	allocate_document_number,
+	apply_and_validate_document_series,
+	set_company_from_local,
+	validate_document_is_not_being_issued,
+)
 from nubefact.utils import (
 	apply_raw_payload_overrides,
 	enqueue_nubefact_file_downloads,
@@ -90,6 +96,7 @@ class NubefactGuiaDeRemision(Document):
 		self.name = series_prefix + getseries(f"NubefactGuiaDeRemision::{series_prefix}", 6)
 
 	def before_validate(self):
+		validate_document_is_not_being_issued(self)
 		if not self.status:
 			self.status = "Borrador"
 
@@ -101,15 +108,23 @@ class NubefactGuiaDeRemision(Document):
 			self._validate_document_rules()
 
 	def _set_inferred_values(self):
-		if not cstr(self.local or "").strip():
-			last_local = get_last_used_local_for_user(
-				doctype=self.doctype,
-				user=frappe.session.user,
-				exclude_name=self.name,
-			)
+		if cint(self.numero_asignado_automaticamente) and not self.nubefact_series:
+			frappe.throw("La Serie NubeFact no puede eliminarse después de asignar el número.")
 
-			if last_local:
-				self.local = last_local
+		if self.nubefact_series:
+			apply_and_validate_document_series(self)
+		else:
+			if not cstr(self.local or "").strip():
+				last_local = get_last_used_local_for_user(
+					doctype=self.doctype,
+					user=frappe.session.user,
+					exclude_name=self.name,
+				)
+
+				if last_local:
+					self.local = last_local
+
+			set_company_from_local(self)
 
 		local_origin_values = get_local_origin_values(self.local)
 		inferred_origin_fields = (
@@ -135,7 +150,8 @@ class NubefactGuiaDeRemision(Document):
 
 	def _compose_title(self, numero: Any | None = None) -> str:
 		serie = cstr(self.serie or "").strip()
-		numero_texto = cstr((self.numero if numero is None else numero) or "").strip().zfill(6)
+		raw_number = cstr((self.numero if numero is None else numero) or "").strip()
+		numero_texto = raw_number.zfill(6) if raw_number else ""
 		return f"{serie}-{numero_texto}" if (serie or numero_texto) else ""
 
 	def _build_generate_payload(self) -> dict[str, Any]:
@@ -386,9 +402,11 @@ class NubefactGuiaDeRemision(Document):
 				f"La serie debe tener 4 caracteres, empezar con {expected_prefix} y usar solo mayúsculas o números."
 			)
 
+		number_text = cstr(self.numero).strip()
 		number = cint(self.numero)
-		if number < 1 or number > 99_999_999:
-			frappe.throw("El número debe ser un entero de 1 a 8 dígitos, sin ceros a la izquierda.")
+		if number_text and not (number == 0 and self.nubefact_series):
+			if number < 1 or number > 99_999_999:
+				frappe.throw("El número debe ser un entero de 1 a 8 dígitos, sin ceros a la izquierda.")
 
 		issue_date = getdate(self.fecha_de_emision)
 		allowed_issue_dates = {getdate(nowdate()), getdate(add_days(nowdate(), -1))}
@@ -745,14 +763,23 @@ class NubefactGuiaDeRemision(Document):
 def enviar_a_nubefact(name: str):
 	doc = frappe.get_doc("Nubefact Guia De Remision", name)
 	doc.check_permission("write")
+	frappe.db.sql(
+		"SELECT `name` FROM `tabNubefact Guia De Remision` WHERE `name` = %s FOR UPDATE",
+		(name,),
+	)
+	doc.reload()
 
 	if doc.status not in {"Borrador", "Error"}:
 		frappe.throw("Solo se pueden enviar guías en estado Borrador o Error.")
 
-	try:
-		doc._action = "save"
-		doc.run_before_save_methods()
+	doc._action = "save"
+	doc.run_before_save_methods()
+	allocate_document_number(doc, mark_as_issuing=True)
+	# Persist the reservation before the external request. A timeout can hide
+	# a successful issue, so an assigned number must never be reused.
+	frappe.db.commit()
 
+	try:
 		values = _request_extract_and_save_response(
 			doc,
 			payload=doc._build_generate_payload(),
@@ -813,11 +840,23 @@ def _request_extract_and_save_response(
 		local=doc.local,
 		referencia_guia_de_remision=doc.name,
 	)
+	if not isinstance(response, dict) or not response:
+		frappe.throw("NubeFact devolvió una respuesta vacía o inválida.")
+
 	values = doc._extract_response_values(response)
+	if not values:
+		frappe.throw("No se pudo interpretar la respuesta de NubeFact.")
 
 	if values:
 		_save_response_status(doc, values, clear_previous=clear_previous)
-		enqueue_nubefact_file_downloads(doc.doctype, doc.name, doc.title or doc.name, values)
+		enqueue_nubefact_file_downloads(
+			doc.doctype,
+			doc.name,
+			doc.title or doc.name,
+			values,
+			request_payload=payload if payload.get("operacion") == "generar_guia" else None,
+			response_payload=response if payload.get("operacion") == "generar_guia" else None,
+		)
 
 	return values
 

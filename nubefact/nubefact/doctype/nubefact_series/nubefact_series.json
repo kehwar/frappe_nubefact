@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-03 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "local",
+  "column_break_series",
+  "tipo_de_comprobante",
+  "serie",
+  "numero",
+  "ultimo_numero_asignado"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Compañía",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "local",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Local",
+   "options": "Nubefact Local",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_series",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Código de tipo de comprobante SUNAT/NubeFact.",
+   "fieldname": "tipo_de_comprobante",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo de Comprobante",
+   "options": "1\n2\n3\n4\n7\n8",
+   "reqd": 1
+  },
+  {
+   "fieldname": "serie",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Serie",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "description": "Próximo número que será asignado. Use este campo para establecer el número inicial.",
+   "fieldname": "numero",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Próximo Número",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "ultimo_numero_asignado",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Último Número Asignado",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "modified": "2026-09-03 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Nubefact",
+ "name": "Nubefact Series",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

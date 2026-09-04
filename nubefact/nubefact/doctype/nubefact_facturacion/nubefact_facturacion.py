@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import frappe
@@ -21,6 +22,12 @@ from nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion_schema 
 )
 from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
     get_last_used_local_for_user,
+)
+from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
+    allocate_document_number,
+    apply_and_validate_document_series,
+    set_company_from_local,
+    validate_document_is_not_being_issued,
 )
 from nubefact.utils import (
     apply_raw_payload_overrides,
@@ -76,26 +83,35 @@ class NubefactFacturacion(Document):
         )
 
     def before_validate(self):
+        validate_document_is_not_being_issued(self)
         if not self.status:
             self.status = "Borrador"
 
         self._set_inferred_values()
 
     def validate(self):
-
         if not cint(getattr(self, "skip_field_validation", 0)):
             self._validate_required_fields()
+            self._validate_document_identity()
 
     def _set_inferred_values(self):
-        if not cstr(self.local or "").strip():
-            last_local = get_last_used_local_for_user(
-                doctype=self.doctype,
-                user=frappe.session.user,
-                exclude_name=self.name,
-            )
+        if cint(self.numero_asignado_automaticamente) and not self.nubefact_series:
+            frappe.throw("La Serie NubeFact no puede eliminarse después de asignar el número.")
 
-            if last_local:
-                self.local = last_local
+        if self.nubefact_series:
+            apply_and_validate_document_series(self)
+        else:
+            if not cstr(self.local or "").strip():
+                last_local = get_last_used_local_for_user(
+                    doctype=self.doctype,
+                    user=frappe.session.user,
+                    exclude_name=self.name,
+                )
+
+                if last_local:
+                    self.local = last_local
+
+            set_company_from_local(self)
 
         self.title = self._compose_title()
 
@@ -333,6 +349,21 @@ class NubefactFacturacion(Document):
                 "Las notas de débito requieren un motivo.",
             )
 
+    def _validate_document_identity(self):
+        document_type = cstr(self.tipo_de_comprobante)
+        series = cstr(self.serie).strip()
+        allowed_prefixes = {"1": {"F"}, "2": {"B"}, "3": {"F", "B"}, "4": {"F", "B"}}
+        if not re.fullmatch(r"[FB][A-Z0-9]{3}", series) or series[:1] not in allowed_prefixes.get(
+            document_type, set()
+        ):
+            frappe.throw("La serie debe tener 4 caracteres y corresponder al tipo de comprobante.")
+
+        number_text = cstr(self.numero).strip()
+        number = cint(self.numero)
+        if number_text and not (number == 0 and self.nubefact_series):
+            if not 1 <= number <= 99_999_999:
+                frappe.throw("El número debe ser un entero de 1 a 8 dígitos, sin ceros a la izquierda.")
+
     def _validate_required_child_rows(
         self,
         rows: list[Document] | None,
@@ -350,11 +381,21 @@ class NubefactFacturacion(Document):
         if not isinstance(response, dict):
             return {}
 
+        response_type = response.get("tipo_de_comprobante")
+        response_series = cstr(response.get("serie") or "").strip()
+        response_number = response.get("numero")
+        if response_type is not None and cint(response_type) != cint(self.tipo_de_comprobante):
+            frappe.throw("La respuesta de NubeFact pertenece a otro tipo de comprobante.")
+        if response_series and response_series != cstr(self.serie).strip():
+            frappe.throw("La respuesta de NubeFact pertenece a otra serie.")
+        if response_number and self.numero and cint(response_number) != cint(self.numero):
+            frappe.throw("La respuesta de NubeFact pertenece a otro número de comprobante.")
+
         accepted_by_sunat = 1 if response.get("aceptada_por_sunat") else 0
-        number = response.get("numero") or self.numero
+        number = response_number or self.numero
         title = self._compose_title(number)
 
-        return {
+        values = {
             "numero": number,
             "title": title,
             "status": "Aceptada" if accepted_by_sunat else "Pendiente de Aceptación",
@@ -365,16 +406,6 @@ class NubefactFacturacion(Document):
             "sunat_note": cstr(response.get("sunat_note") or ""),
             "sunat_soap_error": cstr(response.get("sunat_soap_error") or ""),
             "error_message": cstr(response.get("sunat_soap_error") or ""),
-            "enlace": cstr(response.get("enlace") or ""),
-            "enlace_del_pdf": cstr(response.get("enlace_del_pdf") or ""),
-            "enlace_del_xml": cstr(response.get("enlace_del_xml") or ""),
-            "enlace_del_cdr": cstr(response.get("enlace_del_cdr") or ""),
-            "cadena_para_codigo_qr": cstr(response.get("cadena_para_codigo_qr") or ""),
-            "pdf_zip_base64": cstr(response.get("pdf_zip_base64") or ""),
-            "xml_zip_base64": cstr(response.get("xml_zip_base64") or ""),
-            "cdr_zip_base64": cstr(response.get("cdr_zip_base64") or ""),
-            "codigo_hash": cstr(response.get("codigo_hash") or ""),
-            "codigo_de_barras": cstr(response.get("codigo_de_barras") or ""),
             "sunat_ticket_numero": cstr(
                 response.get("sunat_ticket_numero")
                 or response.get("ticket")
@@ -383,6 +414,22 @@ class NubefactFacturacion(Document):
                 or ""
             ),
         }
+        for fieldname in (
+            "enlace",
+            "enlace_del_pdf",
+            "enlace_del_xml",
+            "enlace_del_cdr",
+            "cadena_para_codigo_qr",
+            "pdf_zip_base64",
+            "xml_zip_base64",
+            "cdr_zip_base64",
+            "codigo_hash",
+            "codigo_de_barras",
+        ):
+            if fieldname in response:
+                values[fieldname] = cstr(response.get(fieldname) or "")
+
+        return values
 
     def _extract_void_response_values(self, response: Any) -> dict[str, Any]:
         if not isinstance(response, dict):
@@ -415,19 +462,29 @@ class NubefactFacturacion(Document):
 def send_to_nubefact(name: str):
     doc = frappe.get_doc("Nubefact Facturacion", name)
     doc.check_permission("write")
+    frappe.db.sql(
+        "SELECT `name` FROM `tabNubefact Facturacion` WHERE `name` = %s FOR UPDATE",
+        (name,),
+    )
+    doc.reload()
 
     if doc.status not in {"Borrador", "Error"}:
         frappe.throw(
             "Solo los comprobantes en estado Borrador o Error pueden enviarse a Nubefact."
         )
 
-    try:
-        doc._action = "save"
-        doc.run_before_save_methods()
+    doc._action = "save"
+    doc.run_before_save_methods()
+    allocate_document_number(doc, mark_as_issuing=True)
+    # Persist the reservation before the external request. A timeout can hide
+    # a successful issue, so an assigned number must never be reused.
+    frappe.db.commit()
 
+    try:
         values = _request_extract_and_save_response(
             doc,
             payload=doc._build_generate_payload(),
+            clear_previous=True,
         )
     except Exception as exc:
         frappe.db.rollback()
@@ -518,7 +575,7 @@ def poll_pending_invoices():
         try:
             doc = frappe.get_doc("Nubefact Facturacion", name)
             _refresh_sunat_status_doc(doc)
-        except Exception as e:
+        except Exception:
             frappe.log_error(
                 title=f"Nubefact Facturacion: falló la actualización SUNAT para {name}",
                 message=frappe.get_traceback(),
@@ -526,18 +583,37 @@ def poll_pending_invoices():
 
 
 def _request_extract_and_save_response(
-    doc: NubefactFacturacion, payload: dict[str, Any]
+    doc: NubefactFacturacion,
+    payload: dict[str, Any],
+    *,
+    clear_previous: bool = False,
 ) -> dict[str, Any]:
     response = make_request(
         payload=payload,
         local=doc.local,
         reference_invoice=doc.name,
     )
+    if not isinstance(response, dict) or not response:
+        frappe.throw("NubeFact devolvió una respuesta vacía o inválida.")
+
     values = doc._extract_response_values(response)
+    if not values:
+        frappe.throw("No se pudo interpretar la respuesta de NubeFact.")
 
     if values:
-        _save_response_status(doc, values)
-        enqueue_nubefact_file_downloads(doc.doctype, doc.name, doc.title or doc.name, values)
+        _save_response_status(doc, values, clear_previous=clear_previous)
+        enqueue_nubefact_file_downloads(
+            doc.doctype,
+            doc.name,
+            doc.title or doc.name,
+            values,
+            request_payload=(
+                payload if payload.get("operacion") == "generar_comprobante" else None
+            ),
+            response_payload=(
+                response if payload.get("operacion") == "generar_comprobante" else None
+            ),
+        )
 
     return values
 
@@ -561,18 +637,22 @@ def _refresh_sunat_status_doc(doc: NubefactFacturacion) -> dict[str, Any]:
 
 
 def _save_response_status(
-    doc: NubefactFacturacion, values: dict[str, Any]
+    doc: NubefactFacturacion,
+    values: dict[str, Any],
+    *,
+    clear_previous: bool = False,
 ) -> dict[str, Any]:
     if not values:
         return {}
 
-    cleared_values: dict[str, Any] = dict(_CLEARED_RESPONSE_VALUES)
-    cleared_values.update(values)
+    saved_values: dict[str, Any] = dict(_CLEARED_RESPONSE_VALUES) if clear_previous else {}
+    saved_values.update(values)
 
-    doc.update(cleared_values)
+    doc.update(saved_values)
     doc.title = doc._compose_title()
+    saved_values["title"] = doc.title
 
-    doc.db_update()
+    doc.db_set(saved_values, update_modified=True)
     doc.notify_update()
 
-    return cleared_values
+    return saved_values

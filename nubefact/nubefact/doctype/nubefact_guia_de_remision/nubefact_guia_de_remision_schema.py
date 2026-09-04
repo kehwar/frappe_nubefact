@@ -17,7 +17,6 @@ Ruta: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
 REQUIRED_FIELDS = [
 	"tipo_de_comprobante",
 	"serie",
-	"numero",
 	"fecha_de_emision",
 	"cliente_tipo_de_documento",
 	"cliente_numero_de_documento",

@@ -2,15 +2,39 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Nubefact Facturacion", {
+	setup(frm) {
+		frm.set_query("nubefact_series", () => ({
+			filters: {
+				...(frm.doc.tipo_de_comprobante
+					? { tipo_de_comprobante: frm.doc.tipo_de_comprobante }
+					: {}),
+				...(frm.doc.company ? { company: frm.doc.company } : {}),
+				...(frm.doc.local ? { local: frm.doc.local } : {}),
+			},
+		}));
+	},
+	async nubefact_series(frm) {
+		const requestedSeries = frm.doc.nubefact_series;
+		if (!requestedSeries) return;
+
+		const { message } = await frappe.db.get_value(
+			"Nubefact Series",
+			requestedSeries,
+			["company", "local", "tipo_de_comprobante", "serie"]
+		);
+		if (message && frm.doc.nubefact_series === requestedSeries) {
+			await frm.set_value(message);
+		}
+	},
 	refresh(frm) {
 		frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
 
-		if (["Pendiente de Aceptación", "Aceptada", "Anulada"].includes(frm.doc.status || "Borrador")) {
+		if (["Enviando", "Pendiente de Aceptación", "Aceptada", "Anulada"].includes(frm.doc.status || "Borrador")) {
 			frm.disable_form();
 		}
 
 		if (!frm.is_new()) {
-			const watcher = nubefact.get_watcher(frm, "nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.refresh_sunat_status");
+			const watcher = window.nubefact.get_watcher(frm, "nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.refresh_sunat_status");
 			watcher.on_refresh();
 			watcher.schedule_if_needed();
 

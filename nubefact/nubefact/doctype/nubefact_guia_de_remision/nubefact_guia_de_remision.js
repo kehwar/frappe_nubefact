@@ -3,15 +3,44 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Nubefact Guia De Remision", {
+    setup(frm) {
+        frm.set_query("nubefact_series", () => ({
+            filters: {
+                ...(frm.doc.tipo_de_comprobante
+                    ? { tipo_de_comprobante: frm.doc.tipo_de_comprobante }
+                    : {}),
+                ...(frm.doc.company ? { company: frm.doc.company } : {}),
+                ...(frm.doc.local ? { local: frm.doc.local } : {}),
+            },
+        }));
+    },
+    async nubefact_series(frm) {
+        const requestedSeries = frm.doc.nubefact_series;
+        if (!requestedSeries) return;
+
+        const { message } = await frappe.db.get_value("Nubefact Series", requestedSeries, [
+            "company",
+            "local",
+            "tipo_de_comprobante",
+            "serie",
+        ]);
+        if (message && frm.doc.nubefact_series === requestedSeries) {
+            await frm.set_value(message);
+        }
+    },
     refresh(frm) {
         frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
 
-        if (["Pendiente de Aceptacion", "Aceptada"].includes(frm.doc.status || "Borrador")) {
+        if (
+            ["Enviando", "Pendiente de Aceptacion", "Aceptada"].includes(
+                frm.doc.status || "Borrador"
+            )
+        ) {
             frm.disable_form();
         }
 
         if (!frm.is_new()) {
-            const watcher = nubefact.get_watcher(
+            const watcher = window.nubefact.get_watcher(
                 frm,
                 "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.refrescar_estado_sunat"
             );
@@ -97,8 +126,9 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
     open_help_dialog(frm) {
         const requiredFields = [
             "tipo_de_comprobante",
-            "serie",
-            "numero",
+            "nubefact_series",
+            "serie (desde Serie NubeFact)",
+            "numero (asignado al emitir)",
             "fecha_de_emision",
             "fecha_de_inicio_de_traslado",
             "fecha_de_entrega_al_transportista (tipo 7 con transporte público)",
