@@ -5,17 +5,21 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import random_string
 
+from nubefact.nubefact.doctype.nubefact_ubigeo.nubefact_ubigeo import load_ubigeos
+
 
 class TestNubefactLocal(FrappeTestCase):
 	def setUp(self):
 		self.company = frappe.get_all("Company", fields=["name", "abbr"], limit=1)[0]
+		load_ubigeos()
 
-	def make_local(self, title):
+	def make_local(self, title, **values):
 		return frappe.get_doc(
 			{
 				"doctype": "Nubefact Local",
 				"title": title,
 				"company": self.company.name,
+				**values,
 			}
 		).insert()
 
@@ -43,3 +47,27 @@ class TestNubefactLocal(FrappeTestCase):
 
 		self.assertEqual(rename_result, new_name)
 		self.assertTrue(frappe.db.exists("Nubefact Local", new_name))
+
+	def test_ubigeo_populates_read_only_location_fields(self):
+		local = self.make_local(
+			f"Local {random_string(8)}",
+			ubigeo="150101",
+			departamento="IGNORED",
+			provincia="IGNORED",
+			distrito="IGNORED",
+		)
+
+		self.assertEqual(local.departamento, "LIMA")
+		self.assertEqual(local.provincia, "LIMA")
+		self.assertEqual(local.distrito, "LIMA")
+
+	def test_ubigeo_and_location_field_metadata(self):
+		meta = frappe.get_meta("Nubefact Local")
+		ubigeo = meta.get_field("ubigeo")
+		self.assertEqual(ubigeo.fieldtype, "Link")
+		self.assertEqual(ubigeo.options, "Nubefact Ubigeo")
+
+		for fieldname in ("departamento", "provincia", "distrito"):
+			field = meta.get_field(fieldname)
+			self.assertTrue(field.read_only)
+			self.assertEqual(field.fetch_from, f"ubigeo.{fieldname}")

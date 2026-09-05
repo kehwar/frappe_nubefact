@@ -1,10 +1,13 @@
 import frappe
 
+from nubefact.nubefact.doctype.nubefact_local.nubefact_local import sync_local_ubigeos
+from nubefact.nubefact.doctype.nubefact_ubigeo.nubefact_ubigeo import load_ubigeos
+
 ROLES = ("Nubefact Manager", "Nubefact User")
 
 
 def setup():
-	"""Ensure the roles managed by Nubefact are installed and enabled."""
+	"""Ensure Nubefact roles and bundled master data are installed."""
 	for role_name in ROLES:
 		if not frappe.db.exists("Role", role_name):
 			frappe.get_doc(
@@ -21,3 +24,6 @@ def setup():
 			role.disabled = 0
 			role.desk_access = 1
 			role.save(ignore_permissions=True)
+
+	load_ubigeos()
+	sync_local_ubigeos()

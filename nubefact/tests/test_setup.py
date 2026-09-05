@@ -12,6 +12,7 @@ READ_ONLY_DOCTYPES = {
 	"Nubefact API Log",
 	"Nubefact Local",
 	"Nubefact Series",
+	"Nubefact Ubigeo",
 }
 
 

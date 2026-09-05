@@ -8,10 +8,10 @@
   "title",
   "company",
   "ubicacion_section",
+  "ubigeo",
   "departamento",
   "provincia",
   "distrito",
-  "ubigeo",
   "column_break_ubicacion",
   "direccion",
   "codigo_sunat",
@@ -43,8 +43,9 @@
   },
   {
    "fieldname": "ubigeo",
-   "fieldtype": "Data",
-   "label": "Ubigeo"
+   "fieldtype": "Link",
+   "label": "Ubigeo",
+   "options": "Nubefact Ubigeo"
   },
   {
    "fieldname": "codigo_sunat",
@@ -56,19 +57,25 @@
    "fieldtype": "Column Break"
   },
   {
+   "fetch_from": "ubigeo.departamento",
    "fieldname": "departamento",
    "fieldtype": "Data",
-   "label": "Departamento"
+   "label": "Departamento",
+   "read_only": 1
   },
   {
+   "fetch_from": "ubigeo.provincia",
    "fieldname": "provincia",
    "fieldtype": "Data",
-   "label": "Provincia"
+   "label": "Provincia",
+   "read_only": 1
   },
   {
+   "fetch_from": "ubigeo.distrito",
    "fieldname": "distrito",
    "fieldtype": "Data",
-   "label": "Distrito"
+   "label": "Distrito",
+   "read_only": 1
   },
   {
    "fieldname": "title",

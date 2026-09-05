@@ -10,10 +10,74 @@ DEFAULT_BASE_URL = "https://api.nubefact.com/api/v1"
 
 
 class NubefactLocal(Document):
+	def before_validate(self):
+		self._set_ubigeo_location()
+
 	def autoname(self):
 		title = cstr(self.title).strip()
 		company_abbr = cstr(frappe.db.get_value("Company", self.company, "abbr")).strip()
 		self.name = append_number_if_name_exists("Nubefact Local", f"{title}-{company_abbr}")
+
+	def _set_ubigeo_location(self):
+		if not self.ubigeo:
+			self.departamento = None
+			self.provincia = None
+			self.distrito = None
+			return
+
+		location = frappe.db.get_value(
+			"Nubefact Ubigeo",
+			self.ubigeo,
+			["departamento", "provincia", "distrito"],
+			as_dict=True,
+		)
+		if not location:
+			frappe.throw("El UBIGEO seleccionado no existe en el catálogo INEI.")
+
+		self.update(location)
+
+
+def sync_local_ubigeos() -> int:
+	"""Refresh stored location names for existing locals with a valid UBIGEO."""
+	locals_with_ubigeo = frappe.get_all(
+		"Nubefact Local",
+		filters={"ubigeo": ["is", "set"]},
+		fields=["name", "ubigeo", "departamento", "provincia", "distrito"],
+	)
+	if not locals_with_ubigeo:
+		return 0
+
+	locations = {
+		record.name: record
+		for record in frappe.get_all(
+			"Nubefact Ubigeo",
+			filters={"name": ["in", list({record.ubigeo for record in locals_with_ubigeo})]},
+			fields=["name", "departamento", "provincia", "distrito"],
+		)
+	}
+	updates = {}
+	unknown_ubigeos = set()
+	for local in locals_with_ubigeo:
+		location = locations.get(local.ubigeo)
+		if not location:
+			unknown_ubigeos.add(local.ubigeo)
+			continue
+		values = {
+			"departamento": location.departamento,
+			"provincia": location.provincia,
+			"distrito": location.distrito,
+		}
+		if any(cstr(local.get(fieldname)).strip() != value for fieldname, value in values.items()):
+			updates[local.name] = values
+
+	if updates:
+		frappe.db.bulk_update("Nubefact Local", updates)
+	if unknown_ubigeos:
+		frappe.logger("nubefact").warning(
+			"Existing Nubefact Local records reference unknown UBIGEO values: %s",
+			", ".join(sorted(unknown_ubigeos)),
+		)
+	return len(updates)
 
 
 def get_origin_values(local: str | None) -> dict[str, str | None]:

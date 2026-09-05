@@ -464,8 +464,9 @@
   },
   {
    "fieldname": "punto_de_partida_ubigeo",
-   "fieldtype": "Data",
-   "label": "Punto de Partida Ubigeo"
+   "fieldtype": "Link",
+   "label": "Punto de Partida Ubigeo",
+   "options": "Nubefact Ubigeo"
   },
   {
    "fieldname": "punto_de_partida_direccion",
@@ -483,8 +484,9 @@
   },
   {
    "fieldname": "punto_de_llegada_ubigeo",
-   "fieldtype": "Data",
-   "label": "Punto de Llegada Ubigeo"
+   "fieldtype": "Link",
+   "label": "Punto de Llegada Ubigeo",
+   "options": "Nubefact Ubigeo"
   },
   {
    "fieldname": "punto_de_llegada_direccion",
