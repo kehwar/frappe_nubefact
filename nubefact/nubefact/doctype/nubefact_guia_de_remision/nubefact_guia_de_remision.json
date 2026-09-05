@@ -197,12 +197,14 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "Today",
    "fieldname": "fecha_de_emision",
    "fieldtype": "Date",
    "in_list_view": 1,
    "label": "Fecha de Emisi\u00f3n"
   },
   {
+   "default": "Today",
    "fieldname": "fecha_de_inicio_de_traslado",
    "fieldtype": "Date",
    "label": "Fecha de Inicio de Traslado"
@@ -220,6 +222,7 @@
    "label": "Cliente"
   },
   {
+   "default": "6",
    "fieldname": "cliente_tipo_de_documento",
    "fieldtype": "Link",
    "label": "Tipo de Documento de Cliente",
@@ -316,12 +319,14 @@
    "label": "Peso Bruto Total"
   },
   {
+   "default": "KGM",
    "fieldname": "peso_bruto_unidad_de_medida",
    "fieldtype": "Link",
    "label": "Unidad de Medida de Peso Bruto",
    "options": "Nubefact Unidad de Medida"
   },
   {
+   "default": "1",
    "fieldname": "numero_de_bultos",
    "fieldtype": "Int",
    "label": "N\u00famero de Bultos"

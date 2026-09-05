@@ -4,6 +4,9 @@
 
 frappe.ui.form.on("Nubefact Guia De Remision", {
     setup(frm) {
+        frm.set_query("local", () => ({
+            filters: frm.doc.company ? { company: frm.doc.company } : {},
+        }));
         frm.set_query("nubefact_series", () => ({
             filters: {
                 ...(frm.doc.tipo_de_comprobante
