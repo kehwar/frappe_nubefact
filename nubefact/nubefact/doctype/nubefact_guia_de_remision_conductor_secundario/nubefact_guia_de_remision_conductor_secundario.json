@@ -17,32 +17,32 @@
    "fieldname": "documento_tipo",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Documento Tipo",
+   "label": "Tipo de Documento de Conductor Secundario",
    "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "documento_numero",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Documento Número"
+   "label": "Número de Documento de Conductor Secundario"
   },
   {
    "fieldname": "nombre",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Nombre"
+   "label": "Nombre de Conductor Secundario"
   },
   {
    "fieldname": "apellidos",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Apellidos"
+   "label": "Apellidos de Conductor Secundario"
   },
   {
    "fieldname": "numero_licencia",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Número de Licencia"
+   "label": "Número de Licencia de Conductor Secundario"
   },
   {
     "fieldname": "custom",

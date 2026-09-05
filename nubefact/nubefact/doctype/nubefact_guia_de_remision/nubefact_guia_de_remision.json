@@ -228,12 +228,12 @@
   {
    "fieldname": "cliente_numero_de_documento",
    "fieldtype": "Data",
-   "label": "Numero de Documento de Cliente"
+   "label": "N\u00famero de Documento de Cliente"
   },
   {
    "fieldname": "cliente_denominacion",
    "fieldtype": "Data",
-   "label": "Razon Social de Cliente"
+   "label": "Raz\u00f3n Social de Cliente"
   },
   {
    "fieldname": "columna_cliente",
@@ -242,22 +242,22 @@
   {
    "fieldname": "cliente_direccion",
    "fieldtype": "Small Text",
-   "label": "Cliente Direcci\u00f3n"
+   "label": "Direcci\u00f3n de Cliente"
   },
   {
    "fieldname": "cliente_email",
    "fieldtype": "Data",
-   "label": "Cliente Email"
+   "label": "Email de Cliente"
   },
   {
    "fieldname": "cliente_email_1",
    "fieldtype": "Data",
-   "label": "Cliente Email 1"
+   "label": "Email 1 de Cliente"
   },
   {
    "fieldname": "cliente_email_2",
    "fieldtype": "Data",
-   "label": "Cliente Email 2"
+   "label": "Email 2 de Cliente"
   },
   {
    "fieldname": "seccion_destinatario",
@@ -273,12 +273,12 @@
   {
    "fieldname": "destinatario_documento_numero",
    "fieldtype": "Data",
-   "label": "Numero de Documento de Destinatario"
+   "label": "N\u00famero de Documento de Destinatario"
   },
   {
    "fieldname": "destinatario_denominacion",
    "fieldtype": "Data",
-   "label": "Razon Social de Destinatario"
+   "label": "Raz\u00f3n Social de Destinatario"
   },
   {
    "fieldname": "seccion_traslado",
@@ -295,13 +295,13 @@
    "depends_on": "eval:doc.motivo_de_traslado=='13'",
    "fieldname": "motivo_de_traslado_otros_descripcion",
    "fieldtype": "Data",
-   "label": "Motivo de Traslado Otros Descripci\u00f3n",
+   "label": "Descripci\u00f3n de Otro Motivo de Traslado",
    "mandatory_depends_on": "eval:doc.motivo_de_traslado=='13'"
   },
   {
    "fieldname": "documento_relacionado_codigo",
    "fieldtype": "Link",
-   "label": "Documento Relacionado C\u00f3digo",
+   "label": "C\u00f3digo de Documento Relacionado",
    "options": "Nubefact Codigo de Documento Relacionado"
   },
   {
@@ -318,7 +318,7 @@
   {
    "fieldname": "peso_bruto_unidad_de_medida",
    "fieldtype": "Link",
-   "label": "Peso Bruto Unidad de Medida",
+   "label": "Unidad de Medida de Peso Bruto",
    "options": "Nubefact Unidad de Medida"
   },
   {
@@ -333,28 +333,28 @@
   {
    "fieldname": "transportista_documento_tipo",
    "fieldtype": "Link",
-   "label": "Transportista Documento Tipo",
+   "label": "Tipo de Documento de Transportista",
    "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "transportista_documento_numero",
    "fieldtype": "Data",
-   "label": "Transportista Documento N\u00famero"
+   "label": "N\u00famero de Documento de Transportista"
   },
   {
    "fieldname": "transportista_denominacion",
    "fieldtype": "Data",
-   "label": "Transportista Denominaci\u00f3n"
+   "label": "Denominaci\u00f3n de Transportista"
   },
   {
    "fieldname": "transportista_placa_numero",
    "fieldtype": "Data",
-   "label": "Transportista Placa N\u00famero"
+   "label": "N\u00famero de Placa de Transportista"
   },
   {
    "fieldname": "tuc_vehiculo_principal",
    "fieldtype": "Data",
-   "label": "TUC Veh\u00edculo Principal"
+   "label": "TUC de Veh\u00edculo Principal"
   },
   {
    "fieldname": "seccion_conductor",
@@ -364,23 +364,23 @@
   {
    "fieldname": "conductor_documento_tipo",
    "fieldtype": "Link",
-   "label": "Conductor Documento Tipo",
+   "label": "Tipo de Documento de Conductor",
    "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "conductor_documento_numero",
    "fieldtype": "Data",
-   "label": "Conductor Documento N\u00famero"
+   "label": "N\u00famero de Documento de Conductor"
   },
   {
    "fieldname": "conductor_denominacion",
    "fieldtype": "Data",
-   "label": "Conductor Denominaci\u00f3n"
+   "label": "Denominaci\u00f3n de Conductor"
   },
   {
    "fieldname": "conductor_nombre",
    "fieldtype": "Data",
-   "label": "Conductor Nombre"
+   "label": "Nombre de Conductor"
   },
   {
    "fieldname": "columna_conductor",
@@ -389,12 +389,12 @@
   {
    "fieldname": "conductor_apellidos",
    "fieldtype": "Data",
-   "label": "Conductor Apellidos"
+   "label": "Apellidos de Conductor"
   },
   {
    "fieldname": "conductor_numero_licencia",
    "fieldtype": "Data",
-   "label": "Conductor N\u00famero Licencia"
+   "label": "N\u00famero de Licencia de Conductor"
   },
   {
    "fieldname": "mtc",
@@ -404,7 +404,7 @@
   {
    "fieldname": "sunat_envio_indicador",
    "fieldtype": "Link",
-   "label": "SUNAT Env\u00edo Indicador",
+   "label": "Indicador de Env\u00edo a SUNAT",
    "options": "Nubefact Indicador Sunat"
   },
   {
@@ -415,13 +415,13 @@
   {
    "fieldname": "subcontratador_documento_tipo",
    "fieldtype": "Link",
-   "label": "Subcontratador Documento Tipo",
+   "label": "Tipo de Documento de Subcontratador",
    "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "subcontratador_documento_numero",
    "fieldtype": "Data",
-   "label": "Subcontratador Documento N\u00famero"
+   "label": "N\u00famero de Documento de Subcontratador"
   },
   {
    "fieldname": "columna_subcontratador",
@@ -430,7 +430,7 @@
   {
    "fieldname": "subcontratador_denominacion",
    "fieldtype": "Data",
-   "label": "Subcontratador Denominaci\u00f3n"
+   "label": "Denominaci\u00f3n de Subcontratador"
   },
   {
    "fieldname": "seccion_pagador_servicio",
@@ -440,13 +440,13 @@
   {
    "fieldname": "pagador_servicio_documento_tipo_identidad",
    "fieldtype": "Link",
-   "label": "Pagador Servicio Tipo de Documento",
+   "label": "Tipo de Documento de Pagador de Servicio",
    "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "pagador_servicio_documento_numero_identidad",
    "fieldtype": "Data",
-   "label": "Pagador Servicio N\u00famero de Documento"
+   "label": "N\u00famero de Documento de Pagador de Servicio"
   },
   {
    "fieldname": "columna_pagador_servicio",
@@ -455,7 +455,7 @@
   {
    "fieldname": "pagador_servicio_denominacion",
    "fieldtype": "Data",
-   "label": "Pagador Servicio Denominaci\u00f3n"
+   "label": "Denominaci\u00f3n de Pagador de Servicio"
   },
   {
    "fieldname": "seccion_origen_destino",
@@ -465,18 +465,18 @@
   {
    "fieldname": "punto_de_partida_ubigeo",
    "fieldtype": "Link",
-   "label": "Punto de Partida Ubigeo",
+   "label": "Ubigeo de Punto de Partida",
    "options": "Nubefact Ubigeo"
   },
   {
    "fieldname": "punto_de_partida_direccion",
    "fieldtype": "Small Text",
-   "label": "Punto de Partida Direcci\u00f3n"
+   "label": "Direcci\u00f3n de Punto de Partida"
   },
   {
    "fieldname": "punto_de_partida_codigo_establecimiento_sunat",
    "fieldtype": "Data",
-   "label": "Punto de Partida C\u00f3digo Establecimiento SUNAT"
+   "label": "C\u00f3digo de Establecimiento SUNAT de Punto de Partida"
   },
   {
    "fieldname": "columna_origen",
@@ -485,18 +485,18 @@
   {
    "fieldname": "punto_de_llegada_ubigeo",
    "fieldtype": "Link",
-   "label": "Punto de Llegada Ubigeo",
+   "label": "Ubigeo de Punto de Llegada",
    "options": "Nubefact Ubigeo"
   },
   {
    "fieldname": "punto_de_llegada_direccion",
    "fieldtype": "Small Text",
-   "label": "Punto de Llegada Direcci\u00f3n"
+   "label": "Direcci\u00f3n de Punto de Llegada"
   },
   {
    "fieldname": "punto_de_llegada_codigo_establecimiento_sunat",
    "fieldtype": "Data",
-   "label": "Punto de Llegada C\u00f3digo Establecimiento SUNAT"
+   "label": "C\u00f3digo de Establecimiento SUNAT de Punto de Llegada"
   },
   {
    "fieldname": "seccion_automatizacion",
@@ -607,28 +607,28 @@
   {
    "fieldname": "sunat_responsecode",
    "fieldtype": "Data",
-   "label": "SUNAT Responsecode",
+   "label": "C\u00f3digo de Respuesta de SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "sunat_description",
    "fieldtype": "Text",
-   "label": "SUNAT Description",
+   "label": "Descripci\u00f3n de SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "sunat_note",
    "fieldtype": "Text",
-   "label": "SUNAT Note",
+   "label": "Nota de SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "sunat_soap_error",
    "fieldtype": "Text",
-   "label": "SUNAT SOAP Error",
+   "label": "Error SOAP de SUNAT",
    "no_copy": 1,
    "read_only": 1
   },
@@ -729,7 +729,7 @@
    "depends_on": "eval:doc.tipo_de_comprobante == '8'",
    "fieldname": "tab_transportista",
    "fieldtype": "Tab Break",
-   "label": "Tipo Transportista"
+   "label": "Tipo de Transportista"
   },
   {
    "fieldname": "seccion_vehiculo_principal_transportista",

@@ -14,13 +14,13 @@
    "fieldname": "placa_numero",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Placa Número"
+   "label": "Número de Placa de Vehículo Secundario"
   },
   {
    "fieldname": "tuc",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "TUC"
+   "label": "TUC de Vehículo Secundario"
   },
   {
     "fieldname": "custom",
