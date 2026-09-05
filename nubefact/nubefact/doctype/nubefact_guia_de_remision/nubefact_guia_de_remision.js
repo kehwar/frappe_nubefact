@@ -175,6 +175,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
             "cliente_denominacion",
             "cliente_direccion",
             "motivo_de_traslado",
+            "documento_relacionado_codigo (cuando motivo_de_traslado = 08 / Importación o 09 / Exportación)",
             "tipo_de_transporte",
             "peso_bruto_total",
             "peso_bruto_unidad_de_medida",

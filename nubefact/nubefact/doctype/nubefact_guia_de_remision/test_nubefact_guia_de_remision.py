@@ -168,6 +168,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			{"motivo_de_traslado": "19"},
 			{"motivo_de_traslado": "13", "motivo_de_traslado_otros_descripcion": None},
 			{"motivo_de_traslado": "08", "documento_relacionado_codigo": None},
+			{"motivo_de_traslado": "09", "documento_relacionado_codigo": None},
 			{
 				"motivo_de_traslado": "04",
 				"punto_de_partida_codigo_establecimiento_sunat": None,
@@ -238,6 +239,9 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertNotIn("conductor_documento_tipo", public_payload)
 		self.assertIn("transportista_documento_tipo", public_payload)
 		self.assertNotIn("tuc_vehiculo_principal", public_payload)
+
+		non_import_payload = make_valid_gre(documento_relacionado_codigo="50")._build_generate_payload()
+		self.assertNotIn("documento_relacionado_codigo", non_import_payload)
 
 		private_payload = make_valid_gre(
 			tipo_de_transporte="02",
@@ -378,6 +382,14 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			field = meta.get_field(fieldname)
 			self.assertEqual(field.depends_on, transportista_condition)
 			self.assertEqual(field.mandatory_depends_on, transportista_condition)
+
+		related_code = meta.get_field("documento_relacionado_codigo")
+		related_code_condition = (
+			"eval:doc.tipo_de_comprobante == '7' && "
+			"(doc.motivo_de_traslado == '08' || doc.motivo_de_traslado == '09')"
+		)
+		self.assertEqual(related_code.depends_on, related_code_condition)
+		self.assertEqual(related_code.mandatory_depends_on, related_code_condition)
 
 		plate = meta.get_field("transportista_placa_numero")
 		self.assertEqual(plate.depends_on, "eval:doc.sunat_envio_indicador != '06'")

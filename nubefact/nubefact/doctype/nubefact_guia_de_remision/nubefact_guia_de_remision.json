@@ -302,9 +302,11 @@
    "mandatory_depends_on": "eval:doc.motivo_de_traslado=='13'"
   },
   {
+   "depends_on": "eval:doc.tipo_de_comprobante == '7' && (doc.motivo_de_traslado == '08' || doc.motivo_de_traslado == '09')",
    "fieldname": "documento_relacionado_codigo",
    "fieldtype": "Link",
    "label": "C\u00f3digo de Documento Relacionado",
+   "mandatory_depends_on": "eval:doc.tipo_de_comprobante == '7' && (doc.motivo_de_traslado == '08' || doc.motivo_de_traslado == '09')",
    "options": "Nubefact Codigo de Documento Relacionado"
   },
   {
@@ -780,7 +782,7 @@
    "link_fieldname": "referencia_guia_de_remision"
   }
  ],
- "modified": "2026-09-05 07:59:59.407817",
+ "modified": "2026-09-05 09:17:10.268944",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Guia De Remision",
