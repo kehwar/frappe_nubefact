@@ -25,7 +25,6 @@ REQUIRED_FIELDS = [
 	"peso_bruto_total",
 	"peso_bruto_unidad_de_medida",
 	"fecha_de_inicio_de_traslado",
-	"transportista_placa_numero",
 	"punto_de_partida_ubigeo",
 	"punto_de_partida_direccion",
 	"punto_de_llegada_ubigeo",
@@ -47,7 +46,7 @@ PUBLIC_TRANSPORT_REQUIRED_FIELDS = [
 	"transportista_denominacion",
 ]
 
-# Required for GRE Remitente with private transport (transport_type = "02") and for all GRE Transportista (type 8)
+# Required for GRE Remitente with private transport (transport_type = "02") and for all GRE Transportista (type 8), except M1L
 DRIVER_REQUIRED_FIELDS = [
 	"conductor_documento_tipo",
 	"conductor_documento_numero",

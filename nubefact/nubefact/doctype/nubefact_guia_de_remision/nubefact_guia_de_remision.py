@@ -191,7 +191,6 @@ class NubefactGuiaDeRemision(Document):
 			"fecha_de_inicio_de_traslado": to_nubefact_date(self.fecha_de_inicio_de_traslado),
 			"peso_bruto_total": cstr(self.peso_bruto_total),
 			"peso_bruto_unidad_de_medida": self.peso_bruto_unidad_de_medida,
-			"transportista_placa_numero": self.transportista_placa_numero,
 			"punto_de_partida_ubigeo": self.punto_de_partida_ubigeo,
 			"punto_de_partida_direccion": self.punto_de_partida_direccion,
 			"punto_de_llegada_ubigeo": self.punto_de_llegada_ubigeo,
@@ -216,6 +215,8 @@ class NubefactGuiaDeRemision(Document):
 				}
 			)
 		)
+		if indicator != "06":
+			payload["transportista_placa_numero"] = self.transportista_placa_numero
 
 		if document_type == "7":
 			payload.update(
@@ -240,11 +241,12 @@ class NubefactGuiaDeRemision(Document):
 						"transportista_denominacion": self.transportista_denominacion,
 					}
 				)
-			elif transport_type == "02":
+			elif transport_type == "02" and indicator != "06":
 				payload.update(self._build_driver_payload())
 
 		if document_type == "8":
-			payload.update(self._build_driver_payload())
+			if indicator != "06":
+				payload.update(self._build_driver_payload())
 			payload.update(
 				{
 					"destinatario_documento_tipo": cstr(self.destinatario_documento_tipo),
@@ -365,6 +367,14 @@ class NubefactGuiaDeRemision(Document):
 			"Faltan campos obligatorios para enviar la guía de remisión.",
 		)
 
+		indicator = cstr(self.sunat_envio_indicador).strip()
+		if indicator != "06":
+			require_fields(
+				self,
+				["transportista_placa_numero"],
+				"La placa del transportista es obligatoria salvo para traslados M1L.",
+			)
+
 		if not self.items:
 			frappe.throw("Se requiere al menos un ítem para enviar la guía de remisión.")
 
@@ -396,9 +406,9 @@ class NubefactGuiaDeRemision(Document):
 				require_fields(
 					self,
 					PUBLIC_TRANSPORT_REQUIRED_FIELDS,
-					"Los campos del transportista son obligatorios para transporte público.",
+					"Los datos del transportista son obligatorios para transporte público.",
 				)
-			elif cstr(self.tipo_de_transporte) == "02":
+			elif cstr(self.tipo_de_transporte) == "02" and indicator != "06":
 				require_fields(
 					self,
 					DRIVER_REQUIRED_FIELDS,
@@ -411,11 +421,12 @@ class NubefactGuiaDeRemision(Document):
 				TYPE_8_RECIPIENT_REQUIRED_FIELDS,
 				"Los campos del destinatario son obligatorios para GRE Transportista.",
 			)
-			require_fields(
-				self,
-				DRIVER_REQUIRED_FIELDS,
-				"Los campos del conductor son obligatorios para GRE Transportista.",
-			)
+			if indicator != "06":
+				require_fields(
+					self,
+					DRIVER_REQUIRED_FIELDS,
+					"Los campos del conductor son obligatorios para GRE Transportista.",
+				)
 
 	def _validate_document_rules(self):
 		document_type = cstr(self.tipo_de_comprobante)
@@ -544,7 +555,8 @@ class NubefactGuiaDeRemision(Document):
 				frappe.throw("El RUC del transportista debe tener 11 dígitos.")
 			self._validate_text_length("transportista_denominacion", 1, 100)
 
-		self._validate_plate(self.transportista_placa_numero, "Placa del vehículo principal")
+		if indicator != "06":
+			self._validate_plate(self.transportista_placa_numero, "Placa del vehículo principal")
 		self._validate_optional_uppercase_code("tuc_vehiculo_principal", 10, 15)
 		if document_type != "8" and cstr(self.tuc_vehiculo_principal).strip():
 			frappe.throw("El TUC del vehículo principal sólo aplica a GRE Transportista.")
@@ -563,8 +575,8 @@ class NubefactGuiaDeRemision(Document):
 		self._validate_child_rules(document_type)
 
 	def _validate_driver_rules(self, document_type: str):
-		driver_required = document_type == "8" or (
-			document_type == "7" and cstr(self.tipo_de_transporte) == "02"
+		driver_required = cstr(self.sunat_envio_indicador).strip() != "06" and (
+			document_type == "8" or (document_type == "7" and cstr(self.tipo_de_transporte) == "02")
 		)
 		if not driver_required:
 			return

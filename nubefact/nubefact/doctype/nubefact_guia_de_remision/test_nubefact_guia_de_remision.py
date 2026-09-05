@@ -122,11 +122,16 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertFalse(doc.numero)
 		self.assertEqual(doc.title, "TTT1-")
 
-	def test_public_remitente_requires_delivery_date(self):
-		doc = make_valid_gre(fecha_de_entrega_al_transportista=None)
-
-		with self.assertRaises(frappe.ValidationError):
-			doc.insert()
+	def test_public_remitente_requires_delivery_date_and_transporter_identity(self):
+		for fieldname in (
+			"fecha_de_entrega_al_transportista",
+			"transportista_documento_tipo",
+			"transportista_documento_numero",
+			"transportista_denominacion",
+		):
+			with self.subTest(fieldname=fieldname):
+				with self.assertRaises(frappe.ValidationError):
+					make_valid_gre(**{fieldname: None}).insert()
 
 	def test_save_rejects_invalid_header_formats_and_ranges(self):
 		invalid_values = [
@@ -231,6 +236,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			getdate(add_days(nowdate(), 2)).strftime("%d-%m-%Y"),
 		)
 		self.assertNotIn("conductor_documento_tipo", public_payload)
+		self.assertIn("transportista_documento_tipo", public_payload)
 		self.assertNotIn("tuc_vehiculo_principal", public_payload)
 
 		private_payload = make_valid_gre(
@@ -250,6 +256,26 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			self.assertNotIn(fieldname, carrier_payload)
 		self.assertNotIn("transportista_documento_tipo", carrier_payload)
 		self.assertIn("destinatario_documento_tipo", carrier_payload)
+
+		m1l_payload = make_valid_gre(
+			tipo_de_transporte="02",
+			sunat_envio_indicador="06",
+			transportista_documento_tipo=None,
+			transportista_documento_numero=None,
+			transportista_denominacion=None,
+			transportista_placa_numero=None,
+		)._build_generate_payload()
+		self.assertNotIn("transportista_documento_tipo", m1l_payload)
+		self.assertNotIn("transportista_placa_numero", m1l_payload)
+		for fieldname in (
+			"conductor_documento_tipo",
+			"conductor_documento_numero",
+			"conductor_denominacion",
+			"conductor_nombre",
+			"conductor_apellidos",
+			"conductor_numero_licencia",
+		):
+			self.assertNotIn(fieldname, m1l_payload)
 
 	def test_import_export_payload_uses_corresponding_item_unit_codes(self):
 		unit_codes = {
@@ -302,6 +328,61 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			"ZZ.*no tienen código|no tienen código.*ZZ",
 		):
 			doc._build_generate_payload()
+
+	def test_m1l_does_not_require_driver_or_transporter_plate(self):
+		doc = make_valid_gre(
+			tipo_de_transporte="02",
+			sunat_envio_indicador="06",
+			transportista_documento_tipo=None,
+			transportista_documento_numero=None,
+			transportista_denominacion=None,
+			transportista_placa_numero=None,
+		)
+
+		doc.insert()
+
+		self.assertFalse(doc.transportista_placa_numero)
+		self.assertFalse(doc.conductor_documento_tipo)
+
+	def test_non_public_transport_does_not_require_transporter_identity(self):
+		doc = make_valid_gre(
+			tipo_de_transporte="02",
+			transportista_documento_tipo=None,
+			transportista_documento_numero=None,
+			transportista_denominacion=None,
+			conductor_documento_tipo="1",
+			conductor_documento_numero="12345678",
+			conductor_nombre="JUAN",
+			conductor_apellidos="PEREZ",
+			conductor_numero_licencia="Q12345678",
+		).insert()
+
+		self.assertFalse(doc.transportista_documento_tipo)
+
+		carrier_doc = make_valid_gre(
+			tipo_de_comprobante="8",
+			transportista_documento_tipo=None,
+			transportista_documento_numero=None,
+			transportista_denominacion=None,
+		).insert()
+		self.assertFalse(carrier_doc.transportista_documento_tipo)
+
+	def test_conditional_fields_have_matching_visibility_and_mandatory_rules(self):
+		meta = frappe.get_meta("Nubefact Guia De Remision")
+		transportista_condition = "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'"
+		for fieldname in (
+			"transportista_documento_tipo",
+			"transportista_documento_numero",
+			"transportista_denominacion",
+		):
+			field = meta.get_field(fieldname)
+			self.assertEqual(field.depends_on, transportista_condition)
+			self.assertEqual(field.mandatory_depends_on, transportista_condition)
+
+		plate = meta.get_field("transportista_placa_numero")
+		self.assertEqual(plate.depends_on, "eval:doc.sunat_envio_indicador != '06'")
+		self.assertEqual(plate.mandatory_depends_on, plate.depends_on)
+		self.assertIn("doc.sunat_envio_indicador != '06'", meta.get_field("seccion_conductor").depends_on)
 
 	def test_valid_private_remitente_and_transportista_can_be_saved(self):
 		private_doc = make_valid_gre(
