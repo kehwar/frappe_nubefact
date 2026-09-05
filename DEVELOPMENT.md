@@ -49,6 +49,23 @@ bench --site "$SITE_NAME" run-tests \
   --module nubefact.nubefact.doctype.nubefact_guia_de_remision.test_nubefact_guia_de_remision
 ```
 
+### Live demo E2E configuration
+
+Live NubeFact API tests are opt-in. Set `NUBEFACT_E2E_ENABLED=1` and the
+`NUBEFACT_E2E_API_URL`/`NUBEFACT_E2E_API_TOKEN` credentials in the ignored
+`.devcontainer/.env` file. The same file contains the provider-side local,
+SUNAT establishment code, and supported factura, boleta, and shipping-guide
+series. Compose passes these values to the developer container.
+
+Do not put credentials in `.devcontainer/.env.example` or run live E2E tests
+against a production account. Recreate the developer service after changing
+these values so its environment is refreshed:
+
+```bash
+docker compose --env-file .devcontainer/.env \
+  -f .devcontainer/compose.yaml up -d --force-recreate developer
+```
+
 Start the development processes only when needed:
 
 ```bash
