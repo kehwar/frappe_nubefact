@@ -10,6 +10,25 @@ from frappe.utils import now_datetime
 from nubefact.nubefact.doctype.nubefact_api_log.nubefact_api_log import create_api_log
 from nubefact.nubefact.doctype.nubefact_local.nubefact_local import get_request_config
 
+NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE = "23"
+MAX_DUPLICATE_NUMBER_SKIPS = 10
+
+
+class NubefactAPIError(frappe.ValidationError):
+    """Structured NubeFact request failure with its provider error code."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        error_code: str | None = None,
+        log_name: str | None = None,
+    ):
+        self.error_code = str(error_code) if error_code is not None else None
+        self.log_name = log_name
+        detail = f"{message} (Log: {log_name})" if log_name else message
+        super().__init__(detail)
+
 
 def make_request(
     payload: dict[str, Any],
@@ -58,6 +77,8 @@ def make_request(
         )
         if status == "Error":
             error_code, error_message = _extract_error_details(response_payload)
+            if not error_message and error_code:
+                error_message = f"NubeFact devolvió el código de error {error_code}."
             if not error_message:
                 error_message = f"La solicitud a Nubefact falló con código de estado {response_status_code}."
 
@@ -85,9 +106,10 @@ def make_request(
         )
 
     if status == "Error":
-        frappe.throw(
+        raise NubefactAPIError(
             error_message or "La solicitud a Nubefact falló.",
-            title=f"Error de Nubefact (Log: {log_name})",
+            error_code=error_code,
+            log_name=log_name,
         )
 
     return response_payload
@@ -103,7 +125,8 @@ def _has_api_error(response_payload: Any) -> bool:
     if response_payload.get("error"):
         return True
 
-    return False
+    error_code = response_payload.get("codigo")
+    return error_code is not None and str(error_code).strip() not in {"", "0"}
 
 
 def _extract_error_details(response_payload: Any) -> tuple[str | None, str | None]:
@@ -125,4 +148,9 @@ def _extract_error_details(response_payload: Any) -> tuple[str | None, str | Non
     return error_code, error_message
 
 
-__all__ = ["make_request"]
+__all__ = [
+    "MAX_DUPLICATE_NUMBER_SKIPS",
+    "NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE",
+    "NubefactAPIError",
+    "make_request",
+]

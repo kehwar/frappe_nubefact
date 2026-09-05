@@ -100,6 +100,88 @@ class TestNubefactFacturacion(FrappeTestCase):
 		)
 		self.assertEqual(json.loads(log_payload)["pdf_zip_base64"], "PDF-BASE64")
 
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_fresh_issue_skips_numbers_that_already_exist_in_nubefact(self, post, enqueue_files):
+		local, series = self.make_local_and_series(numero=17)
+		document = frappe.get_doc(
+			{
+				"doctype": "Nubefact Facturacion",
+				"company": local.company,
+				"local": local.name,
+				"nubefact_series": series.name,
+				"tipo_de_comprobante": "1",
+				"numero": None,
+				"skip_field_validation": 1,
+			}
+		).insert()
+		post.side_effect = [
+			self.make_http_response(
+				{
+					"codigo": 23,
+					"errors": "Este documento ya existe en NubeFact",
+				}
+			),
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 1,
+					"serie": series.serie,
+					"numero": 18,
+					"aceptada_por_sunat": True,
+				}
+			),
+		]
+
+		result = send_to_nubefact(document.name)
+
+		self.assertEqual(result["status"], "Aceptada")
+		self.assertEqual(
+			[call.kwargs["json"]["numero"] for call in post.call_args_list], [17, 18]
+		)
+		self.assertEqual(frappe.db.get_value(document.doctype, document.name, "numero"), 18)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 19)
+		self.assertEqual(
+			frappe.db.get_value(
+				series.doctype, series.name, "ultimo_numero_asignado"
+			),
+			18,
+		)
+		self.assertEqual(
+			frappe.db.count("Nubefact API Log", {"reference_invoice": document.name}),
+			2,
+		)
+		enqueue_files.assert_called_once()
+
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_existing_manual_number_is_not_replaced_on_duplicate(self, post):
+		local, series = self.make_local_and_series(numero=30)
+		document = frappe.get_doc(
+			{
+				"doctype": "Nubefact Facturacion",
+				"company": local.company,
+				"local": local.name,
+				"nubefact_series": series.name,
+				"tipo_de_comprobante": "1",
+				"numero": 30,
+				"skip_field_validation": 1,
+			}
+		).insert()
+		post.return_value = self.make_http_response(
+			{
+				"codigo": 23,
+				"errors": "Este documento ya existe en NubeFact",
+			}
+		)
+
+		result = send_to_nubefact(document.name)
+
+		self.assertEqual(result["status"], "Error")
+		self.assertEqual(post.call_count, 1)
+		self.assertEqual(frappe.db.get_value(document.doctype, document.name, "numero"), 30)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 31)
+
 	@patch("nubefact.utils.nubefact.requests.post")
 	def test_failed_issue_reuses_reserved_number_on_retry(self, post):
 		local, series = self.make_local_and_series(numero=30)
@@ -134,6 +216,41 @@ class TestNubefactFacturacion(FrappeTestCase):
 		self.assertEqual(succeeded["status"], "Aceptada")
 		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 31)
 		self.assertEqual(post.call_args.kwargs["json"]["numero"], 30)
+
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_duplicate_after_ambiguous_timeout_keeps_the_reserved_number(self, post):
+		local, series = self.make_local_and_series(numero=30)
+		document = frappe.get_doc(
+			{
+				"doctype": "Nubefact Facturacion",
+				"company": local.company,
+				"local": local.name,
+				"nubefact_series": series.name,
+				"tipo_de_comprobante": "1",
+				"skip_field_validation": 1,
+			}
+		).insert()
+		post.side_effect = [
+			requests.Timeout("timeout"),
+			self.make_http_response(
+				{
+					"codigo": 23,
+					"errors": "Este documento ya existe en NubeFact",
+				}
+			),
+		]
+
+		first_result = send_to_nubefact(document.name)
+		second_result = send_to_nubefact(document.name)
+
+		self.assertEqual(first_result["status"], "Error")
+		self.assertEqual(second_result["status"], "Error")
+		self.assertIn("Este documento ya existe", second_result["error_message"])
+		self.assertEqual(
+			[call.kwargs["json"]["numero"] for call in post.call_args_list], [30, 30]
+		)
+		self.assertEqual(frappe.db.get_value(document.doctype, document.name, "numero"), 30)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 31)
 
 	def test_rejects_catalog_codes_outside_cpe_scope(self):
 		document = frappe.new_doc("Nubefact Facturacion")

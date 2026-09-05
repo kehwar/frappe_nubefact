@@ -3,13 +3,17 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import random_string
 
 from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
+	advance_document_number_after_nubefact_duplicate,
 	allocate_document_number,
 	compose_series_title,
+	recover_stale_issuing_documents,
 )
 
 
@@ -141,6 +145,95 @@ class TestNubefactSeries(FrappeTestCase):
 		).insert()
 		self.assertEqual(allocate_document_number(imported), 55)
 		self.assertEqual(frappe.db.get_value("Nubefact Series", document.nubefact_series, "numero"), 56)
+
+	def test_duplicate_replacement_uses_current_tracker_after_another_reservation(self):
+		company = self.make_company()
+		local = self.make_local(company)
+		series = frappe.get_doc(
+			{
+				"doctype": "Nubefact Series",
+				"company": company,
+				"local": local.name,
+				"tipo_de_comprobante": "7",
+				"serie": f"T{random_string(3).upper()}",
+				"numero": 1,
+			}
+		).insert()
+		documents = [
+			frappe.get_doc(
+				{
+					"doctype": "Nubefact Guia De Remision",
+					"company": company,
+					"local": local.name,
+					"nubefact_series": series.name,
+					"skip_field_validation": 1,
+				}
+			).insert()
+			for _ in range(2)
+		]
+
+		self.assertEqual(allocate_document_number(documents[0], mark_as_issuing=True), 1)
+		issuance_modified = frappe.db.get_value(documents[0].doctype, documents[0].name, "modified")
+		self.assertEqual(allocate_document_number(documents[1], mark_as_issuing=True), 2)
+		self.assertEqual(
+			advance_document_number_after_nubefact_duplicate(
+				documents[0], expected_number=1, expected_modified=issuance_modified
+			),
+			3,
+		)
+
+		self.assertEqual(frappe.db.get_value(documents[0].doctype, documents[0].name, "numero"), 3)
+		self.assertEqual(frappe.db.get_value(documents[1].doctype, documents[1].name, "numero"), 2)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 4)
+		self.assertEqual(
+			frappe.db.get_value(series.doctype, series.name, "ultimo_numero_asignado"), 3
+		)
+
+	def test_stale_recovery_rechecks_the_document_before_updating(self):
+		company = self.make_company()
+		local = self.make_local(company)
+		while True:
+			series_code = f"T{random_string(3).upper()}"
+			if not frappe.db.exists(
+				"Nubefact Series",
+				{
+					"company": company,
+					"tipo_de_comprobante": "7",
+					"serie": series_code,
+				},
+			):
+				break
+		series = frappe.get_doc(
+			{
+				"doctype": "Nubefact Series",
+				"company": company,
+				"local": local.name,
+				"tipo_de_comprobante": "7",
+				"serie": series_code,
+				"numero": 1,
+			}
+		).insert()
+		document = frappe.get_doc(
+			{
+				"doctype": "Nubefact Guia De Remision",
+				"company": company,
+				"local": local.name,
+				"nubefact_series": series.name,
+				"skip_field_validation": 1,
+			}
+		).insert()
+		allocate_document_number(document, mark_as_issuing=True)
+		with patch(
+			"nubefact.nubefact.doctype.nubefact_series.nubefact_series.frappe.get_all"
+		) as get_all:
+			get_all.side_effect = lambda doctype, **kwargs: (
+				[document.name] if doctype == document.doctype else []
+			)
+			recover_stale_issuing_documents()
+
+		self.assertEqual(
+			frappe.db.get_value(document.doctype, document.name, "status"), "Enviando"
+		)
 
 	def test_facturacion_must_match_the_selected_series_identity(self):
 		company = self.make_company()

@@ -7,6 +7,7 @@ import json
 from unittest.mock import Mock, patch
 
 import frappe
+import requests
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, getdate, nowdate, random_string
 
@@ -557,6 +558,190 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			frappe.db.count("Nubefact API Log", {"referencia_guia_de_remision": doc.name}),
 			2,
 		)
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_fresh_issue_skips_numbers_that_already_exist_in_nubefact(self, post, enqueue_files):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+		post.side_effect = [
+			self.make_http_response({"codigo": 23}),
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 2,
+					"aceptada_por_sunat": True,
+				}
+			),
+		]
+
+		result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(result["status"], "Aceptada")
+		self.assertEqual([call.kwargs["json"]["numero"] for call in post.call_args_list], [1, 2])
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 2)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 3)
+		self.assertEqual(
+			frappe.db.count("Nubefact API Log", {"referencia_guia_de_remision": doc.name}),
+			2,
+		)
+		self.assertEqual(
+			frappe.db.get_value(
+				"Nubefact API Log",
+				{"referencia_guia_de_remision": doc.name, "status": "Error"},
+				"error_code",
+			),
+			"23",
+		)
+		enqueue_files.assert_called_once()
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_duplicate_after_ambiguous_timeout_keeps_the_reserved_number(
+		self, post, enqueue_files
+	):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+		post.side_effect = [
+			requests.Timeout("timeout"),
+			self.make_http_response(
+				{
+					"codigo": 23,
+					"errors": "Este documento ya existe en NubeFact",
+				}
+			),
+		]
+
+		first_result = enviar_a_nubefact(doc.name)
+		second_result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(first_result["status"], "Error")
+		self.assertEqual(second_result["status"], "Error")
+		self.assertIn("Este documento ya existe", second_result["error_message"])
+		self.assertEqual([call.kwargs["json"]["numero"] for call in post.call_args_list], [1, 1])
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 1)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 2)
+		enqueue_files.assert_not_called()
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_identity_override_disables_duplicate_number_skipping(self, post, enqueue_files):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+			custom={"numero": 99},
+		).insert()
+		post.return_value = self.make_http_response(
+			{
+				"codigo": 23,
+				"errors": "Este documento ya existe en NubeFact",
+			}
+		)
+
+		result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(result["status"], "Error")
+		self.assertEqual(post.call_count, 1)
+		self.assertEqual(post.call_args.kwargs["json"]["numero"], 99)
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 1)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 2)
+		enqueue_files.assert_not_called()
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_stale_worker_cannot_replace_a_newer_issuance_number(self, post, enqueue_files):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+
+		def respond_after_newer_issuance(*args, **kwargs):
+			frappe.db.set_value(doc.doctype, doc.name, "status", "Error", update_modified=True)
+			frappe.db.set_value(doc.doctype, doc.name, "status", "Enviando", update_modified=True)
+			return self.make_http_response(
+				{
+					"codigo": 23,
+					"errors": "Este documento ya existe en NubeFact",
+				}
+			)
+
+		post.side_effect = respond_after_newer_issuance
+
+		result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(result["status"], "Error")
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "status"), "Enviando")
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 1)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 2)
+		enqueue_files.assert_not_called()
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_duplicate_number_skipping_is_bounded(self, post, enqueue_files):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+		post.side_effect = [
+			self.make_http_response(
+				{
+					"codigo": 23,
+					"errors": "Este documento ya existe en NubeFact",
+				}
+			)
+			for _ in range(11)
+		]
+
+		result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(result["status"], "Error")
+		self.assertEqual(
+			[call.kwargs["json"]["numero"] for call in post.call_args_list],
+			list(range(1, 12)),
+		)
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 11)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 12)
+		enqueue_files.assert_not_called()
 
 	@patch(
 		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"

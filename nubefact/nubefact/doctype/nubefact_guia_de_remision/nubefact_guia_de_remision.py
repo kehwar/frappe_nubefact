@@ -43,13 +43,18 @@ from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
 	get_origin_values as get_local_origin_values,
 )
 from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
+	advance_document_number_after_nubefact_duplicate,
 	allocate_document_number,
 	apply_and_validate_document_series,
 	set_company_from_local,
 	validate_document_is_not_being_issued,
+	validate_document_issuance_lease,
 )
 from nubefact.utils import (
+	MAX_DUPLICATE_NUMBER_SKIPS,
 	NUBEFACT_BASE64_FIELDS,
+	NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE,
+	NubefactAPIError,
 	apply_raw_payload_overrides,
 	enqueue_nubefact_file_downloads,
 	make_request,
@@ -817,19 +822,52 @@ def enviar_a_nubefact(name: str):
 	if doc.status not in {"Borrador", "Error"}:
 		frappe.throw("Solo se pueden enviar guías en estado Borrador o Error.")
 
+	number_was_unassigned = not cint(doc.numero)
 	doc._action = "save"
 	doc.run_before_save_methods()
 	allocate_document_number(doc, mark_as_issuing=True)
 	# Persist the reservation before the external request. A timeout can hide
 	# a successful issue, so an assigned number must never be reused.
 	frappe.db.commit()
+	issuance_modified = frappe.db.get_value(doc.doctype, doc.name, "modified")
 
+	duplicate_numbers_skipped = 0
 	try:
-		values = _request_extract_and_save_response(
-			doc,
-			payload=doc._build_generate_payload(),
-			clear_previous=True,
-		)
+		while True:
+			attempted_number = cint(doc.numero)
+			payload = doc._build_generate_payload()
+			request_identity_matches_document = (
+				payload.get("operacion") == "generar_guia"
+				and cstr(payload.get("tipo_de_comprobante")) == cstr(cint(doc.tipo_de_comprobante))
+				and cstr(payload.get("serie")).strip() == cstr(doc.serie).strip()
+				and cint(payload.get("numero")) == attempted_number
+			)
+			try:
+				values = _request_extract_and_save_response(
+					doc,
+					payload=payload,
+					clear_previous=True,
+					expected_issuance_modified=issuance_modified,
+				)
+				break
+			except NubefactAPIError as exc:
+				can_skip_duplicate = (
+					number_was_unassigned
+					and request_identity_matches_document
+					and exc.error_code == NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE
+					and duplicate_numbers_skipped < MAX_DUPLICATE_NUMBER_SKIPS
+				)
+				if not can_skip_duplicate:
+					raise
+
+				frappe.db.rollback()
+				advance_document_number_after_nubefact_duplicate(
+					doc,
+					expected_number=attempted_number,
+					expected_modified=issuance_modified,
+				)
+				frappe.db.commit()
+				duplicate_numbers_skipped += 1
 	except Exception as exc:
 		frappe.db.rollback()
 		error_message = cstr(exc)
@@ -841,8 +879,13 @@ def enviar_a_nubefact(name: str):
 		}
 
 	if values and values.get("status") == "Error":
-		_save_response_status(doc, values)
-		frappe.db.commit()
+		try:
+			validate_document_issuance_lease(doc, issuance_modified)
+		except frappe.ValidationError:
+			frappe.db.rollback()
+		else:
+			_save_response_status(doc, values)
+			frappe.db.commit()
 
 	return values
 
@@ -879,6 +922,7 @@ def _request_extract_and_save_response(
 	payload: dict[str, Any],
 	*,
 	clear_previous: bool = False,
+	expected_issuance_modified: Any = None,
 ) -> dict[str, Any]:
 	response = make_request(
 		payload=payload,
@@ -893,6 +937,8 @@ def _request_extract_and_save_response(
 		frappe.throw("No se pudo interpretar la respuesta de NubeFact.")
 
 	if values:
+		if expected_issuance_modified is not None:
+			validate_document_issuance_lease(doc, expected_issuance_modified)
 		saved_values = _save_response_status(doc, values, clear_previous=clear_previous)
 		enqueue_nubefact_file_downloads(
 			doc.doctype,

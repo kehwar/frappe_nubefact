@@ -8,7 +8,7 @@ from typing import Any
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import add_to_date, cint, cstr, now_datetime
+from frappe.utils import add_to_date, cint, cstr, get_datetime, now_datetime
 
 DOCTYPE_BY_DOCUMENT_TYPE = {
 	"1": "Nubefact Facturacion",
@@ -259,20 +259,7 @@ def allocate_document_number(document: Document, *, mark_as_issuing: bool = Fals
 		if not 1 <= number <= MAX_DOCUMENT_NUMBER:
 			frappe.throw("La Serie NubeFact no tiene un próximo número válido.")
 
-		identity = {
-			"tipo_de_comprobante": document.tipo_de_comprobante,
-			"serie": document.serie,
-			"numero": number,
-			"name": ["!=", document.name],
-		}
-		duplicate = frappe.db.exists(
-			document.doctype,
-			{**identity, "company": document.company},
-		) or frappe.db.exists(
-			document.doctype,
-			{**identity, "local": document.local},
-		)
-		if duplicate:
+		if _number_belongs_to_another_document(document, number):
 			frappe.throw(
 				"El número de la Serie NubeFact ya está asignado a otro documento. "
 				"Corrija el próximo número antes de emitir."
@@ -302,6 +289,127 @@ def allocate_document_number(document: Document, *, mark_as_issuing: bool = Fals
 		values["status"] = "Enviando"
 	frappe.db.set_value(document.doctype, document.name, values, update_modified=True)
 	return number
+
+
+def advance_document_number_after_nubefact_duplicate(
+	document: Document, *, expected_number: int, expected_modified: Any
+) -> int:
+	"""Replace a freshly reserved number that NubeFact reports as already existing.
+
+	The caller must commit the replacement before retrying the external request.
+	The expected number and ``Enviando`` state prevent a stale request from
+	renumbering a document owned by a newer issuance attempt.
+	"""
+
+	if document.doctype not in SUPPORTED_DOCTYPES or document.is_new():
+		frappe.throw("El documento debe estar guardado antes de reemplazar su número.")
+
+	expected_number = cint(expected_number)
+	current = _lock_current_document_issuance(document, expected_modified)
+	if not cint(current.numero_asignado_automaticamente):
+		frappe.throw("Solo se puede reemplazar un número reservado automáticamente.")
+	if cint(current.numero) != expected_number:
+		frappe.throw("El número del documento cambió durante el envío; vuelva a cargarlo.")
+	if cstr(current.nubefact_series).strip() != cstr(document.nubefact_series).strip():
+		frappe.throw("La Serie NubeFact del documento cambió; vuelva a cargarlo.")
+
+	series_name = cstr(current.nubefact_series).strip()
+	tracker_rows: list[dict[str, Any]] = frappe.db.sql(
+		"""
+		SELECT `company`, `local`, `tipo_de_comprobante`, `serie`, `numero`, `ultimo_numero_asignado`
+		FROM `tabNubefact Series`
+		WHERE `name` = %s
+		FOR UPDATE
+		""",
+		(series_name,),
+		as_dict=True,
+	)
+	if not tracker_rows:
+		frappe.throw("La Serie NubeFact seleccionada no existe.")
+
+	tracker = tracker_rows[0]
+	_apply_locked_tracker_values(document, tracker)
+	new_number = max(cint(tracker.numero), expected_number + 1)
+	while new_number <= MAX_DOCUMENT_NUMBER and _number_belongs_to_another_document(
+		document, new_number
+	):
+		new_number += 1
+	if new_number > MAX_DOCUMENT_NUMBER:
+		frappe.throw("La Serie NubeFact no tiene más números válidos disponibles.")
+
+	frappe.db.set_value(
+		"Nubefact Series",
+		series_name,
+		{
+			"numero": new_number + 1,
+			"ultimo_numero_asignado": max(
+				new_number, cint(tracker.get("ultimo_numero_asignado"))
+			),
+		},
+		update_modified=True,
+	)
+
+	document.numero = new_number
+	document.numero_asignado_automaticamente = 1
+	document.title = document._compose_title()
+	frappe.db.set_value(
+		document.doctype,
+		document.name,
+		{
+			"numero": new_number,
+			"numero_asignado_automaticamente": 1,
+			"title": document.title,
+		},
+		# Preserve the issuance lease in ``modified``. Stale recovery or a newer
+		# issuance changes it and prevents this worker from renumbering the document.
+		update_modified=False,
+	)
+	return new_number
+
+
+def validate_document_issuance_lease(document: Document, expected_modified: Any) -> None:
+	"""Lock the document and reject responses from an obsolete issuance worker."""
+
+	_lock_current_document_issuance(document, expected_modified)
+
+
+def _lock_current_document_issuance(document: Document, expected_modified: Any) -> dict[str, Any]:
+	if document.doctype not in SUPPORTED_DOCTYPES or document.is_new():
+		frappe.throw("El documento debe estar guardado antes de validar su envío.")
+
+	table = f"tab{document.doctype}"
+	current_rows = frappe.db.sql(
+		f"""
+		SELECT `status`, `numero`, `numero_asignado_automaticamente`, `nubefact_series`, `modified`
+		FROM `{table}`
+		WHERE `name` = %s
+		FOR UPDATE
+		""",  # nosec B608
+		(document.name,),
+		as_dict=True,
+	)
+	if not current_rows:
+		frappe.throw("No se encontró el documento que se está emitiendo.")
+
+	current = current_rows[0]
+	if current.status != "Enviando" or get_datetime(current.modified) != get_datetime(
+		expected_modified
+	):
+		frappe.throw("El documento ya no pertenece a este intento de envío.")
+	return current
+
+
+def _number_belongs_to_another_document(document: Document, number: int) -> bool:
+	identity = {
+		"tipo_de_comprobante": document.tipo_de_comprobante,
+		"serie": document.serie,
+		"numero": number,
+		"name": ["!=", document.name],
+	}
+	return bool(
+		frappe.db.exists(document.doctype, {**identity, "company": document.company})
+		or frappe.db.exists(document.doctype, {**identity, "local": document.local})
+	)
 
 
 def _apply_locked_tracker_values(document: Document, tracker: dict[str, Any]) -> None:
@@ -334,17 +442,24 @@ def recover_stale_issuing_documents() -> None:
 			pluck="name",
 			limit=100,
 		)
+		table = f"tab{doctype}"
 		for name in stale_names:
-			frappe.db.set_value(
-				doctype,
-				name,
-				{
-					"status": "Error",
-					"error_message": (
-						"El envío no terminó correctamente. Puede reintentar con el mismo número reservado."
-					),
-				},
-				update_modified=True,
+			# The initial query is only a snapshot. Recheck both values in the
+			# update so this job cannot overwrite a newer issuance attempt.
+			frappe.db.sql(
+				f"""
+				UPDATE `{table}`
+				SET `status` = %s, `error_message` = %s, `modified` = %s
+				WHERE `name` = %s AND `status` = %s AND `modified` < %s
+				""",  # nosec B608
+				(
+					"Error",
+					"El envío no terminó correctamente. Puede reintentar con el mismo número reservado.",
+					now_datetime(),
+					name,
+					"Enviando",
+					cutoff,
+				),
 			)
 
 

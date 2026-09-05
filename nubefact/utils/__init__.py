@@ -15,7 +15,12 @@ from frappe.model.document import Document
 from frappe.utils import cstr, getdate
 from frappe.utils.file_manager import save_file
 
-from nubefact.utils.nubefact import make_request
+from nubefact.utils.nubefact import (
+	MAX_DUPLICATE_NUMBER_SKIPS,
+	NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE,
+	NubefactAPIError,
+	make_request,
+)
 
 NUBEFACT_BASE64_FIELDS = (
 	"pdf_zip_base64",
@@ -389,7 +394,10 @@ def enqueue_nubefact_file_downloads(
 			)
 
 __all__ = [
+	"MAX_DUPLICATE_NUMBER_SKIPS",
 	"NUBEFACT_BASE64_FIELDS",
+	"NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE",
+	"NubefactAPIError",
 	"apply_raw_payload_overrides",
 	"attach_nubefact_base64_file",
 	"attach_nubefact_json",
