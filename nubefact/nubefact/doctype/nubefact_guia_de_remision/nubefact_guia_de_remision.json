@@ -31,28 +31,29 @@
   "cliente_email_1",
   "cliente_email_2",
   "seccion_traslado",
-  "fecha_de_entrega_al_transportista",
   "fecha_de_inicio_de_traslado",
+  "fecha_de_entrega_al_transportista",
   "documento_relacionado_codigo",
+  "columna_traslado",
+  "transportista_placa_numero",
+  "sunat_envio_indicador",
+  "mtc",
+  "column_break_qxcl",
   "peso_bruto_total",
   "peso_bruto_unidad_de_medida",
   "numero_de_bultos",
-  "columna_traslado",
+  "seccion_transportista",
   "transportista_documento_tipo",
   "transportista_documento_numero",
   "transportista_denominacion",
-  "transportista_placa_numero",
-  "tuc_vehiculo_principal",
+  "column_break_zqqj",
   "seccion_conductor",
   "conductor_documento_tipo",
   "conductor_documento_numero",
-  "conductor_denominacion",
   "conductor_nombre",
   "columna_conductor",
   "conductor_apellidos",
   "conductor_numero_licencia",
-  "mtc",
-  "sunat_envio_indicador",
   "seccion_documentos_relacionados",
   "documento_relacionado",
   "seccion_items",
@@ -72,6 +73,8 @@
   "seccion_informacion_adicional",
   "observaciones",
   "tab_mas_informacion",
+  "seccion_conductor_adicional",
+  "conductor_denominacion",
   "seccion_automatizacion",
   "enviar_automaticamente_al_cliente",
   "skip_field_validation",
@@ -97,6 +100,8 @@
   "codigo_hash",
   "codigo_de_barras",
   "tab_transportista",
+  "seccion_vehiculo_principal_transportista",
+  "tuc_vehiculo_principal",
   "seccion_destinatario",
   "destinatario_documento_tipo",
   "destinatario_documento_numero",
@@ -702,6 +707,11 @@
    "label": "M\u00e1s Informaci\u00f3n"
   },
   {
+   "fieldname": "seccion_conductor_adicional",
+   "fieldtype": "Section Break",
+   "label": "Conductor"
+  },
+  {
    "fieldname": "column_break_otuj",
    "fieldtype": "Column Break"
   },
@@ -714,9 +724,28 @@
    "fieldtype": "Column Break"
   },
   {
+   "depends_on": "eval:doc.tipo_de_comprobante == '8'",
    "fieldname": "tab_transportista",
    "fieldtype": "Tab Break",
    "label": "Tipo Transportista"
+  },
+  {
+   "fieldname": "seccion_vehiculo_principal_transportista",
+   "fieldtype": "Section Break",
+   "label": "Vehículo Principal"
+  },
+  {
+   "fieldname": "column_break_qxcl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "seccion_transportista",
+   "fieldtype": "Section Break",
+   "label": "Datos del Transportista"
+  },
+  {
+   "fieldname": "column_break_zqqj",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
@@ -728,7 +757,7 @@
    "link_fieldname": "referencia_guia_de_remision"
   }
  ],
- "modified": "2026-09-04 18:11:50.530393",
+ "modified": "2026-09-04 22:15:15.219968",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Guia De Remision",
