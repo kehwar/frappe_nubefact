@@ -84,7 +84,8 @@ app_include_js = "nubefact.bundle.js"
 # ------------
 
 # before_install = "nubefact.install.before_install"
-# after_install = "nubefact.install.after_install"
+after_install = "nubefact.setup.setup"
+after_migrate = "nubefact.setup.setup"
 
 # Uninstallation
 # ------------
