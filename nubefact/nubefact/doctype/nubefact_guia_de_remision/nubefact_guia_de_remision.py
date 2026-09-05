@@ -156,11 +156,16 @@ class NubefactGuiaDeRemision(Document):
 		return f"{serie}-{numero_texto}" if (serie or numero_texto) else ""
 
 	def _build_generate_payload(self) -> dict[str, Any]:
+		document_type = cstr(self.tipo_de_comprobante)
+		transport_type = cstr(self.tipo_de_transporte)
+		motive = cstr(self.motivo_de_traslado).strip()
+		indicator = cstr(self.sunat_envio_indicador).strip()
+		item_unit_codes = self._get_item_unit_codes(motive)
 		items_payload = [
 			apply_raw_payload_overrides(
 				omit_empty_values(
 					{
-						"unidad_de_medida": row.unidad_de_medida,
+						"unidad_de_medida": item_unit_codes[cstr(row.unidad_de_medida).strip()],
 						"codigo": row.codigo,
 						"descripcion": row.descripcion,
 						"cantidad": cstr(row.cantidad),
@@ -172,11 +177,6 @@ class NubefactGuiaDeRemision(Document):
 			)
 			for row in self.items
 		]
-
-		document_type = cstr(self.tipo_de_comprobante)
-		transport_type = cstr(self.tipo_de_transporte)
-		motive = cstr(self.motivo_de_traslado)
-		indicator = cstr(self.sunat_envio_indicador).strip()
 
 		payload: dict[str, Any] = {
 			"operacion": "generar_guia",
@@ -322,6 +322,29 @@ class NubefactGuiaDeRemision(Document):
 			]
 
 		return apply_raw_payload_overrides(payload, self.custom, "guía")
+
+	def _get_item_unit_codes(self, motive: str) -> dict[str, str]:
+		unit_codes = {cstr(row.unidad_de_medida).strip() for row in self.items or []}
+		if not unit_codes:
+			return {}
+		if motive not in {"08", "09"}:
+			return {code: code for code in unit_codes}
+
+		mapped_codes = {
+			row.name: cstr(row.codigo_importacion_exportacion).strip()
+			for row in frappe.get_all(
+				"Nubefact Unidad de Medida",
+				filters={"name": ["in", sorted(unit_codes)]},
+				fields=["name", "codigo_importacion_exportacion"],
+			)
+		}
+		missing_codes = sorted(code for code in unit_codes if not mapped_codes.get(code))
+		if missing_codes:
+			frappe.throw(
+				"Las siguientes unidades no tienen código para importación/exportación: "
+				+ ", ".join(missing_codes)
+			)
+		return mapped_codes
 
 	def _build_driver_payload(self) -> dict[str, Any]:
 		return omit_empty_values(
@@ -562,7 +585,9 @@ class NubefactGuiaDeRemision(Document):
 		if document_type == "7" and cstr(self.tipo_de_transporte) != "02" and self.conductores_secundarios:
 			frappe.throw("Los conductores secundarios sólo aplican al transporte privado en GRE Remitente.")
 
-		motive = cstr(self.motivo_de_traslado) if document_type == "7" else ""
+		motive = cstr(self.motivo_de_traslado).strip() if document_type == "7" else ""
+		if motive in {"08", "09"}:
+			self._get_item_unit_codes(motive)
 		related_code = cstr(self.documento_relacionado_codigo)
 		dam_markers = {
 			("08", "50"): "10",

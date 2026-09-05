@@ -251,6 +251,58 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertNotIn("transportista_documento_tipo", carrier_payload)
 		self.assertIn("destinatario_documento_tipo", carrier_payload)
 
+	def test_import_export_payload_uses_corresponding_item_unit_codes(self):
+		unit_codes = {
+			"KGM": "KG",
+			"TNE": "TM",
+			"NIU": "U",
+			"PR": "2U",
+			"KT": "KIT",
+			"MTR": "M",
+			"PK": "PAQ",
+			"BX": "CAJ",
+			"PF": "PAL",
+			"SET": "SET",
+		}
+
+		for motive in ("08", "09"):
+			with self.subTest(motive=motive):
+				doc = make_valid_gre(motivo_de_traslado=motive, documento_relacionado_codigo="50")
+				doc.set("items", [])
+				for unit_code in unit_codes:
+					doc.append(
+						"items",
+						{
+							"unidad_de_medida": unit_code,
+							"descripcion": f"ITEM {unit_code}",
+							"cantidad": 1,
+						},
+					)
+
+				payload = doc._build_generate_payload()
+
+				self.assertEqual(
+					[item["unidad_de_medida"] for item in payload["items"]],
+					list(unit_codes.values()),
+				)
+				self.assertEqual(payload["peso_bruto_unidad_de_medida"], "KGM")
+
+	def test_non_import_export_payload_keeps_standard_item_unit_code(self):
+		doc = make_valid_gre()
+		doc.items[0].unidad_de_medida = "MTR"
+
+		self.assertEqual(doc._build_generate_payload()["items"][0]["unidad_de_medida"], "MTR")
+
+	def test_import_export_requires_corresponding_item_unit_code(self):
+		doc = make_valid_gre(motivo_de_traslado="08", documento_relacionado_codigo="50")
+		doc.items[0].unidad_de_medida = "ZZ"
+
+		with self.assertRaisesRegex(
+			frappe.ValidationError,
+			"ZZ.*no tienen código|no tienen código.*ZZ",
+		):
+			doc._build_generate_payload()
+
 	def test_valid_private_remitente_and_transportista_can_be_saved(self):
 		private_doc = make_valid_gre(
 			motivo_de_traslado="03",

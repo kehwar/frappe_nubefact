@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "codigo",
+  "codigo_importacion_exportacion",
   "descripcion",
   "aplica_peso_bruto"
  ],
@@ -18,6 +19,14 @@
    "label": "Código",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "description": "Código utilizado en ítems de GRE con motivo de importación o exportación.",
+   "fieldname": "codigo_importacion_exportacion",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Código Importación/Exportación"
   },
   {
    "fieldname": "descripcion",
@@ -75,7 +84,7 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "search_fields": "codigo,descripcion",
+ "search_fields": "codigo,codigo_importacion_exportacion,descripcion",
  "show_title_field_in_link": 1,
  "sort_field": "codigo",
  "sort_order": "ASC",
