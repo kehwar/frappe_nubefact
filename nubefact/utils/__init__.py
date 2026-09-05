@@ -17,6 +17,22 @@ from frappe.utils.file_manager import save_file
 
 from nubefact.utils.nubefact import make_request
 
+NUBEFACT_BASE64_FIELDS = (
+	"pdf_zip_base64",
+	"xml_zip_base64",
+	"cdr_zip_base64",
+)
+
+_API_LOG_REFERENCE_FIELDS = {
+	"Nubefact Facturacion": "reference_invoice",
+	"Nubefact Guia De Remision": "referencia_guia_de_remision",
+}
+
+
+def without_nubefact_base64_fields(payload: dict[str, Any]) -> dict[str, Any]:
+	"""Return a shallow copy without NubeFact's encoded document artifacts."""
+	return {key: value for key, value in payload.items() if key not in NUBEFACT_BASE64_FIELDS}
+
 
 def to_nubefact_date(value: str) -> str:
     return getdate(value).strftime("%d-%m-%Y")
@@ -123,10 +139,12 @@ def _attachment_exists(doctype: str, docname: str, filename: str) -> bool:
 def attach_nubefact_json(
 	payload: dict[str, Any], filename: str, doctype: str, docname: str
 ) -> None:
-	"""Attach the exact structured payload used for a successful issue request."""
+	"""Attach a structured issuance payload without encoded response artifacts."""
 	if _attachment_exists(doctype, docname, filename):
 		return
 
+	if filename.endswith("-response.json"):
+		payload = without_nubefact_base64_fields(payload)
 	content = json.dumps(payload, ensure_ascii=False, default=str, indent=2).encode("utf-8")
 	save_file(
 		fname=filename,
@@ -138,13 +156,26 @@ def attach_nubefact_json(
 
 
 def attach_nubefact_base64_file(
-	fieldname: str, filename: str, doctype: str, docname: str
+	fieldname: str | None = None,
+	filename: str | None = None,
+	doctype: str | None = None,
+	docname: str | None = None,
+	*,
+	encoded_content: str | None = None,
 ) -> None:
-	"""Decode one of NubeFact's ``*_zip_base64`` fields into a private attachment."""
+	"""Decode a transient NubeFact Base64 ZIP into a private attachment.
+
+	``fieldname`` remains supported for jobs queued before Base64 DocType fields
+	were removed. Those jobs recover the artifact from the purgeable API log.
+	"""
+	if not filename or not doctype or not docname:
+		return
 	if _attachment_exists(doctype, docname, filename):
 		return
 
-	encoded_content = cstr(frappe.db.get_value(doctype, docname, fieldname) or "")
+	encoded_content = cstr(encoded_content or "")
+	if not encoded_content and fieldname:
+		encoded_content = _get_logged_base64_artifact(doctype, docname, fieldname)
 	if not encoded_content:
 		return
 
@@ -164,6 +195,40 @@ def attach_nubefact_base64_file(
 		dn=docname,
 		is_private=1,
 	)
+
+
+def _get_logged_base64_artifact(doctype: str, docname: str, fieldname: str) -> str:
+	"""Recover an artifact for jobs queued before its DocType field was removed."""
+	if fieldname not in NUBEFACT_BASE64_FIELDS:
+		return ""
+
+	if frappe.db.has_column(doctype, fieldname):
+		encoded_content = cstr(frappe.db.get_value(doctype, docname, fieldname) or "")
+		if encoded_content:
+			return encoded_content
+
+	reference_field = _API_LOG_REFERENCE_FIELDS.get(doctype)
+	if not reference_field:
+		return ""
+	logs = frappe.db.sql(
+		f"""
+			SELECT `response_payload`
+			FROM `tabNubefact API Log`
+			WHERE `{reference_field}` = %s
+				AND `response_payload` LIKE %s
+			ORDER BY `request_timestamp` DESC
+		""",
+		(docname, f'%"{fieldname}"%'),
+		as_dict=True,
+	)
+	for log in logs:
+		try:
+			payload = json.loads(log.response_payload)
+		except (TypeError, json.JSONDecodeError):
+			continue
+		if isinstance(payload, dict) and payload.get(fieldname):
+			return cstr(payload[fieldname])
+	return ""
 
 
 def _is_safe_download_url(url: str) -> bool:
@@ -216,13 +281,15 @@ def download_and_attach_file(
 	filename: str,
 	doctype: str,
 	docname: str,
-	fallback_fieldname: str | None = None,
+	fallback_content: str | None = None,
 	fallback_filename: str | None = None,
+	fallback_fieldname: str | None = None,
 ):
 	"""Download a NubeFact artifact and attach it privately to its document.
 
-	If the download fails and NubeFact also returned a Base64 ZIP, use that value
-	as a fallback. Attachment failures are logged without changing issuance state.
+	If the download fails and NubeFact also returned a Base64 ZIP, use that
+	transient value as a fallback. Attachment failures are logged without changing
+	issuance state.
 	"""
 	if _attachment_exists(doctype, docname, filename):
 		return
@@ -234,9 +301,13 @@ def download_and_attach_file(
 			title=f"Nubefact: error al descargar el archivo {filename}",
 			message=str(exc),
 		)
-		if fallback_fieldname and fallback_filename:
+		if (fallback_content or fallback_fieldname) and fallback_filename:
 			attach_nubefact_base64_file(
-				fallback_fieldname, fallback_filename, doctype, docname
+				fieldname=fallback_fieldname,
+				filename=fallback_filename,
+				doctype=doctype,
+				docname=docname,
+				encoded_content=fallback_content,
 			)
 		return
 
@@ -259,15 +330,20 @@ def enqueue_nubefact_file_downloads(
 ):
 	"""Queue private attachments for a NubeFact issuance response.
 
-	PDF, XML and CDR URLs are downloaded. Their Base64 ZIP equivalents are used
-	when a URL is absent or its download fails. The complete issuance request and
-	response bodies are also stored as JSON. Jobs run only after commit.
+	PDF, XML and CDR URLs are downloaded. Their transient Base64 ZIP equivalents
+	are used when a URL is absent or its download fails. Issuance request and
+	response bodies are stored as JSON, excluding Base64 artifacts from the
+	response copy. Jobs run only after commit.
 	"""
 	base_name = cstr(title).strip() or cstr(docname).strip()
 
 	json_payloads = {
 		"request": request_payload,
-		"response": response_payload,
+		"response": (
+			without_nubefact_base64_fields(response_payload)
+			if response_payload is not None
+			else None
+		),
 	}
 	for suffix, payload in json_payloads.items():
 		if payload is not None:
@@ -288,6 +364,7 @@ def enqueue_nubefact_file_downloads(
 	}
 	for extension, (url, base64_fieldname) in artifacts.items():
 		fallback_filename = f"{base_name}-{extension}.zip"
+		encoded_content = cstr(values.get(base64_fieldname) or "")
 		if isinstance(url, str) and url.startswith(("http://", "https://")):
 			frappe.enqueue(
 				"nubefact.utils.download_and_attach_file",
@@ -295,15 +372,15 @@ def enqueue_nubefact_file_downloads(
 				filename=f"{base_name}.{extension}",
 				doctype=doctype,
 				docname=docname,
-				fallback_fieldname=base64_fieldname if values.get(base64_fieldname) else None,
-				fallback_filename=fallback_filename if values.get(base64_fieldname) else None,
+				fallback_content=encoded_content or None,
+				fallback_filename=fallback_filename if encoded_content else None,
 				queue="short",
 				enqueue_after_commit=True,
 			)
-		elif values.get(base64_fieldname):
+		elif encoded_content:
 			frappe.enqueue(
 				"nubefact.utils.attach_nubefact_base64_file",
-				fieldname=base64_fieldname,
+				encoded_content=encoded_content,
 				filename=fallback_filename,
 				doctype=doctype,
 				docname=docname,
@@ -312,6 +389,7 @@ def enqueue_nubefact_file_downloads(
 			)
 
 __all__ = [
+	"NUBEFACT_BASE64_FIELDS",
 	"apply_raw_payload_overrides",
 	"attach_nubefact_base64_file",
 	"attach_nubefact_json",
@@ -326,4 +404,5 @@ __all__ = [
 	"require_fields",
 	"set_if_value",
 	"to_nubefact_date",
+	"without_nubefact_base64_fields",
 ]

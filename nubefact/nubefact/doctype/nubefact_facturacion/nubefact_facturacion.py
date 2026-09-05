@@ -30,6 +30,7 @@ from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
     validate_document_is_not_being_issued,
 )
 from nubefact.utils import (
+    NUBEFACT_BASE64_FIELDS,
     apply_raw_payload_overrides,
     enqueue_nubefact_file_downloads,
     make_request,
@@ -52,9 +53,6 @@ _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
     "enlace_del_xml": "",
     "enlace_del_cdr": "",
     "cadena_para_codigo_qr": "",
-    "pdf_zip_base64": "",
-    "xml_zip_base64": "",
-    "cdr_zip_base64": "",
     "codigo_hash": "",
     "codigo_de_barras": "",
     "sunat_ticket_numero": "",
@@ -601,7 +599,7 @@ def _request_extract_and_save_response(
         frappe.throw("No se pudo interpretar la respuesta de NubeFact.")
 
     if values:
-        _save_response_status(doc, values, clear_previous=clear_previous)
+        saved_values = _save_response_status(doc, values, clear_previous=clear_previous)
         enqueue_nubefact_file_downloads(
             doc.doctype,
             doc.name,
@@ -615,7 +613,7 @@ def _request_extract_and_save_response(
             ),
         )
 
-    return values
+    return saved_values
 
 
 def _refresh_sunat_status_doc(doc: NubefactFacturacion) -> dict[str, Any]:
@@ -646,7 +644,13 @@ def _save_response_status(
         return {}
 
     saved_values: dict[str, Any] = dict(_CLEARED_RESPONSE_VALUES) if clear_previous else {}
-    saved_values.update(values)
+    saved_values.update(
+        {
+            fieldname: value
+            for fieldname, value in values.items()
+            if fieldname not in NUBEFACT_BASE64_FIELDS
+        }
+    )
 
     doc.update(saved_values)
     doc.title = doc._compose_title()

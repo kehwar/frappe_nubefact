@@ -13,6 +13,10 @@ from frappe.tests.utils import FrappeTestCase
 from frappe.utils import random_string
 
 from nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion import send_to_nubefact
+from nubefact.patches.remove_persisted_base64_artifact_fields import (
+	_artifact_is_attached,
+	_scrub_response_attachments,
+)
 from nubefact.utils import (
 	attach_nubefact_base64_file,
 	attach_nubefact_json,
@@ -74,6 +78,7 @@ class TestNubefactFacturacion(FrappeTestCase):
 				"serie": series.serie,
 				"numero": 17,
 				"aceptada_por_sunat": True,
+				"pdf_zip_base64": "PDF-BASE64",
 			}
 		)
 
@@ -85,6 +90,15 @@ class TestNubefactFacturacion(FrappeTestCase):
 		self.assertEqual(post.call_args.kwargs["json"]["numero"], 17)
 		self.assertEqual(enqueue_files.call_args.kwargs["request_payload"]["numero"], 17)
 		self.assertEqual(enqueue_files.call_args.kwargs["response_payload"]["numero"], 17)
+		self.assertEqual(enqueue_files.call_args.args[3]["pdf_zip_base64"], "PDF-BASE64")
+		self.assertNotIn("pdf_zip_base64", result)
+		self.assertIsNone(frappe.get_meta(document.doctype).get_field("pdf_zip_base64"))
+		log_payload = frappe.db.get_value(
+			"Nubefact API Log",
+			{"reference_invoice": document.name},
+			"response_payload",
+		)
+		self.assertEqual(json.loads(log_payload)["pdf_zip_base64"], "PDF-BASE64")
 
 	@patch("nubefact.utils.nubefact.requests.post")
 	def test_failed_issue_reuses_reserved_number_on_retry(self, post):
@@ -150,7 +164,13 @@ class TestNubefactFacturacion(FrappeTestCase):
 	@patch("nubefact.utils.frappe.enqueue")
 	def test_issue_attachments_are_queued_after_commit(self, enqueue):
 		payload = {"operacion": "generar_comprobante", "numero": 17}
-		response_payload = {"numero": 17, "aceptada_por_sunat": True}
+		response_payload = {
+			"numero": 17,
+			"aceptada_por_sunat": True,
+			"pdf_zip_base64": "fallback",
+			"xml_zip_base64": "xml-fallback",
+			"cdr_zip_base64": "cdr-fallback",
+		}
 		values = {
 			"enlace_del_pdf": "https://files.example.test/doc.pdf",
 			"enlace_del_xml": "https://files.example.test/doc.xml",
@@ -175,7 +195,8 @@ class TestNubefactFacturacion(FrappeTestCase):
 		}
 		self.assertEqual(json_jobs["F001-17-request.json"]["payload"], payload)
 		self.assertEqual(
-			json_jobs["F001-17-response.json"]["payload"], response_payload
+			json_jobs["F001-17-response.json"]["payload"],
+			{"numero": 17, "aceptada_por_sunat": True},
 		)
 		download_jobs = [
 			call.kwargs
@@ -186,8 +207,28 @@ class TestNubefactFacturacion(FrappeTestCase):
 			{job["filename"] for job in download_jobs},
 			{"F001-17.pdf", "F001-17.xml", "F001-17.cdr"},
 		)
-		self.assertTrue(
-			all(call.kwargs["enqueue_after_commit"] for call in enqueue.call_args_list)
+		pdf_job = next(job for job in download_jobs if job["filename"] == "F001-17.pdf")
+		self.assertEqual(pdf_job["fallback_content"], "fallback")
+		self.assertEqual(pdf_job["fallback_filename"], "F001-17-pdf.zip")
+		self.assertTrue(all(call.kwargs["enqueue_after_commit"] for call in enqueue.call_args_list))
+
+	@patch("nubefact.utils.frappe.enqueue")
+	def test_base64_only_artifact_is_queued_without_document_field(self, enqueue):
+		enqueue_nubefact_file_downloads(
+			"Nubefact Facturacion",
+			"CPE-TEST",
+			"F001-17",
+			{"cdr_zip_base64": "encoded-cdr"},
+		)
+
+		enqueue.assert_called_once_with(
+			"nubefact.utils.attach_nubefact_base64_file",
+			encoded_content="encoded-cdr",
+			filename="F001-17-cdr.zip",
+			doctype="Nubefact Facturacion",
+			docname="CPE-TEST",
+			queue="short",
+			enqueue_after_commit=True,
 		)
 
 	@patch("nubefact.utils.save_file")
@@ -204,25 +245,97 @@ class TestNubefactFacturacion(FrappeTestCase):
 		self.assertEqual(json.loads(json_call["content"]), payload)
 		self.assertEqual(json_call["is_private"], 1)
 
+		attach_nubefact_json(
+			{"numero": 17, "pdf_zip_base64": "encoded"},
+			"F001-17-response.json",
+			"Nubefact Facturacion",
+			"CPE-TEST",
+		)
+		response_json_call = save_file.call_args_list[1].kwargs
+		self.assertEqual(json.loads(response_json_call["content"]), {"numero": 17})
+
 		encoded_zip = base64.b64encode(b"zip-content").decode()
-		with patch("nubefact.utils.frappe.db.get_value", return_value=encoded_zip):
-			attach_nubefact_base64_file(
-				"pdf_zip_base64",
-				"F001-17-pdf.zip",
-				"Nubefact Facturacion",
-				"CPE-TEST",
-			)
-		base64_call = save_file.call_args_list[1].kwargs
+		attach_nubefact_base64_file(
+			encoded_content=encoded_zip,
+			filename="F001-17-pdf.zip",
+			doctype="Nubefact Facturacion",
+			docname="CPE-TEST",
+		)
+		base64_call = save_file.call_args_list[2].kwargs
 		self.assertEqual(base64_call["content"], b"zip-content")
 		self.assertEqual(base64_call["is_private"], 1)
+
+	def test_migration_recognizes_existing_direct_and_fallback_artifacts(self):
+		self.assertTrue(_artifact_is_attached(["F001-17.pdf"], "F001-17", "pdf"))
+		self.assertTrue(_artifact_is_attached(["F001-17a1b2c3.pdf"], "F001-17", "pdf"))
+		self.assertTrue(_artifact_is_attached(["F001-17-xml.zip"], "F001-17", "xml"))
+		self.assertFalse(_artifact_is_attached(["F001-17-request.json"], "F001-17", "cdr"))
+
+	@patch("nubefact.patches.remove_persisted_base64_artifact_fields.save_file")
+	@patch("nubefact.patches.remove_persisted_base64_artifact_fields.frappe.delete_doc")
+	@patch("nubefact.patches.remove_persisted_base64_artifact_fields.frappe.get_doc")
+	@patch("nubefact.patches.remove_persisted_base64_artifact_fields.frappe.get_all")
+	def test_migration_replaces_historical_response_json(
+		self, get_all, get_doc, delete_doc, save_file
+	):
+		get_all.return_value = [
+			frappe._dict(
+				name="FILE-1",
+				file_name="F001-17-responsea1b2c3.json",
+				attached_to_doctype="Nubefact Facturacion",
+				attached_to_name="CPE-TEST",
+				attached_to_field=None,
+				folder="Home/Attachments",
+				is_private=1,
+			)
+		]
+		get_doc.return_value.get_content.return_value = json.dumps(
+			{"numero": 17, "pdf_zip_base64": "encoded"}
+		)
+
+		_scrub_response_attachments()
+
+		self.assertEqual(
+			get_all.call_args.kwargs["filters"]["file_name"],
+			["like", "%-response%.json"],
+		)
+		delete_doc.assert_called_once_with("File", "FILE-1", ignore_permissions=True)
+		self.assertEqual(json.loads(save_file.call_args.kwargs["content"]), {"numero": 17})
+		self.assertEqual(save_file.call_args.kwargs["folder"], "Home/Attachments")
+		self.assertEqual(save_file.call_args.kwargs["is_private"], 1)
+
+		get_doc.return_value.get_content.side_effect = OSError("missing file")
+		delete_doc.reset_mock()
+		save_file.reset_mock()
+		_scrub_response_attachments()
+		delete_doc.assert_not_called()
+		save_file.assert_not_called()
+
+	@patch("nubefact.utils.save_file")
+	@patch("nubefact.utils._get_logged_base64_artifact")
+	@patch("nubefact.utils._attachment_exists", return_value=False)
+	def test_legacy_base64_job_recovers_content_from_api_log(
+		self, _exists, get_logged_artifact, save_file
+	):
+		get_logged_artifact.return_value = base64.b64encode(b"legacy-zip").decode()
+
+		attach_nubefact_base64_file(
+			fieldname="pdf_zip_base64",
+			filename="F001-17-pdf.zip",
+			doctype="Nubefact Facturacion",
+			docname="CPE-TEST",
+		)
+
+		get_logged_artifact.assert_called_once_with(
+			"Nubefact Facturacion", "CPE-TEST", "pdf_zip_base64"
+		)
+		self.assertEqual(save_file.call_args.kwargs["content"], b"legacy-zip")
 
 	@patch("nubefact.utils.save_file")
 	@patch("nubefact.utils._attachment_exists", return_value=False)
 	@patch("nubefact.utils.requests.get")
 	@patch("nubefact.utils.socket.getaddrinfo")
-	def test_downloads_only_public_urls_as_private_attachments(
-		self, getaddrinfo, get, _exists, save_file
-	):
+	def test_downloads_only_public_urls_as_private_attachments(self, getaddrinfo, get, _exists, save_file):
 		getaddrinfo.return_value = [(2, 1, 6, "", ("93.184.216.34", 443))]
 		response = Mock(status_code=200, headers={}, content=b"pdf-content")
 		response.raise_for_status.return_value = None
@@ -235,9 +348,7 @@ class TestNubefactFacturacion(FrappeTestCase):
 			"CPE-TEST",
 		)
 
-		get.assert_called_once_with(
-			"https://files.example.test/doc.pdf", timeout=60, allow_redirects=False
-		)
+		get.assert_called_once_with("https://files.example.test/doc.pdf", timeout=60, allow_redirects=False)
 		self.assertEqual(save_file.call_args.kwargs["content"], b"pdf-content")
 		self.assertEqual(save_file.call_args.kwargs["is_private"], 1)
 
@@ -253,3 +364,16 @@ class TestNubefactFacturacion(FrappeTestCase):
 			)
 		get.assert_not_called()
 		save_file.assert_not_called()
+
+		with patch("nubefact.utils.frappe.log_error"):
+			download_and_attach_file(
+				"https://localhost/private",
+				"blocked.pdf",
+				"Nubefact Facturacion",
+				"CPE-TEST",
+				fallback_content=base64.b64encode(b"zip-fallback").decode(),
+				fallback_filename="F001-17-pdf.zip",
+			)
+		self.assertEqual(save_file.call_args.kwargs["content"], b"zip-fallback")
+		self.assertEqual(save_file.call_args.kwargs["fname"], "F001-17-pdf.zip")
+		self.assertEqual(save_file.call_args.kwargs["is_private"], 1)

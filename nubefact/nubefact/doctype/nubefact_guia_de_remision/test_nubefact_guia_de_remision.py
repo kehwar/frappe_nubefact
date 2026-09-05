@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 from unittest.mock import Mock, patch
 
 import frappe
@@ -363,8 +364,11 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			2,
 		)
 
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
 	@patch("nubefact.utils.nubefact.requests.post")
-	def test_generate_rpc_persists_base64_response_artifacts(self, post):
+	def test_generate_keeps_base64_transient_except_in_api_log(self, post, enqueue_files):
 		local = self.make_local()
 		series = self.make_series(local)
 		doc = make_valid_gre(
@@ -384,15 +388,27 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			}
 		)
 
-		enviar_a_nubefact(doc.name)
+		result = enviar_a_nubefact(doc.name)
 
-		persisted = frappe.get_doc(doc.doctype, doc.name)
-		self.assertEqual(persisted.pdf_zip_base64, "PDF-BASE64")
-		self.assertEqual(persisted.xml_zip_base64, "XML-BASE64")
-		self.assertEqual(persisted.cdr_zip_base64, "CDR-BASE64")
+		self.assertNotIn("pdf_zip_base64", result)
+		self.assertIsNone(frappe.get_meta(doc.doctype).get_field("pdf_zip_base64"))
+		transient_values = enqueue_files.call_args.args[3]
+		self.assertEqual(transient_values["pdf_zip_base64"], "PDF-BASE64")
+		self.assertEqual(transient_values["xml_zip_base64"], "XML-BASE64")
+		self.assertEqual(transient_values["cdr_zip_base64"], "CDR-BASE64")
 
+		log_payload = frappe.db.get_value(
+			"Nubefact API Log",
+			{"referencia_guia_de_remision": doc.name},
+			"response_payload",
+		)
+		self.assertEqual(json.loads(log_payload)["pdf_zip_base64"], "PDF-BASE64")
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
 	@patch("nubefact.utils.nubefact.requests.post")
-	def test_query_keeps_existing_base64_when_response_omits_artifacts(self, post):
+	def test_query_uses_base64_only_for_attachments(self, post, enqueue_files):
 		local = self.make_local()
 		series = self.make_series(local)
 		doc = make_valid_gre(
@@ -402,30 +418,22 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			serie=series.serie,
 			numero=None,
 		).insert()
-		doc.db_set(
-			{
-				"numero": 1,
-				"status": "Pendiente de Aceptacion",
-				"pdf_zip_base64": "PDF-BASE64",
-				"xml_zip_base64": "XML-BASE64",
-				"cdr_zip_base64": "CDR-BASE64",
-			}
-		)
+		doc.db_set({"numero": 1, "status": "Pendiente de Aceptacion"})
 		post.return_value = self.make_http_response(
 			{
 				"tipo_de_comprobante": 7,
 				"serie": series.serie,
 				"numero": 1,
 				"aceptada_por_sunat": True,
+				"cdr_zip_base64": "CDR-BASE64",
 			}
 		)
 
-		refrescar_estado_sunat(doc.name)
+		result = refrescar_estado_sunat(doc.name)
 
-		persisted = frappe.get_doc(doc.doctype, doc.name)
-		self.assertEqual(persisted.pdf_zip_base64, "PDF-BASE64")
-		self.assertEqual(persisted.xml_zip_base64, "XML-BASE64")
-		self.assertEqual(persisted.cdr_zip_base64, "CDR-BASE64")
+		self.assertNotIn("cdr_zip_base64", result)
+		self.assertEqual(enqueue_files.call_args.args[3]["cdr_zip_base64"], "CDR-BASE64")
+		self.assertIsNone(enqueue_files.call_args.kwargs["response_payload"])
 
 	def test_sunat_error_response_is_terminal_and_keeps_important_note(self):
 		doc = make_valid_gre()
