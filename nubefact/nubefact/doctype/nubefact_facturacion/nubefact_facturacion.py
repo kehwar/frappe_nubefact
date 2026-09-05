@@ -40,6 +40,9 @@ from nubefact.utils import (
     to_nubefact_date,
 )
 
+CPE_DOCUMENT_TYPES = {"1", "2", "3", "4"}
+CPE_CLIENT_DOCUMENT_TYPES = {"6", "1", "-", "4", "7", "A", "B", "0", "G"}
+
 _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
     "aceptada_por_sunat": 0,
     "last_sunat_check": None,
@@ -349,6 +352,11 @@ class NubefactFacturacion(Document):
 
     def _validate_document_identity(self):
         document_type = cstr(self.tipo_de_comprobante)
+        if document_type not in CPE_DOCUMENT_TYPES:
+            frappe.throw("El tipo de comprobante no pertenece al catálogo CPE de NubeFact.")
+        if cstr(self.cliente_tipo_de_documento) not in CPE_CLIENT_DOCUMENT_TYPES:
+            frappe.throw("El tipo de documento del cliente no pertenece al catálogo CPE de NubeFact.")
+
         series = cstr(self.serie).strip()
         allowed_prefixes = {"1": {"F"}, "2": {"B"}, "3": {"F", "B"}, "4": {"F", "B"}}
         if not re.fullmatch(r"[FB][A-Z0-9]{3}", series) or series[:1] not in allowed_prefixes.get(

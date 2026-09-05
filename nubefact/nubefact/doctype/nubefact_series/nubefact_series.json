@@ -43,10 +43,10 @@
   {
    "description": "C\u00f3digo de tipo de comprobante NubeFact.",
    "fieldname": "tipo_de_comprobante",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Tipo de Comprobante",
-   "options": "1\n2\n3\n4\n7\n8",
+   "options": "Nubefact Tipo de Comprobante",
    "reqd": 1
   },
   {

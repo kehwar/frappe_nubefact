@@ -17,6 +17,8 @@ from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remisi
 	DRIVER_DOCUMENT_TYPES,
 	DRIVER_REQUIRED_FIELDS,
 	ESTABLISHMENT_REQUIRED_FIELDS,
+	GRE_DOCUMENT_TYPES,
+	GROSS_WEIGHT_UNITS,
 	ITEM_REQUIRED_FIELDS,
 	MAX_SECONDARY_ROWS,
 	PUBLIC_TRANSPORT_REQUIRED_FIELDS,
@@ -28,6 +30,7 @@ from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remisi
 	SERVICE_PAYER_REQUIRED_FIELDS,
 	SUBCONTRACTOR_REQUIRED_FIELDS,
 	TRANSFER_REASONS,
+	TRANSPORT_TYPES,
 	TYPE_7_REQUIRED_FIELDS,
 	TYPE_7_SUNAT_INDICATORS,
 	TYPE_8_RECIPIENT_REQUIRED_FIELDS,
@@ -393,6 +396,13 @@ class NubefactGuiaDeRemision(Document):
 
 	def _validate_document_rules(self):
 		document_type = cstr(self.tipo_de_comprobante)
+		if document_type not in GRE_DOCUMENT_TYPES:
+			frappe.throw("El tipo de comprobante no pertenece al catálogo GRE de NubeFact.")
+		if cstr(self.peso_bruto_unidad_de_medida) not in GROSS_WEIGHT_UNITS:
+			frappe.throw("La unidad del peso bruto debe ser KGM o TNE.")
+		if document_type == "7" and cstr(self.tipo_de_transporte) not in TRANSPORT_TYPES:
+			frappe.throw("El tipo de transporte no pertenece al catálogo GRE de NubeFact.")
+
 		expected_prefix = "T" if document_type == "7" else "V"
 		series = cstr(self.serie).strip()
 		if not re.fullmatch(rf"{expected_prefix}[A-Z0-9]{{3}}", series):

@@ -29,9 +29,10 @@
  "fields": [
   {
    "fieldname": "unidad_de_medida",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Unidad de Medida"
+   "label": "Unidad de Medida",
+   "options": "Nubefact Unidad de Medida"
   },
   {
    "fieldname": "codigo",

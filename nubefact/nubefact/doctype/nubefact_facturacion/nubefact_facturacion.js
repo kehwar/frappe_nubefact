@@ -12,6 +12,12 @@ frappe.ui.form.on("Nubefact Facturacion", {
 				...(frm.doc.local ? { local: frm.doc.local } : {}),
 			},
 		}));
+		frm.set_query("tipo_de_comprobante", () => ({
+			filters: { aplica_facturacion: 1 },
+		}));
+		frm.set_query("cliente_tipo_de_documento", () => ({
+			filters: { aplica_facturacion: 1 },
+		}));
 	},
 	async nubefact_series(frm) {
 		const requestedSeries = frm.doc.nubefact_series;

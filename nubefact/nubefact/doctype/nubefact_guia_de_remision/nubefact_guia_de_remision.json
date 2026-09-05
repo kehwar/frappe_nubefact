@@ -155,10 +155,10 @@
   },
   {
    "fieldname": "tipo_de_comprobante",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Tipo de Comprobante",
-   "options": "7\n8"
+   "options": "Nubefact Tipo de Comprobante"
   },
   {
    "fieldname": "title",
@@ -221,9 +221,9 @@
   },
   {
    "fieldname": "cliente_tipo_de_documento",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Tipo de Documento de Cliente",
-   "options": "6\n1\n4\n7\nA\n0"
+   "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "cliente_numero_de_documento",
@@ -266,9 +266,9 @@
   },
   {
    "fieldname": "destinatario_documento_tipo",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Tipo de Documento de Destinatario",
-   "options": "6\n1\n4\n7\nA\n0"
+   "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "destinatario_documento_numero",
@@ -287,9 +287,9 @@
   },
   {
    "fieldname": "motivo_de_traslado",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Motivo de Traslado",
-   "options": "01\n02\n03\n04\n05\n06\n07\n08\n09\n13\n14\n17\n18"
+   "options": "Nubefact Motivo de Traslado"
   },
   {
    "depends_on": "eval:doc.motivo_de_traslado=='13'",
@@ -300,15 +300,15 @@
   },
   {
    "fieldname": "documento_relacionado_codigo",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Documento Relacionado C\u00f3digo",
-   "options": "\n50\n52"
+   "options": "Nubefact Codigo de Documento Relacionado"
   },
   {
    "fieldname": "tipo_de_transporte",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Tipo de Transporte",
-   "options": "01\n02"
+   "options": "Nubefact Tipo de Transporte"
   },
   {
    "fieldname": "peso_bruto_total",
@@ -317,9 +317,9 @@
   },
   {
    "fieldname": "peso_bruto_unidad_de_medida",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Peso Bruto Unidad de Medida",
-   "options": "KGM\nTNE"
+   "options": "Nubefact Unidad de Medida"
   },
   {
    "fieldname": "numero_de_bultos",
@@ -332,9 +332,9 @@
   },
   {
    "fieldname": "transportista_documento_tipo",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Transportista Documento Tipo",
-   "options": "6"
+   "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "transportista_documento_numero",
@@ -363,9 +363,9 @@
   },
   {
    "fieldname": "conductor_documento_tipo",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Conductor Documento Tipo",
-   "options": "1\n4\n7\nA\n0"
+   "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "conductor_documento_numero",
@@ -403,9 +403,9 @@
   },
   {
    "fieldname": "sunat_envio_indicador",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "SUNAT Env\u00edo Indicador",
-   "options": "\n01\n02\n03\n04\n05\n06\n07"
+   "options": "Nubefact Indicador Sunat"
   },
   {
    "fieldname": "seccion_subcontratador",
@@ -414,9 +414,9 @@
   },
   {
    "fieldname": "subcontratador_documento_tipo",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Subcontratador Documento Tipo",
-   "options": "6"
+   "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "subcontratador_documento_numero",
@@ -439,9 +439,9 @@
   },
   {
    "fieldname": "pagador_servicio_documento_tipo_identidad",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Pagador Servicio Tipo de Documento",
-   "options": "6\n1\n4\n7\nA\n0"
+   "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "pagador_servicio_documento_numero_identidad",

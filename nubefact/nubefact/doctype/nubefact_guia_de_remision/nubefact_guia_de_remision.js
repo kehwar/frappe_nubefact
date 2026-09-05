@@ -13,6 +13,41 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                 ...(frm.doc.local ? { local: frm.doc.local } : {}),
             },
         }));
+        frm.set_query("tipo_de_comprobante", () => ({
+            filters: { aplica_guia_de_remision: 1 },
+        }));
+        for (const fieldname of [
+            "cliente_tipo_de_documento",
+            "destinatario_documento_tipo",
+            "pagador_servicio_documento_tipo_identidad",
+        ]) {
+            frm.set_query(fieldname, () => ({
+                filters: { aplica_guia_de_remision: 1 },
+            }));
+        }
+        for (const fieldname of [
+            "transportista_documento_tipo",
+            "subcontratador_documento_tipo",
+        ]) {
+            frm.set_query(fieldname, () => ({
+                filters: { aplica_transportista: 1 },
+            }));
+        }
+        frm.set_query("conductor_documento_tipo", () => ({
+            filters: { aplica_conductor: 1 },
+        }));
+        frm.set_query("documento_tipo", "conductores_secundarios", () => ({
+            filters: { aplica_conductor: 1 },
+        }));
+        frm.set_query("peso_bruto_unidad_de_medida", () => ({
+            filters: { aplica_peso_bruto: 1 },
+        }));
+        frm.set_query("sunat_envio_indicador", () => ({
+            filters:
+                frm.doc.tipo_de_comprobante === "7"
+                    ? { aplica_gre_remitente: 1 }
+                    : { aplica_gre_transportista: 1 },
+        }));
     },
     async nubefact_series(frm) {
         const requestedSeries = frm.doc.nubefact_series;

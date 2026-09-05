@@ -182,10 +182,10 @@
   },
   {
    "fieldname": "tipo_de_comprobante",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Tipo de Comprobante",
-   "options": "1\n2\n3\n4"
+   "options": "Nubefact Tipo de Comprobante"
   },
   {
    "fieldname": "serie",
@@ -250,9 +250,9 @@
   },
   {
    "fieldname": "cliente_tipo_de_documento",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Tipo de Documento del Cliente",
-   "options": "6\n1\n-\n4\n7\nA\nB\n0\nG"
+   "options": "Nubefact Tipo de Documento"
   },
   {
    "fieldname": "cliente_numero_de_documento",

@@ -94,9 +94,12 @@ ESTABLISHMENT_REQUIRED_FIELDS = [
 	"punto_de_llegada_codigo_establecimiento_sunat",
 ]
 
+GRE_DOCUMENT_TYPES = {"7", "8"}
 DOCUMENT_TYPES = {"6", "1", "4", "7", "A", "0"}
 DRIVER_DOCUMENT_TYPES = {"1", "4", "7", "A", "0"}
 TRANSFER_REASONS = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "13", "14", "17", "18"}
+TRANSPORT_TYPES = {"01", "02"}
+GROSS_WEIGHT_UNITS = {"KGM", "TNE"}
 TYPE_7_SUNAT_INDICATORS = {"04", "05", "06", "07"}
 TYPE_8_SUNAT_INDICATORS = {"01", "02", "03", "04", "05"}
 RELATED_DOCUMENT_CODES = {"50", "52"}

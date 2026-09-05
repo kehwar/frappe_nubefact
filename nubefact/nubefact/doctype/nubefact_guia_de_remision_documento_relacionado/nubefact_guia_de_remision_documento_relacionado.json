@@ -13,10 +13,10 @@
  "fields": [
   {
    "fieldname": "tipo",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Tipo",
-   "options": "01\n03\n09\n31"
+   "options": "Nubefact Tipo de Documento Relacionado"
   },
   {
    "fieldname": "serie",

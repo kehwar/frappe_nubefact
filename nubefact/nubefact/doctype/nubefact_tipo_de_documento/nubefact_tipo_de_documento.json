@@ -1,0 +1,109 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-09-05 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "codigo",
+  "descripcion",
+  "aplica_facturacion",
+  "aplica_guia_de_remision",
+  "aplica_conductor",
+  "aplica_transportista"
+ ],
+ "fields": [
+  {
+   "fieldname": "codigo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Código",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "descripcion",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Descripción",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "aplica_facturacion",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Aplica a Facturación"
+  },
+  {
+   "default": "0",
+   "fieldname": "aplica_guia_de_remision",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Aplica a Guía de Remisión"
+  },
+  {
+   "default": "0",
+   "fieldname": "aplica_conductor",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Aplica a Conductor"
+  },
+  {
+   "default": "0",
+   "fieldname": "aplica_transportista",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Aplica a Transportista"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "modified": "2026-09-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nubefact",
+ "name": "Nubefact Tipo de Documento",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Nubefact Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Nubefact User"
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "codigo,descripcion",
+ "show_title_field_in_link": 1,
+ "sort_field": "codigo",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "descripcion",
+ "track_changes": 1
+}

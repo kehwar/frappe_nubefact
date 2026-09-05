@@ -135,6 +135,20 @@ class TestNubefactFacturacion(FrappeTestCase):
 		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 31)
 		self.assertEqual(post.call_args.kwargs["json"]["numero"], 30)
 
+	def test_rejects_catalog_codes_outside_cpe_scope(self):
+		document = frappe.new_doc("Nubefact Facturacion")
+		document.tipo_de_comprobante = "1"
+		document.cliente_tipo_de_documento = "8"
+		document.serie = "F001"
+
+		with self.assertRaises(frappe.ValidationError):
+			document._validate_document_identity()
+
+		document.tipo_de_comprobante = "7"
+		document.cliente_tipo_de_documento = "6"
+		with self.assertRaises(frappe.ValidationError):
+			document._validate_document_identity()
+
 	def test_response_identity_must_match_allocated_number(self):
 		document = frappe.new_doc("Nubefact Facturacion")
 		document.tipo_de_comprobante = "1"
@@ -275,9 +289,7 @@ class TestNubefactFacturacion(FrappeTestCase):
 	@patch("nubefact.patches.remove_persisted_base64_artifact_fields.frappe.delete_doc")
 	@patch("nubefact.patches.remove_persisted_base64_artifact_fields.frappe.get_doc")
 	@patch("nubefact.patches.remove_persisted_base64_artifact_fields.frappe.get_all")
-	def test_migration_replaces_historical_response_json(
-		self, get_all, get_doc, delete_doc, save_file
-	):
+	def test_migration_replaces_historical_response_json(self, get_all, get_doc, delete_doc, save_file):
 		get_all.return_value = [
 			frappe._dict(
 				name="FILE-1",
@@ -314,9 +326,7 @@ class TestNubefactFacturacion(FrappeTestCase):
 	@patch("nubefact.utils.save_file")
 	@patch("nubefact.utils._get_logged_base64_artifact")
 	@patch("nubefact.utils._attachment_exists", return_value=False)
-	def test_legacy_base64_job_recovers_content_from_api_log(
-		self, _exists, get_logged_artifact, save_file
-	):
+	def test_legacy_base64_job_recovers_content_from_api_log(self, _exists, get_logged_artifact, save_file):
 		get_logged_artifact.return_value = base64.b64encode(b"legacy-zip").decode()
 
 		attach_nubefact_base64_file(
@@ -326,9 +336,7 @@ class TestNubefactFacturacion(FrappeTestCase):
 			docname="CPE-TEST",
 		)
 
-		get_logged_artifact.assert_called_once_with(
-			"Nubefact Facturacion", "CPE-TEST", "pdf_zip_base64"
-		)
+		get_logged_artifact.assert_called_once_with("Nubefact Facturacion", "CPE-TEST", "pdf_zip_base64")
 		self.assertEqual(save_file.call_args.kwargs["content"], b"legacy-zip")
 
 	@patch("nubefact.utils.save_file")

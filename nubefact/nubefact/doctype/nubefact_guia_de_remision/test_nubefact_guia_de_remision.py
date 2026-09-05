@@ -106,6 +106,16 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		response.json.return_value = payload
 		return response
 
+	def test_rejects_catalog_codes_outside_gre_scope(self):
+		with self.assertRaises(frappe.ValidationError):
+			make_valid_gre(tipo_de_comprobante="1")._validate_document_rules()
+
+		with self.assertRaises(frappe.ValidationError):
+			make_valid_gre(peso_bruto_unidad_de_medida="NIU")._validate_document_rules()
+
+		with self.assertRaises(frappe.ValidationError):
+			make_valid_gre(tipo_de_transporte="99")._validate_document_rules()
+
 	def test_draft_can_be_saved_without_numero(self):
 		doc = make_valid_gre(numero=None).insert()
 
@@ -265,22 +275,37 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertEqual(private_doc.status, "Borrador")
 		self.assertEqual(carrier_doc.status, "Borrador")
 
-	def test_docfield_catalogs_match_the_gre_manual(self):
-		meta = frappe.get_meta("Nubefact Guia De Remision")
-
+	def test_link_catalogs_match_the_gre_manual(self):
 		self.assertEqual(
-			set(meta.get_field("motivo_de_traslado").options.splitlines()),
+			set(frappe.get_all("Nubefact Motivo de Traslado", pluck="name")),
 			{"01", "02", "03", "04", "05", "06", "07", "08", "09", "13", "14", "17", "18"},
 		)
-		self.assertEqual(meta.get_field("transportista_documento_tipo").options, "6")
 		self.assertEqual(
-			set(meta.get_field("conductor_documento_tipo").options.splitlines()),
+			set(
+				frappe.get_all(
+					"Nubefact Tipo de Documento",
+					filters={"aplica_transportista": 1},
+					pluck="name",
+				)
+			),
+			{"6"},
+		)
+		self.assertEqual(
+			set(
+				frappe.get_all(
+					"Nubefact Tipo de Documento",
+					filters={"aplica_conductor": 1},
+					pluck="name",
+				)
+			),
 			{"1", "4", "7", "A", "0"},
 		)
 		self.assertEqual(
-			set(filter(None, meta.get_field("sunat_envio_indicador").options.splitlines())),
+			set(frappe.get_all("Nubefact Indicador Sunat", pluck="name")),
 			{"01", "02", "03", "04", "05", "06", "07"},
 		)
+
+		meta = frappe.get_meta("Nubefact Guia De Remision")
 		self.assertEqual(
 			set(filter(None, meta.get_field("formato_de_pdf").options.splitlines())),
 			{"A4", "TICKET"},

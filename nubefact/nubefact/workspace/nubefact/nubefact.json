@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"-RwVt73tGz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Nubefact</span>\",\"col\":12}},{\"id\":\"rGHcNn0D7x\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Guia De Remision\",\"col\":3}},{\"id\":\"rfM3xlCgUn\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Facturacion\",\"col\":3}},{\"id\":\"GTS_YtriSf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":12}},{\"id\":\"8C4DCrEEbK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Local\",\"col\":3}},{\"id\":\"-o_SYuVJH-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Logs\",\"col\":3}}]",
+ "content": "[{\"id\":\"-RwVt73tGz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Nubefact</span>\",\"col\":12}},{\"id\":\"rGHcNn0D7x\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Guia De Remision\",\"col\":3}},{\"id\":\"rfM3xlCgUn\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Facturacion\",\"col\":3}},{\"id\":\"GTS_YtriSf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Settings</b></span>\",\"col\":12}},{\"id\":\"8C4DCrEEbK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Local\",\"col\":3}},{\"id\":\"-o_SYuVJH-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Logs\",\"col\":3}},{\"id\":\"nubefact-links-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"nubefact-links-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Documentos y maestros</b></span>\",\"col\":12}},{\"id\":\"nubefact-card-8\",\"type\":\"card\",\"data\":{\"card_name\":\"Documentos\",\"col\":3}},{\"id\":\"nubefact-card-9\",\"type\":\"card\",\"data\":{\"card_name\":\"Configuración\",\"col\":3}},{\"id\":\"nubefact-card-10\",\"type\":\"card\",\"data\":{\"card_name\":\"Catálogos\",\"col\":3}},{\"id\":\"nubefact-card-11\",\"type\":\"card\",\"data\":{\"card_name\":\"Monitoreo\",\"col\":3}}]",
  "creation": "2026-02-26 21:54:56.814818",
  "custom_blocks": [],
  "docstatus": 0,
@@ -12,8 +12,195 @@
  "indicator_color": "green",
  "is_hidden": 0,
  "label": "Nubefact",
- "links": [],
- "modified": "2026-02-28 10:05:26.728989",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Documentos",
+   "link_count": 0,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Facturacion",
+   "link_count": 0,
+   "link_to": "Nubefact Facturacion",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Guia De Remision",
+   "link_count": 0,
+   "link_to": "Nubefact Guia De Remision",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configuración",
+   "link_count": 0,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Local",
+   "link_count": 0,
+   "link_to": "Nubefact Local",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Series",
+   "link_count": 0,
+   "link_to": "Nubefact Series",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ubigeo",
+   "link_count": 0,
+   "link_to": "Nubefact Ubigeo",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Catálogos",
+   "link_count": 0,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tipo de Comprobante",
+   "link_count": 0,
+   "link_to": "Nubefact Tipo de Comprobante",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Motivo de Traslado",
+   "link_count": 0,
+   "link_to": "Nubefact Motivo de Traslado",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tipo de Transporte",
+   "link_count": 0,
+   "link_to": "Nubefact Tipo de Transporte",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Unidad de Medida",
+   "link_count": 0,
+   "link_to": "Nubefact Unidad de Medida",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tipo de Documento",
+   "link_count": 0,
+   "link_to": "Nubefact Tipo de Documento",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tipo de Documento Relacionado",
+   "link_count": 0,
+   "link_to": "Nubefact Tipo de Documento Relacionado",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Codigo de Documento Relacionado",
+   "link_count": 0,
+   "link_to": "Nubefact Codigo de Documento Relacionado",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Indicador Sunat",
+   "link_count": 0,
+   "link_to": "Nubefact Indicador Sunat",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Monitoreo",
+   "link_count": 0,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "API Log",
+   "link_count": 0,
+   "link_to": "Nubefact API Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-09-04 23:00:41.920038",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact",

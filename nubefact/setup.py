@@ -1,5 +1,6 @@
 import frappe
 
+from nubefact.master_data import load_master_data
 from nubefact.nubefact.doctype.nubefact_local.nubefact_local import sync_local_ubigeos
 from nubefact.nubefact.doctype.nubefact_ubigeo.nubefact_ubigeo import load_ubigeos
 
@@ -25,5 +26,6 @@ def setup():
 			role.desk_access = 1
 			role.save(ignore_permissions=True)
 
+	load_master_data()
 	load_ubigeos()
 	sync_local_ubigeos()
