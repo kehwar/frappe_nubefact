@@ -27,6 +27,7 @@
   "cliente_denominacion",
   "columna_cliente",
   "cliente_direccion",
+  "column_break_pcwt",
   "cliente_email",
   "cliente_email_1",
   "cliente_email_2",
@@ -45,15 +46,16 @@
   "seccion_transportista",
   "transportista_documento_tipo",
   "transportista_documento_numero",
-  "transportista_denominacion",
   "column_break_zqqj",
+  "transportista_denominacion",
   "seccion_conductor",
   "conductor_documento_tipo",
   "conductor_documento_numero",
-  "conductor_nombre",
-  "columna_conductor",
-  "conductor_apellidos",
   "conductor_numero_licencia",
+  "columna_conductor",
+  "conductor_nombre",
+  "conductor_apellidos",
+  "conductor_denominacion",
   "seccion_documentos_relacionados",
   "documento_relacionado",
   "seccion_items",
@@ -73,9 +75,8 @@
   "seccion_informacion_adicional",
   "observaciones",
   "tab_mas_informacion",
-  "seccion_conductor_adicional",
-  "conductor_denominacion",
   "seccion_automatizacion",
+  "mostrar_todos_los_campos_condicionales",
   "enviar_automaticamente_al_cliente",
   "skip_field_validation",
   "formato_de_pdf",
@@ -154,6 +155,7 @@
    "search_index": 1
   },
   {
+   "default": "7",
    "fieldname": "tipo_de_comprobante",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -289,20 +291,21 @@
    "label": "Datos del Traslado"
   },
   {
+   "default": "01",
    "fieldname": "motivo_de_traslado",
    "fieldtype": "Link",
    "label": "Motivo de Traslado",
    "options": "Nubefact Motivo de Traslado"
   },
   {
-   "depends_on": "eval:doc.motivo_de_traslado=='13'",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || doc.motivo_de_traslado=='13'",
    "fieldname": "motivo_de_traslado_otros_descripcion",
    "fieldtype": "Data",
    "label": "Descripci\u00f3n de Otro Motivo de Traslado",
    "mandatory_depends_on": "eval:doc.motivo_de_traslado=='13'"
   },
   {
-   "depends_on": "eval:doc.tipo_de_comprobante == '7' && (doc.motivo_de_traslado == '08' || doc.motivo_de_traslado == '09')",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || (doc.tipo_de_comprobante == '7' && (doc.motivo_de_traslado == '08' || doc.motivo_de_traslado == '09'))",
    "fieldname": "documento_relacionado_codigo",
    "fieldtype": "Link",
    "label": "C\u00f3digo de Documento Relacionado",
@@ -310,6 +313,7 @@
    "options": "Nubefact Codigo de Documento Relacionado"
   },
   {
+   "default": "02",
    "fieldname": "tipo_de_transporte",
    "fieldtype": "Link",
    "label": "Tipo de Transporte",
@@ -338,7 +342,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01')",
    "fieldname": "transportista_documento_tipo",
    "fieldtype": "Link",
    "label": "Tipo de Documento de Transportista",
@@ -346,21 +350,21 @@
    "options": "Nubefact Tipo de Documento"
   },
   {
-   "depends_on": "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01')",
    "fieldname": "transportista_documento_numero",
    "fieldtype": "Data",
    "label": "N\u00famero de Documento de Transportista",
    "mandatory_depends_on": "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'"
   },
   {
-   "depends_on": "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01')",
    "fieldname": "transportista_denominacion",
    "fieldtype": "Data",
    "label": "Denominaci\u00f3n de Transportista",
    "mandatory_depends_on": "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'"
   },
   {
-   "depends_on": "eval:doc.sunat_envio_indicador != '06'",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || doc.sunat_envio_indicador != '06'",
    "fieldname": "transportista_placa_numero",
    "fieldtype": "Data",
    "label": "N\u00famero de Placa de Transportista",
@@ -372,12 +376,13 @@
    "label": "TUC de Veh\u00edculo Principal"
   },
   {
-   "depends_on": "eval:doc.sunat_envio_indicador != '06' && (doc.tipo_de_comprobante == '8' || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '02'))",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || (doc.sunat_envio_indicador != '06' && (doc.tipo_de_comprobante == '8' || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '02')))",
    "fieldname": "seccion_conductor",
    "fieldtype": "Section Break",
    "label": "Conductor Principal"
   },
   {
+   "default": "1",
    "fieldname": "conductor_documento_tipo",
    "fieldtype": "Link",
    "label": "Tipo de Documento de Conductor",
@@ -391,6 +396,7 @@
    "mandatory_depends_on": "eval:doc.sunat_envio_indicador != '06' && (doc.tipo_de_comprobante == '8' || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '02'))"
   },
   {
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales",
    "fieldname": "conductor_denominacion",
    "fieldtype": "Data",
    "label": "Denominaci\u00f3n de Conductor"
@@ -535,7 +541,8 @@
    "description": "Escape hatch avanzado: omite todas las validaciones GRE de campos, formatos y aplicabilidad.",
    "fieldname": "skip_field_validation",
    "fieldtype": "Check",
-   "label": "Omitir Todas las Validaciones GRE"
+   "label": "Omitir Todas las Validaciones GRE",
+   "permlevel": 1
   },
   {
    "fieldname": "formato_de_pdf",
@@ -730,10 +737,11 @@
    "label": "M\u00e1s Informaci\u00f3n"
   },
   {
-   "depends_on": "eval:doc.sunat_envio_indicador != '06' && (doc.tipo_de_comprobante == '8' || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '02'))",
-   "fieldname": "seccion_conductor_adicional",
-   "fieldtype": "Section Break",
-   "label": "Conductor"
+   "default": "0",
+   "description": "Muestra los campos ocultos por condiciones sin cambiar cu\u00e1les son obligatorios.",
+   "fieldname": "mostrar_todos_los_campos_condicionales",
+   "fieldtype": "Check",
+   "label": "Mostrar Todos los Campos Condicionales"
   },
   {
    "fieldname": "column_break_otuj",
@@ -748,7 +756,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.tipo_de_comprobante == '8'",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || doc.tipo_de_comprobante == '8'",
    "fieldname": "tab_transportista",
    "fieldtype": "Tab Break",
    "label": "Tipo de Transportista"
@@ -756,20 +764,24 @@
   {
    "fieldname": "seccion_vehiculo_principal_transportista",
    "fieldtype": "Section Break",
-   "label": "Vehículo Principal"
+   "label": "Veh\u00edculo Principal"
   },
   {
    "fieldname": "column_break_qxcl",
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01')",
    "fieldname": "seccion_transportista",
    "fieldtype": "Section Break",
    "label": "Datos del Transportista"
   },
   {
    "fieldname": "column_break_zqqj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_pcwt",
    "fieldtype": "Column Break"
   }
  ],
@@ -782,7 +794,7 @@
    "link_fieldname": "referencia_guia_de_remision"
   }
  ],
- "modified": "2026-09-05 09:17:10.268944",
+ "modified": "2026-09-05 10:38:46.524034",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact Guia De Remision",
@@ -823,6 +835,18 @@
    "report": 1,
    "role": "Nubefact User",
    "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Nubefact Manager",
    "write": 1
   }
  ],

@@ -346,7 +346,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		doc.insert()
 
 		self.assertFalse(doc.transportista_placa_numero)
-		self.assertFalse(doc.conductor_documento_tipo)
+		self.assertNotIn("conductor_documento_tipo", doc._build_generate_payload())
 
 	def test_non_public_transport_does_not_require_transporter_identity(self):
 		doc = make_valid_gre(
@@ -371,8 +371,30 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		).insert()
 		self.assertFalse(carrier_doc.transportista_documento_tipo)
 
-	def test_conditional_fields_have_matching_visibility_and_mandatory_rules(self):
+	def test_skip_validation_is_restricted_to_managers(self):
 		meta = frappe.get_meta("Nubefact Guia De Remision")
+		self.assertEqual(meta.get_field("skip_field_validation").permlevel, 1)
+
+		level_one_roles = {
+			permission.role
+			for permission in meta.permissions
+			if permission.permlevel == 1 and permission.read and permission.write
+		}
+		self.assertEqual(level_one_roles, {"System Manager", "Nubefact Manager"})
+
+	def test_show_all_override_controls_conditional_field_visibility(self):
+		meta = frappe.get_meta("Nubefact Guia De Remision")
+		override = "doc.mostrar_todos_los_campos_condicionales"
+		show_all = meta.get_field("mostrar_todos_los_campos_condicionales")
+		self.assertEqual(show_all.fieldtype, "Check")
+		self.assertEqual(show_all.default, "0")
+
+		for field in meta.fields:
+			if field.depends_on:
+				self.assertIn(override, field.depends_on, field.fieldname)
+
+		self.assertEqual(meta.get_field("conductor_denominacion").depends_on, f"eval:{override}")
+
 		transportista_condition = "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'"
 		for fieldname in (
 			"transportista_documento_tipo",
@@ -380,7 +402,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			"transportista_denominacion",
 		):
 			field = meta.get_field(fieldname)
-			self.assertEqual(field.depends_on, transportista_condition)
+			self.assertIn(transportista_condition.removeprefix("eval:"), field.depends_on)
 			self.assertEqual(field.mandatory_depends_on, transportista_condition)
 
 		related_code = meta.get_field("documento_relacionado_codigo")
@@ -388,13 +410,15 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			"eval:doc.tipo_de_comprobante == '7' && "
 			"(doc.motivo_de_traslado == '08' || doc.motivo_de_traslado == '09')"
 		)
-		self.assertEqual(related_code.depends_on, related_code_condition)
+		self.assertIn(related_code_condition.removeprefix("eval:"), related_code.depends_on)
 		self.assertEqual(related_code.mandatory_depends_on, related_code_condition)
 
 		plate = meta.get_field("transportista_placa_numero")
-		self.assertEqual(plate.depends_on, "eval:doc.sunat_envio_indicador != '06'")
-		self.assertEqual(plate.mandatory_depends_on, plate.depends_on)
-		self.assertIn("doc.sunat_envio_indicador != '06'", meta.get_field("seccion_conductor").depends_on)
+		self.assertIn("doc.sunat_envio_indicador != '06'", plate.depends_on)
+		self.assertEqual(
+			plate.mandatory_depends_on,
+			"eval:doc.sunat_envio_indicador != '06'",
+		)
 
 	def test_valid_private_remitente_and_transportista_can_be_saved(self):
 		private_doc = make_valid_gre(
