@@ -302,7 +302,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
             "peso_bruto_unidad_de_medida",
             "numero_de_bultos",
             "transportista_documento_tipo / numero / denominacion (cuando tipo_de_transporte = 01 / Público)",
-            "transportista_placa_numero (excepto cuando sunat_envio_indicador = 06 / M1L)",
+            "transportista_placa_numero (transporte privado o tipo 8, excepto indicador 06 / M1L)",
             "conductor_documento_tipo / numero / nombre / apellidos / numero_licencia (transporte privado o tipo 8, excepto indicador 06 / M1L)",
             "punto_de_llegada_ubigeo",
             "punto_de_llegada_direccion",

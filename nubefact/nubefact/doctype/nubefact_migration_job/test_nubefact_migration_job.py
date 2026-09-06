@@ -294,14 +294,28 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 				packages="<cbc:TotalTransportHandlingUnitQuantity>3</cbc:TotalTransportHandlingUnitQuantity>",
 			)
 			.replace(f"{series.serie}-25", f"{series.serie}-00000199")
+			.replace(
+				"<cbc:TransportModeCode>02</cbc:TransportModeCode>",
+				"<cbc:TransportModeCode>01</cbc:TransportModeCode>",
+			)
+			.replace(
+				"""  <cac:TransportHandlingUnit><cac:TransportEquipment>
+   <cbc:ID>ABC123</cbc:ID><cac:ApplicableTransportMeans><cbc:RegistrationNationalityID>ABC1234567</cbc:RegistrationNationalityID></cac:ApplicableTransportMeans>
+   <cac:AttachedTransportEquipment><cbc:ID>ABC124</cbc:ID><cac:ApplicableTransportMeans><cbc:RegistrationNationalityID>ABC1234568</cbc:RegistrationNationalityID></cac:ApplicableTransportMeans></cac:AttachedTransportEquipment>
+  </cac:TransportEquipment></cac:TransportHandlingUnit>
+""",
+				"",
+			)
 			.encode()
 		)
+		qr_value = "https://www.nubefact.com/gre/qr/" + "a" * 160
 		request.return_value = {
 			"tipo_de_comprobante": 7,
 			"serie": series.serie.lower(),
 			"numero": "00000199",
 			"aceptada_por_sunat": True,
 			"sunat_responsecode": "0",
+			"cadena_para_codigo_qr": qr_value,
 		}
 		collect.return_value = InspectedArtifacts(logical={"xml": xml})
 		start_migration(job.name)
@@ -320,6 +334,9 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertEqual(gre.migration_job, job.name)
 		self.assertTrue(gre.issued_identity_hash)
 		self.assertEqual(gre.fecha_de_emision.isoformat(), "2026-06-01")
+		self.assertEqual(gre.tipo_de_transporte, "01")
+		self.assertFalse(gre.transportista_placa_numero)
+		self.assertEqual(gre.cadena_para_codigo_qr, qr_value)
 		files = frappe.get_all(
 			"File",
 			filters={"attached_to_doctype": gre.doctype, "attached_to_name": gre.name},

@@ -94,13 +94,20 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		).insert()
 
 	def make_series(self, local, *, numero=1):
+		while True:
+			series_code = f"T{random_string(3).upper()}"
+			if not frappe.db.exists(
+				"Nubefact Series",
+				{"company": local.company, "tipo_de_comprobante": "7", "serie": series_code},
+			):
+				break
 		return frappe.get_doc(
 			{
 				"doctype": "Nubefact Series",
 				"company": local.company,
 				"local": local.name,
 				"tipo_de_comprobante": "7",
-				"serie": f"T{random_string(3).upper()}",
+				"serie": series_code,
 				"numero": numero,
 			}
 		).insert()
@@ -272,7 +279,6 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			transportista_documento_tipo=None,
 			transportista_documento_numero=None,
 			transportista_denominacion=None,
-			transportista_placa_numero=None,
 		)._build_generate_payload()
 		self.assertNotIn("transportista_documento_tipo", m1l_payload)
 		self.assertNotIn("transportista_placa_numero", m1l_payload)
@@ -337,6 +343,13 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			"ZZ.*no tienen código|no tienen código.*ZZ",
 		):
 			doc._build_generate_payload()
+
+	def test_public_transport_does_not_require_vehicle_plate(self):
+		doc = make_valid_gre(transportista_placa_numero=None)
+
+		doc.insert()
+
+		self.assertNotIn("transportista_placa_numero", doc._build_generate_payload())
 
 	def test_m1l_does_not_require_driver_or_transporter_plate(self):
 		doc = make_valid_gre(
@@ -419,11 +432,13 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertEqual(related_code.mandatory_depends_on, related_code_condition)
 
 		plate = meta.get_field("transportista_placa_numero")
-		self.assertIn("doc.sunat_envio_indicador != '06'", plate.depends_on)
-		self.assertEqual(
-			plate.mandatory_depends_on,
-			"eval:doc.sunat_envio_indicador != '06'",
+		plate_condition = (
+			"eval:doc.sunat_envio_indicador != '06' && "
+			"(doc.tipo_de_comprobante == '8' || "
+			"(doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '02'))"
 		)
+		self.assertIn(plate_condition.removeprefix("eval:"), plate.depends_on)
+		self.assertEqual(plate.mandatory_depends_on, plate_condition)
 
 	def test_valid_private_remitente_and_transportista_can_be_saved(self):
 		private_doc = make_valid_gre(

@@ -324,7 +324,9 @@ class NubefactGuiaDeRemision(Document):
 				}
 			)
 		)
-		if indicator != "06":
+		if indicator != "06" and (
+			self._requires_vehicle_plate() or cstr(self.transportista_placa_numero).strip()
+		):
 			payload["transportista_placa_numero"] = self.transportista_placa_numero
 
 		if document_type == "7":
@@ -477,11 +479,11 @@ class NubefactGuiaDeRemision(Document):
 		)
 
 		indicator = cstr(self.sunat_envio_indicador).strip()
-		if indicator != "06":
+		if self._requires_vehicle_plate():
 			require_fields(
 				self,
 				["transportista_placa_numero"],
-				"La placa del transportista es obligatoria salvo para traslados M1L.",
+				"La placa del vehículo es obligatoria para transporte privado y GRE Transportista, salvo traslados M1L.",
 			)
 
 		if not self.items:
@@ -667,7 +669,9 @@ class NubefactGuiaDeRemision(Document):
 				frappe.throw("El RUC del transportista debe tener 11 dígitos.")
 			self._validate_text_length("transportista_denominacion", 1, 100)
 
-		if indicator != "06":
+		if indicator != "06" and (
+			self._requires_vehicle_plate() or cstr(self.transportista_placa_numero).strip()
+		):
 			self._validate_plate(self.transportista_placa_numero, "Placa del vehículo principal")
 		self._validate_optional_uppercase_code("tuc_vehiculo_principal", 10, 15)
 		if not historical_source and document_type != "8" and cstr(self.tuc_vehiculo_principal).strip():
@@ -812,6 +816,12 @@ class NubefactGuiaDeRemision(Document):
 		integers = max(len(digits) - decimals, 0)
 		if integers > integer_digits or decimals > decimal_digits:
 			frappe.throw(f"{label} admite hasta {integer_digits} enteros y {decimal_digits} decimales.")
+
+	def _requires_vehicle_plate(self) -> bool:
+		if cstr(self.sunat_envio_indicador).strip() == "06":
+			return False
+		document_type = cstr(self.tipo_de_comprobante)
+		return document_type == "8" or (document_type == "7" and cstr(self.tipo_de_transporte) == "02")
 
 	def _validate_plate(self, value: Any, label: str):
 		plate = cstr(value).strip()

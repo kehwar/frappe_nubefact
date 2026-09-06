@@ -403,11 +403,11 @@
    "mandatory_depends_on": "eval:doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '01'"
   },
   {
-   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || doc.sunat_envio_indicador != '06'",
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || (doc.sunat_envio_indicador != '06' && (doc.tipo_de_comprobante == '8' || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '02')))",
    "fieldname": "transportista_placa_numero",
    "fieldtype": "Data",
    "label": "Número de Placa de Transportista",
-   "mandatory_depends_on": "eval:doc.sunat_envio_indicador != '06'"
+   "mandatory_depends_on": "eval:doc.sunat_envio_indicador != '06' && (doc.tipo_de_comprobante == '8' || (doc.tipo_de_comprobante == '7' && doc.tipo_de_transporte == '02'))"
   },
   {
    "fieldname": "tuc_vehiculo_principal",
@@ -751,7 +751,7 @@
   },
   {
    "fieldname": "cadena_para_codigo_qr",
-   "fieldtype": "Data",
+   "fieldtype": "Text",
    "label": "Cadena para Código QR",
    "no_copy": 1,
    "read_only": 1
