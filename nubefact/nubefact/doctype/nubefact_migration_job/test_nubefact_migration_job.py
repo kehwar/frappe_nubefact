@@ -7,6 +7,7 @@ import base64
 import io
 import socket
 import zipfile
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import frappe
@@ -299,6 +300,10 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 				"<cbc:TransportModeCode>01</cbc:TransportModeCode>",
 			)
 			.replace(
+				"<cac:LoadingTransportEvent><cbc:OccurrenceDate>2026-06-03</cbc:OccurrenceDate></cac:LoadingTransportEvent>",
+				"",
+			)
+			.replace(
 				"""  <cac:TransportHandlingUnit><cac:TransportEquipment>
    <cbc:ID>ABC123</cbc:ID><cac:ApplicableTransportMeans><cbc:RegistrationNationalityID>ABC1234567</cbc:RegistrationNationalityID></cac:ApplicableTransportMeans>
    <cac:AttachedTransportEquipment><cbc:ID>ABC124</cbc:ID><cac:ApplicableTransportMeans><cbc:RegistrationNationalityID>ABC1234568</cbc:RegistrationNationalityID></cac:ApplicableTransportMeans></cac:AttachedTransportEquipment>
@@ -335,6 +340,7 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertTrue(gre.issued_identity_hash)
 		self.assertEqual(gre.fecha_de_emision.isoformat(), "2026-06-01")
 		self.assertEqual(gre.tipo_de_transporte, "01")
+		self.assertFalse(gre.fecha_de_entrega_al_transportista)
 		self.assertFalse(gre.transportista_placa_numero)
 		self.assertEqual(gre.cadena_para_codigo_qr, qr_value)
 		files = frappe.get_all(
@@ -346,6 +352,125 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertTrue(all(row.is_private for row in files))
 		with self.assertRaisesRegex(frappe.ValidationError, "no se pueden eliminar"):
 			gre.delete()
+
+	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job._dispatch_job")
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.collect_response_artifacts"
+	)
+	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.make_request")
+	def test_warning_retry_recognizes_frappe_suffixed_artifact_names(self, request, collect, dispatch):
+		job, series = self.make_job(start=1, end=1)
+		start_migration(job.name)
+		dispatch.reset_mock()
+		gre = frappe.get_doc(
+			{
+				"doctype": "Nubefact Guia De Remision",
+				"company": job.company,
+				"local": job.local,
+				"nubefact_series": series.name,
+				"tipo_de_comprobante": "7",
+				"serie": series.serie,
+				"numero": 1,
+				"status": "Aceptada",
+				"skip_field_validation": 1,
+			}
+		).insert()
+		frappe.db.set_value(
+			gre.doctype,
+			gre.name,
+			{"migrated_from_nubefact": 1, "migration_job": job.name},
+			update_modified=False,
+		)
+		base = f"{series.serie}-000001"
+		for kind in ("pdf", "xml"):
+			filename = f"{base}a1b2c3.{kind}"
+			file_path = Path(frappe.get_site_path("private", "files", filename))
+			file_path.write_bytes(f"{series.serie}-{kind}".encode())
+			self.addCleanup(file_path.unlink, missing_ok=True)
+			file_doc = frappe.get_doc(
+				{
+					"doctype": "File",
+					"file_name": filename,
+					"file_url": f"/private/files/{filename}",
+					"is_private": 1,
+					"attached_to_doctype": gre.doctype,
+					"attached_to_name": gre.name,
+				}
+			)
+			file_doc.flags.copy_from_existing_file = True
+			file_doc.insert(ignore_permissions=True)
+		public_cdr_name = f"{base}.cdr"
+		public_cdr_path = Path(frappe.get_site_path("public", "files", public_cdr_name))
+		public_cdr_path.write_bytes(b"public-placeholder")
+		self.addCleanup(public_cdr_path.unlink, missing_ok=True)
+		public_cdr = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": public_cdr_name,
+				"file_url": f"/files/{public_cdr_name}",
+				"is_private": 0,
+				"attached_to_doctype": gre.doctype,
+				"attached_to_name": gre.name,
+			}
+		)
+		public_cdr.flags.copy_from_existing_file = True
+		public_cdr.insert(ignore_permissions=True)
+		item = frappe.get_doc(
+			{
+				"doctype": "Nubefact Migration Job Item",
+				"parent": job.name,
+				"parenttype": job.doctype,
+				"parentfield": "results",
+				"number": 1,
+				"status": "Warning",
+				"guia_de_remision": gre.name,
+				"pdf_downloaded": 0,
+				"xml_downloaded": 0,
+				"cdr_downloaded": 0,
+			}
+		).insert(ignore_permissions=True)
+		frappe.db.set_value(
+			job.doctype,
+			job.name,
+			{
+				"status": "Completed with Warnings",
+				"processed_count": 1,
+				"warning_count": 1,
+				"next_enqueue_pending": 0,
+			},
+		)
+		request.return_value = {
+			"tipo_de_comprobante": 7,
+			"serie": series.serie,
+			"numero": 1,
+			"aceptada_por_sunat": True,
+			"sunat_responsecode": "0",
+		}
+		collect.return_value = InspectedArtifacts(
+			logical={"cdr": f"<ApplicationResponse>{series.serie}</ApplicationResponse>".encode()}
+		)
+
+		retry_migration(job.name, include_warnings=True)
+		dispatch.reset_mock()
+		run_next_migration_number(job.name)
+
+		job.reload()
+		item.reload()
+		self.assertEqual(
+			job.status,
+			"Completed",
+			msg=(
+				f"item={item.status}/{item.message}; files="
+				f"{frappe.get_all('File', filters={'attached_to_name': gre.name}, fields=['file_name', 'is_private'])}"
+			),
+		)
+		self.assertEqual(job.warning_count, 0)
+		self.assertEqual(item.status, "Existing")
+		self.assertTrue(item.pdf_downloaded)
+		self.assertTrue(item.xml_downloaded)
+		self.assertTrue(item.cdr_downloaded)
+		collect.assert_called_once()
+		self.assertEqual(collect.call_args.kwargs["kinds"], {"cdr"})
 
 	def test_migrated_gre_cannot_be_sent_again(self):
 		job, series = self.make_job(start=1, end=1)

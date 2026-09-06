@@ -33,7 +33,6 @@ from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
 	make_issued_identity_hash,
 )
 from nubefact.utils import NubefactAPIError, _is_safe_download_url, make_request
-from nubefact.utils import _attachment_exists as attachment_exists
 
 from .nubefact_migration_artifacts import (
 	ArtifactValidationError,
@@ -921,11 +920,18 @@ def _artifact_attachment_state(gre_name: str, series: str, number: int) -> dict[
 			filters={
 				"attached_to_doctype": "Nubefact Guia De Remision",
 				"attached_to_name": gre_name,
+				"is_private": 1,
 			},
 			pluck="file_name",
 		)
 	}
-	return {kind: f"{base}.{kind}".lower() in filenames for kind in ("pdf", "xml", "cdr")}
+	base_pattern = re.escape(base.lower())
+	return {
+		kind: any(
+			re.fullmatch(rf"{base_pattern}(?:[0-9a-f]{{6}})*\.{kind}", filename) for filename in filenames
+		)
+		for kind in ("pdf", "xml", "cdr")
+	}
 
 
 def _attach_artifacts(
@@ -952,7 +958,15 @@ def _attach_artifacts(
 
 def _save_owned_file(job_name: str, token: str, gre_name: str, filename: str, content: bytes):
 	_lock_owned_job(job_name, token)
-	if not attachment_exists("Nubefact Guia De Remision", gre_name, filename):
+	if not frappe.db.exists(
+		"File",
+		{
+			"attached_to_doctype": "Nubefact Guia De Remision",
+			"attached_to_name": gre_name,
+			"file_name": filename,
+			"is_private": 1,
+		},
+	):
 		save_file(
 			fname=filename,
 			content=content,

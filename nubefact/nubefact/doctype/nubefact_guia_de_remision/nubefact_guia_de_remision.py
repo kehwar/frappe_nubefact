@@ -187,7 +187,7 @@ class NubefactGuiaDeRemision(Document):
 		)
 		# Reuse the complete business/catalog validator and bypass only the rule
 		# that ties an issuance request to today's date.
-		self._validate_required_fields()
+		self._validate_required_fields(historical_source=True)
 		self._validate_document_rules(validate_issue_window=False, historical_source=True)
 
 	def on_trash(self):
@@ -471,7 +471,7 @@ class NubefactGuiaDeRemision(Document):
 			}
 		)
 
-	def _validate_required_fields(self):
+	def _validate_required_fields(self, *, historical_source: bool = False):
 		require_fields(
 			self,
 			REQUIRED_FIELDS,
@@ -514,9 +514,16 @@ class NubefactGuiaDeRemision(Document):
 			)
 
 			if cstr(self.tipo_de_transporte) == "01":
+				public_transport_fields = PUBLIC_TRANSPORT_REQUIRED_FIELDS
+				if historical_source:
+					public_transport_fields = [
+						fieldname
+						for fieldname in public_transport_fields
+						if fieldname != "fecha_de_entrega_al_transportista"
+					]
 				require_fields(
 					self,
-					PUBLIC_TRANSPORT_REQUIRED_FIELDS,
+					public_transport_fields,
 					"Los datos del transportista son obligatorios para transporte público.",
 				)
 			elif cstr(self.tipo_de_transporte) == "02" and indicator != "06":
