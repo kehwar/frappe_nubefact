@@ -198,6 +198,11 @@ class TestMigrationInterpretation(FrappeTestCase):
 
 
 class TestMigrationManagerAndWorker(FrappeTestCase):
+	def test_server_populated_fields_do_not_block_standard_form_save(self):
+		meta = frappe.get_meta("Nubefact Migration Job")
+		for fieldname in ("serie", "requested_by"):
+			self.assertFalse(meta.get_field(fieldname).reqd)
+
 	def make_job(self, *, start=1, end=2):
 		company = frappe.get_all("Company", pluck="name", limit=1)[0]
 		local = frappe.get_doc(
