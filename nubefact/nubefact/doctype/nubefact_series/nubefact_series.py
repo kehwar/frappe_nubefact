@@ -41,6 +41,37 @@ ISSUABLE_STATUSES = {"Borrador", "Error"}
 MAX_DOCUMENT_NUMBER = 99_999_999
 
 
+def make_gre_artifact_names(
+	company: Any, document_type: Any, series: Any, number: Any
+) -> tuple[dict[str, str], dict[str, str]]:
+	"""Return canonical private artifact names for a GRE identity."""
+
+	company_name = cstr(company or "").strip()
+	tax_id = cstr(frappe.db.get_value("Company", company_name, "tax_id")).strip()
+	if not re.fullmatch(r"\d{11}", tax_id):
+		frappe.throw("La compañía debe tener un RUC de 11 dígitos para nombrar los artefactos GRE.")
+
+	provider_type = cstr(document_type or "").strip()
+	sunat_type = SUNAT_DOCUMENT_TYPE_BY_NUBEFACT_TYPE.get(provider_type)
+	if provider_type not in {"7", "8"} or not sunat_type:
+		frappe.throw("El tipo de comprobante no corresponde a una GRE compatible.")
+
+	series_code = cstr(series or "").strip().upper()
+	number_value = cint(number)
+	if not series_code or number_value < 1 or number_value > MAX_DOCUMENT_NUMBER:
+		frappe.throw("No se puede nombrar un artefacto GRE con una identidad incompleta.")
+
+	base = f"{tax_id}-{sunat_type}-{series_code}-{number_value:08d}"
+	return (
+		{"pdf": f"{base}.pdf", "xml": f"{base}.xml", "cdr": f"R-{base}.xml"},
+		{
+			"pdf_zip_base64": f"{base}-pdf-field.zip",
+			"xml_zip_base64": f"{base}-xml-field.zip",
+			"cdr_zip_base64": f"{base}-cdr-field.zip",
+		},
+	)
+
+
 def make_issued_identity_hash(company: Any, document_type: Any, series: Any, number: Any) -> str:
 	"""Return the canonical race-guard identity shared by allocation and migration."""
 

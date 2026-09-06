@@ -15,6 +15,7 @@ from frappe.model.document import Document
 from frappe.utils import cstr, getdate
 from frappe.utils.file_manager import save_file
 
+from nubefact.nubefact.doctype.nubefact_series.nubefact_series import make_gre_artifact_names
 from nubefact.utils.nubefact import (
 	MAX_DUPLICATE_NUMBER_SKIPS,
 	NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE,
@@ -125,17 +126,43 @@ def parse_raw_payload(raw_value: Any, context: str) -> dict[str, Any]:
 	return {}
 
 
-def _attachment_exists(doctype: str, docname: str, filename: str) -> bool:
-	return bool(
-		frappe.db.exists(
-			"File",
-			{
-				"attached_to_doctype": doctype,
-				"attached_to_name": docname,
-				"file_name": filename,
-			},
-		)
+def _attachment_exists(doctype: str, docname: str, filename: str, *, private_only: bool = False) -> bool:
+	filters = {
+		"attached_to_doctype": doctype,
+		"attached_to_name": docname,
+		"file_name": filename,
+	}
+	if private_only:
+		filters["is_private"] = 1
+	return bool(frappe.db.exists("File", filters))
+
+
+def _save_private_attachment_exact(filename: str, content: bytes, doctype: str, docname: str) -> None:
+	"""Save one private attachment without Frappe's content-hash filename suffix."""
+	if _attachment_exists(doctype, docname, filename, private_only=True):
+		return
+
+	file_url = f"/private/files/{filename}"
+	if frappe.db.exists("File", {"file_url": file_url}):
+		frappe.throw(f"Ya existe otro archivo privado con el nombre canónico {filename}.")
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": filename,
+			"content": content,
+			"is_private": 1,
+			"attached_to_doctype": doctype,
+			"attached_to_name": docname,
+		}
 	)
+	file_doc.flags.new_file = True
+	file_doc.save_file(
+		content=content,
+		ignore_existing_file_check=True,
+		overwrite=True,
+	)
+	file_doc.flags.copy_from_existing_file = True
+	file_doc.insert(ignore_permissions=True)
 
 
 def attach_nubefact_json(payload: dict[str, Any], filename: str, doctype: str, docname: str) -> None:
@@ -162,6 +189,7 @@ def attach_nubefact_base64_file(
 	docname: str | None = None,
 	*,
 	encoded_content: str | None = None,
+	exact_filename: bool = False,
 ) -> None:
 	"""Decode a transient NubeFact Base64 ZIP into a private attachment.
 
@@ -170,7 +198,7 @@ def attach_nubefact_base64_file(
 	"""
 	if not filename or not doctype or not docname:
 		return
-	if _attachment_exists(doctype, docname, filename):
+	if _attachment_exists(doctype, docname, filename, private_only=exact_filename):
 		return
 
 	encoded_content = cstr(encoded_content or "")
@@ -188,13 +216,16 @@ def attach_nubefact_base64_file(
 		)
 		return
 
-	save_file(
-		fname=filename,
-		content=content,
-		dt=doctype,
-		dn=docname,
-		is_private=1,
-	)
+	if exact_filename:
+		_save_private_attachment_exact(filename, content, doctype, docname)
+	else:
+		save_file(
+			fname=filename,
+			content=content,
+			dt=doctype,
+			dn=docname,
+			is_private=1,
+		)
 
 
 def _get_logged_base64_artifact(doctype: str, docname: str, fieldname: str) -> str:
@@ -295,6 +326,8 @@ def download_and_attach_file(
 	fallback_content: str | None = None,
 	fallback_filename: str | None = None,
 	fallback_fieldname: str | None = None,
+	*,
+	exact_filename: bool = False,
 ):
 	"""Download a NubeFact artifact and attach it privately to its document.
 
@@ -302,7 +335,7 @@ def download_and_attach_file(
 	transient value as a fallback. Attachment failures are logged without changing
 	issuance state.
 	"""
-	if _attachment_exists(doctype, docname, filename):
+	if _attachment_exists(doctype, docname, filename, private_only=exact_filename):
 		return
 
 	try:
@@ -319,16 +352,20 @@ def download_and_attach_file(
 				doctype=doctype,
 				docname=docname,
 				encoded_content=fallback_content,
+				exact_filename=exact_filename,
 			)
 		return
 
-	save_file(
-		fname=filename,
-		content=content,
-		dt=doctype,
-		dn=docname,
-		is_private=1,
-	)
+	if exact_filename:
+		_save_private_attachment_exact(filename, content, doctype, docname)
+	else:
+		save_file(
+			fname=filename,
+			content=content,
+			dt=doctype,
+			dn=docname,
+			is_private=1,
+		)
 
 
 def enqueue_nubefact_file_downloads(
@@ -347,6 +384,31 @@ def enqueue_nubefact_file_downloads(
 	response copy. Jobs run only after commit.
 	"""
 	base_name = cstr(title).strip() or cstr(docname).strip()
+	artifact_names = {
+		"pdf": f"{base_name}.pdf",
+		"xml": f"{base_name}.xml",
+		"cdr": f"{base_name}.cdr",
+	}
+	container_names = {
+		"pdf_zip_base64": f"{base_name}-pdf.zip",
+		"xml_zip_base64": f"{base_name}-xml.zip",
+		"cdr_zip_base64": f"{base_name}-cdr.zip",
+	}
+	if doctype == "Nubefact Guia De Remision":
+		identity = frappe.db.get_value(
+			doctype,
+			docname,
+			["company", "tipo_de_comprobante", "serie", "numero"],
+			as_dict=True,
+		)
+		if not identity:
+			frappe.throw("No se encontró la GRE para nombrar sus artefactos.")
+		artifact_names, container_names = make_gre_artifact_names(
+			identity.company,
+			identity.tipo_de_comprobante,
+			identity.serie,
+			identity.numero,
+		)
 
 	json_payloads = {
 		"request": request_payload,
@@ -366,33 +428,44 @@ def enqueue_nubefact_file_downloads(
 				enqueue_after_commit=True,
 			)
 
+	exact_artifact_names = doctype == "Nubefact Guia De Remision"
 	artifacts = {
 		"pdf": (values.get("enlace_del_pdf"), "pdf_zip_base64"),
 		"xml": (values.get("enlace_del_xml"), "xml_zip_base64"),
 		"cdr": (values.get("enlace_del_cdr"), "cdr_zip_base64"),
 	}
 	for extension, (url, base64_fieldname) in artifacts.items():
-		fallback_filename = f"{base_name}-{extension}.zip"
+		fallback_filename = container_names[base64_fieldname]
 		encoded_content = cstr(values.get(base64_fieldname) or "")
 		if isinstance(url, str) and url.startswith(("http://", "https://")):
+			job_args = {
+				"url": url,
+				"filename": artifact_names[extension],
+				"doctype": doctype,
+				"docname": docname,
+				"fallback_content": encoded_content or None,
+				"fallback_filename": fallback_filename if encoded_content else None,
+			}
+			if exact_artifact_names:
+				job_args["exact_filename"] = True
 			frappe.enqueue(
 				"nubefact.utils.download_and_attach_file",
-				url=url,
-				filename=f"{base_name}.{extension}",
-				doctype=doctype,
-				docname=docname,
-				fallback_content=encoded_content or None,
-				fallback_filename=fallback_filename if encoded_content else None,
+				**job_args,
 				queue="short",
 				enqueue_after_commit=True,
 			)
 		elif encoded_content:
+			job_args = {
+				"encoded_content": encoded_content,
+				"filename": fallback_filename,
+				"doctype": doctype,
+				"docname": docname,
+			}
+			if exact_artifact_names:
+				job_args["exact_filename"] = True
 			frappe.enqueue(
 				"nubefact.utils.attach_nubefact_base64_file",
-				encoded_content=encoded_content,
-				filename=fallback_filename,
-				doctype=doctype,
-				docname=docname,
+				**job_args,
 				queue="short",
 				enqueue_after_commit=True,
 			)

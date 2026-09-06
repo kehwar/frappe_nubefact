@@ -30,6 +30,7 @@ from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remisi
 )
 from nubefact.nubefact.doctype.nubefact_local.nubefact_local import get_request_config
 from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
+	make_gre_artifact_names,
 	make_issued_identity_hash,
 )
 from nubefact.utils import NubefactAPIError, _is_safe_download_url, make_request
@@ -39,6 +40,7 @@ from .nubefact_migration_artifacts import (
 	InspectedArtifacts,
 	canonical_document_identity,
 	collect_response_artifacts,
+	inspect_zip_container,
 )
 
 ACTIVE_STATUSES = {
@@ -676,7 +678,14 @@ def _process_claimed_number(job_name: str, token: str, item_name: str, number: i
 		as_dict=True,
 	)
 	attachment_state = (
-		_artifact_attachment_state(existing.name, job.company, job.serie, number)
+		_recover_existing_container_artifacts(
+			job_name,
+			token,
+			existing.name,
+			job.company,
+			job.serie,
+			number,
+		)
 		if existing.name
 		else {"pdf": False, "xml": False, "cdr": False}
 	)
@@ -925,12 +934,13 @@ def _artifact_attachment_state(gre_name: str, company: str, series: str, number:
 		)
 	}
 	canonical_names, _ = _migration_artifact_names(company, series, number)
-	legacy_base = re.escape(f"{series}-{str(number).zfill(6)}".lower())
-	legacy_patterns = {kind: rf"{legacy_base}(?:[0-9a-f]{{6}})*\.{kind}" for kind in ("pdf", "xml", "cdr")}
+	legacy_names, _ = _legacy_migration_artifact_names(canonical_names, series, number)
 	return {
 		kind: any(
-			_filename_matches(filename, canonical_names[kind])
-			or re.fullmatch(legacy_patterns[kind], filename)
+			any(
+				_filename_matches(filename, expected)
+				for expected in (canonical_names[kind], *legacy_names[kind])
+			)
 			for filename in filenames
 		)
 		for kind in ("pdf", "xml", "cdr")
@@ -940,16 +950,35 @@ def _artifact_attachment_state(gre_name: str, company: str, series: str, number:
 def _migration_artifact_names(
 	company: str, series: str, number: int
 ) -> tuple[dict[str, str], dict[str, str]]:
-	tax_id = cstr(frappe.db.get_value("Company", company, "tax_id")).strip()
-	if not re.fullmatch(r"\d{11}", tax_id):
-		frappe.throw("La compañía debe tener un RUC de 11 dígitos para nombrar los artefactos GRE.")
-	base = f"{tax_id}-09-{cstr(series).strip().upper()}-{cint(number)}"
+	return make_gre_artifact_names(company, "7", series, number)
+
+
+def _legacy_migration_artifact_names(
+	canonical_names: dict[str, str], series: str, number: int
+) -> tuple[dict[str, tuple[str, ...]], dict[str, tuple[str, ...]]]:
+	canonical_base = canonical_names["pdf"].rsplit(".", 1)[0]
+	identity_prefix = canonical_base.rsplit("-", 1)[0]
+	unpadded_base = f"{identity_prefix}-{cint(number)}"
+	old_base = f"{cstr(series).strip().upper()}-{cint(number):06d}"
 	return (
-		{"pdf": f"{base}.pdf", "xml": f"{base}.xml", "cdr": f"R-{base}.xml"},
 		{
-			"pdf_zip_base64": f"{base}-pdf-field.zip",
-			"xml_zip_base64": f"{base}-xml-field.zip",
-			"cdr_zip_base64": f"{base}-cdr-field.zip",
+			"pdf": (f"{unpadded_base}.pdf", f"{old_base}.pdf"),
+			"xml": (f"{unpadded_base}.xml", f"{old_base}.xml"),
+			"cdr": (f"R-{unpadded_base}.xml", f"{old_base}.cdr"),
+		},
+		{
+			"pdf_zip_base64": (
+				f"{unpadded_base}-pdf-field.zip",
+				f"{old_base}-pdf-field.zip",
+			),
+			"xml_zip_base64": (
+				f"{unpadded_base}-xml-field.zip",
+				f"{old_base}-xml-field.zip",
+			),
+			"cdr_zip_base64": (
+				f"{unpadded_base}-cdr-field.zip",
+				f"{old_base}-cdr-field.zip",
+			),
 		},
 	)
 
@@ -957,6 +986,56 @@ def _migration_artifact_names(
 def _filename_matches(actual: str, expected: str) -> bool:
 	stem, extension = expected.lower().rsplit(".", 1)
 	return bool(re.fullmatch(rf"{re.escape(stem)}(?:[0-9a-f]{{6}})*\.{extension}", actual))
+
+
+def _recover_existing_container_artifacts(
+	job_name: str,
+	token: str,
+	gre_name: str,
+	company: str,
+	series: str,
+	number: int,
+) -> dict[str, bool]:
+	"""Rebuild missing logical files from previously accepted private ZIP containers."""
+	_normalize_existing_artifact_names(job_name, token, gre_name, company, series, number)
+	state = _artifact_attachment_state(gre_name, company, series, number)
+	missing_kinds = {kind for kind, present in state.items() if not present}
+	if not missing_kinds:
+		return state
+
+	logical_names, container_names = _migration_artifact_names(company, series, number)
+	files = frappe.get_all(
+		"File",
+		filters={
+			"attached_to_doctype": "Nubefact Guia De Remision",
+			"attached_to_name": gre_name,
+			"is_private": 1,
+		},
+		fields=["name", "file_name"],
+	)
+	recovered: dict[str, bytes] = {}
+	for row in files:
+		filename = cstr(row.file_name).strip().lower()
+		if not any(_filename_matches(filename, expected) for expected in container_names.values()):
+			continue
+		try:
+			container = frappe.get_doc("File", row.name).get_content()
+			kind, content = inspect_zip_container(
+				container,
+				expected_series=series,
+				expected_number=number,
+			)
+		except (ArtifactValidationError, FileNotFoundError):
+			continue
+		if kind not in missing_kinds:
+			continue
+		if kind in recovered and recovered[kind] != content:
+			frappe.throw(f"Hay múltiples contenedores distintos para el artefacto {kind.upper()}.")
+		recovered[kind] = content
+
+	for kind, content in recovered.items():
+		_save_owned_file(job_name, token, gre_name, logical_names[kind], content)
+	return _artifact_attachment_state(gre_name, company, series, number)
 
 
 def _attach_artifacts(
@@ -987,25 +1066,25 @@ def _normalize_existing_artifact_names(
 ) -> None:
 	_lock_owned_job(job_name, token)
 	canonical_names, container_names = _migration_artifact_names(company, series, number)
-	legacy_base = re.escape(f"{series}-{str(number).zfill(6)}".lower())
+	legacy_names, legacy_container_names = _legacy_migration_artifact_names(canonical_names, series, number)
 	targets = (
-		("PDF", canonical_names["pdf"], rf"{legacy_base}(?:[0-9a-f]{{6}})*\.pdf"),
-		("XML", canonical_names["xml"], rf"{legacy_base}(?:[0-9a-f]{{6}})*\.xml"),
-		("CDR", canonical_names["cdr"], rf"{legacy_base}(?:[0-9a-f]{{6}})*\.cdr"),
+		("PDF", canonical_names["pdf"], legacy_names["pdf"]),
+		("XML", canonical_names["xml"], legacy_names["xml"]),
+		("CDR", canonical_names["cdr"], legacy_names["cdr"]),
 		(
 			"contenedor PDF",
 			container_names["pdf_zip_base64"],
-			rf"{legacy_base}-pdf-field(?:[0-9a-f]{{6}})*\.zip",
+			legacy_container_names["pdf_zip_base64"],
 		),
 		(
 			"contenedor XML",
 			container_names["xml_zip_base64"],
-			rf"{legacy_base}-xml-field(?:[0-9a-f]{{6}})*\.zip",
+			legacy_container_names["xml_zip_base64"],
 		),
 		(
 			"contenedor CDR",
 			container_names["cdr_zip_base64"],
-			rf"{legacy_base}-cdr-field(?:[0-9a-f]{{6}})*\.zip",
+			legacy_container_names["cdr_zip_base64"],
 		),
 	)
 	files = frappe.get_all(
@@ -1017,12 +1096,14 @@ def _normalize_existing_artifact_names(
 		},
 		fields=["name", "file_name", "file_url"],
 	)
-	for label, canonical_name, legacy_pattern in targets:
+	for label, canonical_name, compatible_names in targets:
 		candidates = [
 			row
 			for row in files
-			if _filename_matches(cstr(row.file_name).strip().lower(), canonical_name)
-			or re.fullmatch(legacy_pattern, cstr(row.file_name).strip().lower())
+			if any(
+				_filename_matches(cstr(row.file_name).strip().lower(), expected)
+				for expected in (canonical_name, *compatible_names)
+			)
 		]
 		if not candidates:
 			continue

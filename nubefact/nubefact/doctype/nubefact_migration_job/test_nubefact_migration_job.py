@@ -371,9 +371,9 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertEqual(
 			{row.file_name for row in files},
 			{
-				f"20506005133-09-{series.serie}-199.pdf",
-				f"20506005133-09-{series.serie}-199.xml",
-				f"R-20506005133-09-{series.serie}-199.xml",
+				f"20506005133-09-{series.serie}-00000199.pdf",
+				f"20506005133-09-{series.serie}-00000199.xml",
+				f"R-20506005133-09-{series.serie}-00000199.xml",
 			},
 		)
 		self.assertTrue(all(row.is_private for row in files))
@@ -464,7 +464,25 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		legacy_container.flags.copy_from_existing_file = True
 		legacy_container.insert(ignore_permissions=True)
 
-		public_cdr_name = f"R-20506005133-09-{series.serie}-1.xml"
+		unpadded_cdr_name = f"R-20506005133-09-{series.serie}-1.xml"
+		unpadded_cdr_path = Path(frappe.get_site_path("private", "files", unpadded_cdr_name))
+		unpadded_cdr_path.write_bytes(f"{series.serie}-cdr".encode())
+		legacy_private_paths.append(unpadded_cdr_path)
+		self.addCleanup(unpadded_cdr_path.unlink, missing_ok=True)
+		unpadded_cdr = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": unpadded_cdr_name,
+				"file_url": f"/private/files/{unpadded_cdr_name}",
+				"is_private": 1,
+				"attached_to_doctype": gre.doctype,
+				"attached_to_name": gre.name,
+			}
+		)
+		unpadded_cdr.flags.copy_from_existing_file = True
+		unpadded_cdr.insert(ignore_permissions=True)
+
+		public_cdr_name = f"R-20506005133-09-{series.serie}-00000001.xml"
 		public_cdr_path = Path(frappe.get_site_path("public", "files", public_cdr_name))
 		public_cdr_path.write_bytes(b"public-placeholder")
 		self.addCleanup(public_cdr_path.unlink, missing_ok=True)
@@ -511,9 +529,6 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			"aceptada_por_sunat": True,
 			"sunat_responsecode": "0",
 		}
-		collect.return_value = InspectedArtifacts(
-			logical={"cdr": f"<ApplicationResponse>{series.serie}</ApplicationResponse>".encode()}
-		)
 
 		retry_migration(job.name, include_warnings=True)
 		dispatch.reset_mock()
@@ -548,16 +563,139 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertEqual(
 			private_filenames,
 			{
-				f"20506005133-09-{series.serie}-1.pdf",
-				f"20506005133-09-{series.serie}-1.xml",
-				f"R-20506005133-09-{series.serie}-1.xml",
-				f"20506005133-09-{series.serie}-1-pdf-field.zip",
+				f"20506005133-09-{series.serie}-00000001.pdf",
+				f"20506005133-09-{series.serie}-00000001.xml",
+				f"R-20506005133-09-{series.serie}-00000001.xml",
+				f"20506005133-09-{series.serie}-00000001-pdf-field.zip",
 			},
 		)
 		self.assertTrue(public_cdr_path.exists())
 		self.assertTrue(all(not path.exists() for path in legacy_private_paths))
-		collect.assert_called_once()
-		self.assertEqual(collect.call_args.kwargs["kinds"], {"cdr"})
+		collect.assert_not_called()
+
+	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job._dispatch_job")
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.collect_response_artifacts"
+	)
+	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.make_request")
+	def test_warning_retry_recovers_a_logical_artifact_from_its_saved_container(
+		self, request, collect, dispatch
+	):
+		job, series = self.make_job(start=1, end=1)
+		gre = frappe.get_doc(
+			{
+				"doctype": "Nubefact Guia De Remision",
+				"company": job.company,
+				"local": job.local,
+				"nubefact_series": series.name,
+				"tipo_de_comprobante": "7",
+				"serie": series.serie,
+				"numero": 1,
+				"status": "Aceptada",
+				"skip_field_validation": 1,
+			}
+		).insert()
+		frappe.db.set_value(
+			gre.doctype,
+			gre.name,
+			{"migrated_from_nubefact": 1, "migration_job": job.name},
+			update_modified=False,
+		)
+
+		canonical_base = f"20506005133-09-{series.serie}-00000001"
+		cdr = CDR_WITH_REFERENCE.replace(b"TTT1-00000001", f"{series.serie}-00000001".encode())
+		container = base64.b64decode(zip64("R-guide.xml", cdr))
+		attachments = {
+			f"{canonical_base}.pdf": b"existing-pdf",
+			f"{canonical_base}.xml": b"existing-xml",
+			f"20506005133-09-{series.serie}-1-cdr-field.zip": container,
+		}
+		paths = []
+		for filename, content in attachments.items():
+			path = Path(frappe.get_site_path("private", "files", filename))
+			path.write_bytes(content)
+			paths.append(path)
+			self.addCleanup(path.unlink, missing_ok=True)
+			file_doc = frappe.get_doc(
+				{
+					"doctype": "File",
+					"file_name": filename,
+					"file_url": f"/private/files/{filename}",
+					"is_private": 1,
+					"attached_to_doctype": gre.doctype,
+					"attached_to_name": gre.name,
+				}
+			)
+			file_doc.flags.copy_from_existing_file = True
+			file_doc.insert(ignore_permissions=True)
+
+		item = frappe.get_doc(
+			{
+				"doctype": "Nubefact Migration Job Item",
+				"parent": job.name,
+				"parenttype": job.doctype,
+				"parentfield": "results",
+				"number": 1,
+				"status": "Warning",
+				"guia_de_remision": gre.name,
+				"pdf_downloaded": 1,
+				"xml_downloaded": 1,
+				"cdr_downloaded": 0,
+			}
+		).insert(ignore_permissions=True)
+		frappe.db.set_value(
+			job.doctype,
+			job.name,
+			{
+				"status": "Completed with Warnings",
+				"processed_count": 1,
+				"warning_count": 1,
+				"next_enqueue_pending": 0,
+			},
+		)
+		request.return_value = {
+			"tipo_de_comprobante": 7,
+			"serie": series.serie,
+			"numero": 1,
+			"aceptada_por_sunat": True,
+			"sunat_responsecode": "0",
+		}
+
+		retry_migration(job.name, include_warnings=True)
+		dispatch.reset_mock()
+		run_next_migration_number(job.name)
+
+		job.reload()
+		item.reload()
+		self.assertEqual(job.status, "Completed")
+		self.assertEqual(item.status, "Existing")
+		self.assertTrue(item.cdr_downloaded)
+		collect.assert_not_called()
+		private_filenames = set(
+			frappe.get_all(
+				"File",
+				filters={
+					"attached_to_doctype": gre.doctype,
+					"attached_to_name": gre.name,
+					"is_private": 1,
+				},
+				pluck="file_name",
+			)
+		)
+		self.assertEqual(
+			private_filenames,
+			{
+				f"{canonical_base}.pdf",
+				f"{canonical_base}.xml",
+				f"R-{canonical_base}.xml",
+				f"{canonical_base}-cdr-field.zip",
+			},
+		)
+		self.assertFalse(paths[-1].exists())
+		for filename in (f"R-{canonical_base}.xml", f"{canonical_base}-cdr-field.zip"):
+			path = Path(frappe.get_site_path("private", "files", filename))
+			self.addCleanup(path.unlink, missing_ok=True)
+			self.assertTrue(path.is_file())
 
 	def test_migrated_gre_cannot_be_sent_again(self):
 		job, series = self.make_job(start=1, end=1)

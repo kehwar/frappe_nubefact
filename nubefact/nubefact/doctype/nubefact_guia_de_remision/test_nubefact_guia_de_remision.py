@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import frappe
@@ -19,9 +20,16 @@ from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remisi
 	refrescar_estado_sunat,
 	solicitar_anulacion,
 )
+from nubefact.utils import download_and_attach_file
 
 
 def make_valid_gre(**overrides):
+	latest_local = frappe.get_all(
+		"Nubefact Local",
+		fields=["name", "company"],
+		order_by="modified desc",
+		limit=1,
+	)
 	values = {
 		"tipo_de_comprobante": "7",
 		"serie": "TTT1",
@@ -47,6 +55,8 @@ def make_valid_gre(**overrides):
 		"punto_de_llegada_ubigeo": "150102",
 		"punto_de_llegada_direccion": "DESTINO DE PRUEBA",
 	}
+	if latest_local:
+		values.update(company=latest_local[0].company, local=latest_local[0].name)
 	values.update(overrides)
 	if values["tipo_de_comprobante"] == "8":
 		values.update(
@@ -93,12 +103,16 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			}
 		).insert()
 
-	def make_series(self, local, *, numero=1):
+	def make_series(self, local, *, numero=1, document_type="7"):
 		while True:
-			series_code = f"T{random_string(3).upper()}"
+			series_code = f"{'T' if document_type == '7' else 'V'}{random_string(3).upper()}"
 			if not frappe.db.exists(
 				"Nubefact Series",
-				{"company": local.company, "tipo_de_comprobante": "7", "serie": series_code},
+				{
+					"company": local.company,
+					"tipo_de_comprobante": document_type,
+					"serie": series_code,
+				},
 			):
 				break
 		return frappe.get_doc(
@@ -106,7 +120,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 				"doctype": "Nubefact Series",
 				"company": local.company,
 				"local": local.name,
-				"tipo_de_comprobante": "7",
+				"tipo_de_comprobante": document_type,
 				"serie": series_code,
 				"numero": numero,
 			}
@@ -576,6 +590,136 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertEqual(
 			frappe.db.count("Nubefact API Log", {"referencia_guia_de_remision": doc.name}),
 			2,
+		)
+
+	@patch("nubefact.utils.frappe.enqueue")
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_newly_issued_gre_uses_canonical_padded_artifact_names(self, post, enqueue):
+		local = self.make_local()
+		original_tax_id = frappe.db.get_value("Company", local.company, "tax_id")
+		frappe.db.set_value("Company", local.company, "tax_id", "20506005133", update_modified=False)
+		series = self.make_series(local, numero=2)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+		post.return_value = self.make_http_response(
+			{
+				"tipo_de_comprobante": 7,
+				"serie": series.serie,
+				"numero": 2,
+				"aceptada_por_sunat": True,
+				"enlace_del_pdf": "https://files.example.test/guide.pdf",
+				"enlace_del_xml": "https://files.example.test/guide.xml",
+				"enlace_del_cdr": "https://files.example.test/guide.cdr",
+				"pdf_zip_base64": "PDF-BASE64",
+				"xml_zip_base64": "XML-BASE64",
+				"cdr_zip_base64": "CDR-BASE64",
+			}
+		)
+		try:
+			enviar_a_nubefact(doc.name)
+		finally:
+			frappe.db.set_value("Company", local.company, "tax_id", original_tax_id, update_modified=False)
+			frappe.db.commit()
+
+		download_jobs = [
+			call.kwargs
+			for call in enqueue.call_args_list
+			if call.args[0] == "nubefact.utils.download_and_attach_file"
+		]
+		expected_filenames = {
+			f"20506005133-09-{series.serie}-00000002.pdf",
+			f"20506005133-09-{series.serie}-00000002.xml",
+			f"R-20506005133-09-{series.serie}-00000002.xml",
+		}
+		self.assertEqual({job["filename"] for job in download_jobs}, expected_filenames)
+		self.assertEqual(
+			{job["filename"]: job["fallback_filename"] for job in download_jobs},
+			{
+				f"20506005133-09-{series.serie}-00000002.pdf": f"20506005133-09-{series.serie}-00000002-pdf-field.zip",
+				f"20506005133-09-{series.serie}-00000002.xml": f"20506005133-09-{series.serie}-00000002-xml-field.zip",
+				f"R-20506005133-09-{series.serie}-00000002.xml": f"20506005133-09-{series.serie}-00000002-cdr-field.zip",
+			},
+		)
+
+		with patch("nubefact.utils._download_public_file", return_value=b"artifact"):
+			for job in download_jobs:
+				download_and_attach_file(
+					url=job["url"],
+					filename=job["filename"],
+					doctype=job["doctype"],
+					docname=job["docname"],
+					fallback_content=job["fallback_content"],
+					fallback_filename=job["fallback_filename"],
+					exact_filename=job["exact_filename"],
+				)
+		for filename in expected_filenames:
+			path = Path(frappe.get_site_path("private", "files", filename))
+			self.addCleanup(path.unlink, missing_ok=True)
+			self.assertTrue(path.is_file())
+		self.assertEqual(
+			set(
+				frappe.get_all(
+					"File",
+					filters={
+						"attached_to_doctype": doc.doctype,
+						"attached_to_name": doc.name,
+						"is_private": 1,
+					},
+					pluck="file_name",
+				)
+			),
+			expected_filenames,
+		)
+
+	@patch("nubefact.utils.frappe.enqueue")
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_newly_issued_transportista_uses_sunat_type_31_artifact_names(self, post, enqueue):
+		local = self.make_local()
+		original_tax_id = frappe.db.get_value("Company", local.company, "tax_id")
+		frappe.db.set_value("Company", local.company, "tax_id", "20506005133", update_modified=False)
+		series = self.make_series(local, numero=2, document_type="8")
+		doc = make_valid_gre(
+			tipo_de_comprobante="8",
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+		post.return_value = self.make_http_response(
+			{
+				"tipo_de_comprobante": 8,
+				"serie": series.serie,
+				"numero": 2,
+				"aceptada_por_sunat": True,
+				"enlace_del_pdf": "https://files.example.test/guide.pdf",
+				"enlace_del_xml": "https://files.example.test/guide.xml",
+				"enlace_del_cdr": "https://files.example.test/guide.cdr",
+			}
+		)
+		try:
+			enviar_a_nubefact(doc.name)
+		finally:
+			frappe.db.set_value("Company", local.company, "tax_id", original_tax_id, update_modified=False)
+			frappe.db.commit()
+
+		download_jobs = [
+			call.kwargs
+			for call in enqueue.call_args_list
+			if call.args[0] == "nubefact.utils.download_and_attach_file"
+		]
+		self.assertEqual(
+			{job["filename"] for job in download_jobs},
+			{
+				f"20506005133-31-{series.serie}-00000002.pdf",
+				f"20506005133-31-{series.serie}-00000002.xml",
+				f"R-20506005133-31-{series.serie}-00000002.xml",
+			},
 		)
 
 	def test_manual_voiding_lifecycle_requires_an_accepted_gre_and_a_reason(self):

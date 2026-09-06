@@ -55,6 +55,7 @@ from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
 	advance_document_number_after_nubefact_duplicate,
 	allocate_document_number,
 	apply_and_validate_document_series,
+	make_gre_artifact_names,
 	set_company_from_local,
 	validate_document_is_not_being_issued,
 	validate_document_issuance_lease,
@@ -958,6 +959,7 @@ def enviar_a_nubefact(name: str):
 	number_was_unassigned = not cint(doc.numero)
 	doc._action = "save"
 	doc.run_before_save_methods()
+	make_gre_artifact_names(doc.company, doc.tipo_de_comprobante, doc.serie, doc.numero or 1)
 	allocate_document_number(doc, mark_as_issuing=True)
 	# Persist the reservation before the external request. A timeout can hide
 	# a successful issue, so an assigned number must never be reused.
@@ -1175,6 +1177,7 @@ def _request_extract_and_save_response(
 	expected_issuance_modified: Any = None,
 	expected_response_modified: Any = None,
 ) -> dict[str, Any]:
+	make_gre_artifact_names(doc.company, doc.tipo_de_comprobante, doc.serie, doc.numero)
 	response = make_request(
 		payload=payload,
 		local=doc.local,
