@@ -3,14 +3,18 @@
 
 from __future__ import annotations
 
+import hashlib
+import io
 import json
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import frappe
 import requests
+from filelock import FileLock, Timeout
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, getdate, nowdate, random_string
+from pypdf import PdfWriter
 
 from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision import (
 	_save_response_status,
@@ -646,7 +650,16 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			},
 		)
 
-		with patch("nubefact.utils._download_public_file", return_value=b"artifact"):
+		pdf = io.BytesIO()
+		pdf_writer = PdfWriter()
+		pdf_writer.add_blank_page(width=72, height=72)
+		pdf_writer.write(pdf)
+		artifact_content = {
+			"https://files.example.test/guide.pdf": pdf.getvalue(),
+			"https://files.example.test/guide.xml": b"<DespatchAdvice/>",
+			"https://files.example.test/guide.cdr": b"<ApplicationResponse/>",
+		}
+		with patch("nubefact.utils._download_public_file", side_effect=artifact_content.__getitem__):
 			for job in download_jobs:
 				download_and_attach_file(
 					url=job["url"],
@@ -661,20 +674,148 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			path = Path(frappe.get_site_path("private", "files", filename))
 			self.addCleanup(path.unlink, missing_ok=True)
 			self.assertTrue(path.is_file())
-		self.assertEqual(
-			set(
-				frappe.get_all(
-					"File",
-					filters={
-						"attached_to_doctype": doc.doctype,
-						"attached_to_name": doc.name,
-						"is_private": 1,
-					},
-					pluck="file_name",
-				)
-			),
-			expected_filenames,
+		files = frappe.get_all(
+			"File",
+			filters={
+				"attached_to_doctype": doc.doctype,
+				"attached_to_name": doc.name,
+				"is_private": 1,
+			},
+			fields=["file_name", "file_url"],
 		)
+		self.assertEqual({row.file_name for row in files}, expected_filenames)
+		self.assertEqual(
+			{row.file_url for row in files}, {f"/private/files/{name}" for name in expected_filenames}
+		)
+
+	def test_exact_gre_attachment_does_not_overwrite_an_unmanaged_canonical_blob(self):
+		doc = make_valid_gre().insert()
+		filename = f"20506005133-09-T{random_string(3).upper()}-00000001.xml"
+		path = Path(frappe.get_site_path("private", "files", filename))
+		original_content = b"unmanaged-canonical-content"
+		path.write_bytes(original_content)
+		self.addCleanup(path.unlink, missing_ok=True)
+
+		with (
+			patch("nubefact.utils._download_public_file", return_value=b"<DespatchAdvice/>"),
+			self.assertRaisesRegex(frappe.ValidationError, "nombre canónico"),
+		):
+			download_and_attach_file(
+				url="https://files.example.test/guide.xml",
+				filename=filename,
+				doctype=doc.doctype,
+				docname=doc.name,
+				exact_filename=True,
+			)
+
+		self.assertEqual(path.read_bytes(), original_content)
+		self.assertFalse(
+			frappe.db.exists(
+				"File",
+				{
+					"attached_to_doctype": doc.doctype,
+					"attached_to_name": doc.name,
+					"file_name": filename,
+				},
+			)
+		)
+
+	def test_exact_gre_attachment_adopts_an_identical_crash_left_canonical_blob(self):
+		doc = make_valid_gre().insert()
+		filename = f"20506005133-09-T{random_string(3).upper()}-00000001.xml"
+		content = b"<DespatchAdvice><ID>crash-recovery</ID></DespatchAdvice>"
+		path = Path(frappe.get_site_path("private", "files", filename))
+		path.write_bytes(content)
+		self.addCleanup(path.unlink, missing_ok=True)
+
+		with patch("nubefact.utils._download_public_file", return_value=content):
+			download_and_attach_file(
+				url="https://files.example.test/guide.xml",
+				filename=filename,
+				doctype=doc.doctype,
+				docname=doc.name,
+				exact_filename=True,
+			)
+
+		file_row = frappe.db.get_value(
+			"File",
+			{
+				"attached_to_doctype": doc.doctype,
+				"attached_to_name": doc.name,
+				"file_name": filename,
+			},
+			["file_url", "is_private"],
+			as_dict=True,
+		)
+		self.assertEqual(file_row.file_url, f"/private/files/{filename}")
+		self.assertTrue(file_row.is_private)
+		self.assertEqual(path.read_bytes(), content)
+
+	def test_exact_gre_attachment_lock_is_held_until_transaction_end(self):
+		doc = make_valid_gre().insert()
+		filename = f"20506005133-09-T{random_string(3).upper()}-00000001.xml"
+		path = Path(frappe.get_site_path("private", "files", filename))
+		self.addCleanup(path.unlink, missing_ok=True)
+
+		with patch("nubefact.utils._download_public_file", return_value=b"<DespatchAdvice/>"):
+			download_and_attach_file(
+				url="https://files.example.test/guide.xml",
+				filename=filename,
+				doctype=doc.doctype,
+				docname=doc.name,
+				exact_filename=True,
+			)
+
+		lock_digest = hashlib.sha256(filename.encode()).hexdigest()
+		lock_path = frappe.get_site_path("locks", f"nubefact-artifact-{lock_digest}.lock")
+		contender = FileLock(lock_path)
+		with self.assertRaises(Timeout):
+			contender.acquire(timeout=0)
+
+		frappe.db.rollback()
+		with contender.acquire(timeout=0):
+			pass
+
+	def test_exact_gre_attachment_comment_uses_final_canonical_url_after_deduplication(self):
+		doc = make_valid_gre().insert()
+		content = b"<DespatchAdvice><ID>deduplicated</ID></DespatchAdvice>"
+		source = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": f"source-{random_string(8)}.xml",
+				"content": content,
+				"is_private": 1,
+			}
+		).insert(ignore_permissions=True)
+		self.addCleanup(Path(source.get_full_path()).unlink, missing_ok=True)
+		filename = f"20506005133-09-T{random_string(3).upper()}-00000001.xml"
+		canonical_url = f"/private/files/{filename}"
+		self.addCleanup(
+			Path(frappe.get_site_path("private", "files", filename)).unlink,
+			missing_ok=True,
+		)
+
+		with patch("nubefact.utils._download_public_file", return_value=content):
+			download_and_attach_file(
+				url="https://files.example.test/guide.xml",
+				filename=filename,
+				doctype=doc.doctype,
+				docname=doc.name,
+				exact_filename=True,
+			)
+
+		comments = frappe.get_all(
+			"Comment",
+			filters={
+				"reference_doctype": doc.doctype,
+				"reference_name": doc.name,
+				"comment_type": "Attachment",
+			},
+			pluck="content",
+		)
+		self.assertEqual(len(comments), 1)
+		self.assertIn(canonical_url, comments[0])
+		self.assertNotIn(source.file_url, comments[0])
 
 	@patch("nubefact.utils.frappe.enqueue")
 	@patch("nubefact.utils.nubefact.requests.post")

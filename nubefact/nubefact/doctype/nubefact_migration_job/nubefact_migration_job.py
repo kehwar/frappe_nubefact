@@ -33,7 +33,12 @@ from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
 	make_gre_artifact_names,
 	make_issued_identity_hash,
 )
-from nubefact.utils import NubefactAPIError, _is_safe_download_url, make_request
+from nubefact.utils import (
+	NubefactAPIError,
+	_is_safe_download_url,
+	_save_private_attachment_exact,
+	make_request,
+)
 
 from .nubefact_migration_artifacts import (
 	ArtifactValidationError,
@@ -1133,6 +1138,7 @@ def _normalize_existing_artifact_names(
 				row
 				for row, _content in readable
 				if cstr(row.file_name).strip().lower() == canonical_name.lower()
+				and cstr(row.file_url) == f"/private/files/{canonical_name}"
 			),
 			None,
 		)
@@ -1161,42 +1167,45 @@ def _remove_replaced_private_file(file_record: Document) -> None:
 	if frappe.db.count("File", {"file_url": file_doc.file_url}) == 1:
 		Path(file_doc.get_full_path()).unlink(missing_ok=True)
 	frappe.delete_doc("File", file_doc.name, ignore_permissions=True)
+	_remove_obsolete_attachment_comments(file_doc)
+
+
+def _remove_obsolete_attachment_comments(file_doc: Document) -> None:
+	file_url = cstr(file_doc.file_url)
+	if not file_url or not file_doc.attached_to_doctype or not file_doc.attached_to_name:
+		return
+	if frappe.db.exists(
+		"File",
+		{
+			"file_url": file_url,
+			"attached_to_doctype": file_doc.attached_to_doctype,
+			"attached_to_name": file_doc.attached_to_name,
+		},
+	):
+		return
+
+	for comment in frappe.get_all(
+		"Comment",
+		filters={
+			"reference_doctype": file_doc.attached_to_doctype,
+			"reference_name": file_doc.attached_to_name,
+			"comment_type": "Attachment",
+		},
+		fields=["name", "content"],
+	):
+		content = cstr(comment.content)
+		if f"href='{file_url}'" in content or f'href="{file_url}"' in content:
+			frappe.delete_doc("Comment", comment.name, ignore_permissions=True)
 
 
 def _save_owned_file(job_name: str, token: str, gre_name: str, filename: str, content: bytes):
 	_lock_owned_job(job_name, token)
-	filters = {
-		"attached_to_doctype": "Nubefact Guia De Remision",
-		"attached_to_name": gre_name,
-		"file_name": filename,
-		"is_private": 1,
-	}
-	if not frappe.db.exists("File", filters):
-		file_url = f"/private/files/{filename}"
-		conflict = frappe.db.exists("File", {"file_url": file_url})
-		if conflict:
-			frappe.throw(f"Ya existe otro archivo privado con el nombre canónico {filename}.")
-		file_doc = frappe.get_doc(
-			{
-				"doctype": "File",
-				"file_name": filename,
-				"content": content,
-				"is_private": 1,
-				"attached_to_doctype": "Nubefact Guia De Remision",
-				"attached_to_name": gre_name,
-			}
-		)
-		# Frappe's file-manager helper always appends a content-hash suffix.
-		# Write through File with overwrite=True, then insert the exact private
-		# URL so SUNAT identity filenames remain deterministic.
-		file_doc.flags.new_file = True
-		file_doc.save_file(
-			content=content,
-			ignore_existing_file_check=True,
-			overwrite=True,
-		)
-		file_doc.flags.copy_from_existing_file = True
-		file_doc.insert(ignore_permissions=True)
+	_save_private_attachment_exact(
+		filename,
+		content,
+		"Nubefact Guia De Remision",
+		gre_name,
+	)
 	frappe.db.commit()
 
 

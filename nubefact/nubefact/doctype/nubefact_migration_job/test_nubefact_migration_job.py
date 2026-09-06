@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_to_date, now_datetime, random_string
+from frappe.utils.file_manager import get_content_hash
 from pypdf import PdfWriter
 
 from nubefact.nubefact.doctype.nubefact_api_log.nubefact_api_log import (
@@ -60,6 +61,46 @@ def zip64(filename: str, content: bytes) -> str:
 	with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
 		archive.writestr(filename, content)
 	return base64.b64encode(buffer.getvalue()).decode()
+
+
+def pdf_bytes(subject: str = "fixture") -> bytes:
+	buffer = io.BytesIO()
+	writer = PdfWriter()
+	writer.add_blank_page(width=72, height=72)
+	writer.add_metadata({"/Subject": subject})
+	writer.write(buffer)
+	return buffer.getvalue()
+
+
+def register_existing_file(
+	filename: str,
+	content: bytes,
+	attached_to_doctype: str,
+	attached_to_name: str,
+	*,
+	is_private: bool = True,
+	physical_filename: str | None = None,
+):
+	"""Create an on-disk File fixture without relying on version-specific insert flags."""
+	visibility = "private" if is_private else "public"
+	physical_filename = physical_filename or filename
+	file_url = f"/private/files/{physical_filename}" if is_private else f"/files/{physical_filename}"
+	path = Path(frappe.get_site_path(visibility, "files", physical_filename))
+	path.write_bytes(content)
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": filename,
+			"file_url": file_url,
+			"file_size": len(content),
+			"content_hash": get_content_hash(content),
+			"is_private": int(is_private),
+			"attached_to_doctype": attached_to_doctype,
+			"attached_to_name": attached_to_name,
+		}
+	)
+	file_doc.db_insert()
+	return file_doc, path
 
 
 class TestMigrationInterpretation(FrappeTestCase):
@@ -366,17 +407,25 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		files = frappe.get_all(
 			"File",
 			filters={"attached_to_doctype": gre.doctype, "attached_to_name": gre.name},
-			fields=["file_name", "is_private"],
+			fields=["file_name", "file_url", "is_private"],
 		)
+		expected_filenames = {
+			f"20506005133-09-{series.serie}-00000199.pdf",
+			f"20506005133-09-{series.serie}-00000199.xml",
+			f"R-20506005133-09-{series.serie}-00000199.xml",
+		}
+		self.assertEqual({row.file_name for row in files}, expected_filenames)
 		self.assertEqual(
-			{row.file_name for row in files},
-			{
-				f"20506005133-09-{series.serie}-00000199.pdf",
-				f"20506005133-09-{series.serie}-00000199.xml",
-				f"R-20506005133-09-{series.serie}-00000199.xml",
-			},
+			{row.file_url for row in files},
+			{f"/private/files/{filename}" for filename in expected_filenames},
 		)
 		self.assertTrue(all(row.is_private for row in files))
+		self.assertTrue(
+			all(
+				Path(frappe.get_site_path("private", "files", filename)).is_file()
+				for filename in expected_filenames
+			)
+		)
 		with self.assertRaisesRegex(frappe.ValidationError, "no se pueden eliminar"):
 			gre.delete()
 
@@ -409,95 +458,78 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			update_modified=False,
 		)
 		base = f"{series.serie}-000001"
+		canonical_base = f"20506005133-09-{series.serie}-00000001"
 		legacy_private_paths = []
-		for kind in ("pdf", "xml"):
-			filename = f"{base}a1b2c3.{kind}"
-			file_path = Path(frappe.get_site_path("private", "files", filename))
-			file_path.write_bytes(f"{series.serie}-{kind}".encode())
-			legacy_private_paths.append(file_path)
-			self.addCleanup(file_path.unlink, missing_ok=True)
-			file_doc = frappe.get_doc(
-				{
-					"doctype": "File",
-					"file_name": filename,
-					"file_url": f"/private/files/{filename}",
-					"is_private": 1,
-					"attached_to_doctype": gre.doctype,
-					"attached_to_name": gre.name,
-				}
+		legacy_attachment_urls = []
+		legacy_artifacts = (
+			(f"{base}a1b2c3.pdf", pdf_bytes(series.serie), None),
+			(f"{canonical_base}.xml", f"{series.serie}-xml".encode(), f"{base}a1b2c3.xml"),
+		)
+		for filename, content, physical_filename in legacy_artifacts:
+			_file_doc, file_path = register_existing_file(
+				filename,
+				content,
+				gre.doctype,
+				gre.name,
+				physical_filename=physical_filename,
 			)
-			file_doc.flags.copy_from_existing_file = True
-			file_doc.insert(ignore_permissions=True)
+			legacy_private_paths.append(file_path)
+			legacy_attachment_urls.append(_file_doc.file_url)
+			gre.add_comment(
+				"Attachment",
+				f"<a href='{_file_doc.file_url}' target='_blank'>{_file_doc.file_name}</a>",
+			)
+			self.addCleanup(file_path.unlink, missing_ok=True)
 
 		missing_legacy_name = f"{base}d4e5f6.pdf"
-		missing_legacy_path = Path(frappe.get_site_path("private", "files", missing_legacy_name))
-		missing_legacy_path.write_bytes(f"{series.serie}-pdf".encode())
-		missing_legacy = frappe.get_doc(
-			{
-				"doctype": "File",
-				"file_name": missing_legacy_name,
-				"file_url": f"/private/files/{missing_legacy_name}",
-				"is_private": 1,
-				"attached_to_doctype": gre.doctype,
-				"attached_to_name": gre.name,
-			}
+		_missing_legacy, missing_legacy_path = register_existing_file(
+			missing_legacy_name,
+			pdf_bytes(series.serie),
+			gre.doctype,
+			gre.name,
 		)
-		missing_legacy.flags.copy_from_existing_file = True
-		missing_legacy.insert(ignore_permissions=True)
 		missing_legacy_path.unlink()
 
 		legacy_container_name = f"{base}-pdf-field.zip"
-		legacy_container_path = Path(frappe.get_site_path("private", "files", legacy_container_name))
-		legacy_container_path.write_bytes(f"{series.serie}-pdf-container".encode())
+		_legacy_container, legacy_container_path = register_existing_file(
+			legacy_container_name,
+			f"{series.serie}-pdf-container".encode(),
+			gre.doctype,
+			gre.name,
+		)
 		legacy_private_paths.append(legacy_container_path)
 		self.addCleanup(legacy_container_path.unlink, missing_ok=True)
-		legacy_container = frappe.get_doc(
-			{
-				"doctype": "File",
-				"file_name": legacy_container_name,
-				"file_url": f"/private/files/{legacy_container_name}",
-				"is_private": 1,
-				"attached_to_doctype": gre.doctype,
-				"attached_to_name": gre.name,
-			}
-		)
-		legacy_container.flags.copy_from_existing_file = True
-		legacy_container.insert(ignore_permissions=True)
 
 		unpadded_cdr_name = f"R-20506005133-09-{series.serie}-1.xml"
-		unpadded_cdr_path = Path(frappe.get_site_path("private", "files", unpadded_cdr_name))
-		unpadded_cdr_path.write_bytes(f"{series.serie}-cdr".encode())
-		legacy_private_paths.append(unpadded_cdr_path)
-		self.addCleanup(unpadded_cdr_path.unlink, missing_ok=True)
-		unpadded_cdr = frappe.get_doc(
-			{
-				"doctype": "File",
-				"file_name": unpadded_cdr_name,
-				"file_url": f"/private/files/{unpadded_cdr_name}",
-				"is_private": 1,
-				"attached_to_doctype": gre.doctype,
-				"attached_to_name": gre.name,
-			}
+		canonical_cdr_name = f"R-{canonical_base}.xml"
+		_canonical_cdr, canonical_cdr_path = register_existing_file(
+			canonical_cdr_name,
+			f"{series.serie}-cdr".encode(),
+			gre.doctype,
+			gre.name,
 		)
-		unpadded_cdr.flags.copy_from_existing_file = True
-		unpadded_cdr.insert(ignore_permissions=True)
+		self.addCleanup(canonical_cdr_path.unlink, missing_ok=True)
+		_duplicate_cdr, _shared_cdr_path = register_existing_file(
+			unpadded_cdr_name,
+			f"{series.serie}-cdr".encode(),
+			gre.doctype,
+			gre.name,
+			physical_filename=canonical_cdr_name,
+		)
+		gre.add_comment(
+			"Attachment",
+			f"<a href='/private/files/{canonical_cdr_name}' target='_blank'>{canonical_cdr_name}</a>",
+		)
 
-		public_cdr_name = f"R-20506005133-09-{series.serie}-00000001.xml"
-		public_cdr_path = Path(frappe.get_site_path("public", "files", public_cdr_name))
-		public_cdr_path.write_bytes(b"public-placeholder")
-		self.addCleanup(public_cdr_path.unlink, missing_ok=True)
-		public_cdr = frappe.get_doc(
-			{
-				"doctype": "File",
-				"file_name": public_cdr_name,
-				"file_url": f"/files/{public_cdr_name}",
-				"is_private": 0,
-				"attached_to_doctype": gre.doctype,
-				"attached_to_name": gre.name,
-			}
+		public_cdr_name = canonical_cdr_name
+		_public_cdr, public_cdr_path = register_existing_file(
+			public_cdr_name,
+			b"public-placeholder",
+			gre.doctype,
+			gre.name,
+			is_private=False,
 		)
-		public_cdr.flags.copy_from_existing_file = True
-		public_cdr.insert(ignore_permissions=True)
+		self.addCleanup(public_cdr_path.unlink, missing_ok=True)
 		item = frappe.get_doc(
 			{
 				"doctype": "Nubefact Migration Job Item",
@@ -549,28 +581,56 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertTrue(item.pdf_downloaded)
 		self.assertTrue(item.xml_downloaded)
 		self.assertTrue(item.cdr_downloaded)
-		private_filenames = set(
-			frappe.get_all(
-				"File",
-				filters={
-					"attached_to_doctype": gre.doctype,
-					"attached_to_name": gre.name,
-					"is_private": 1,
-				},
-				pluck="file_name",
-			)
-		)
-		self.assertEqual(
-			private_filenames,
-			{
-				f"20506005133-09-{series.serie}-00000001.pdf",
-				f"20506005133-09-{series.serie}-00000001.xml",
-				f"R-20506005133-09-{series.serie}-00000001.xml",
-				f"20506005133-09-{series.serie}-00000001-pdf-field.zip",
+		private_files = frappe.get_all(
+			"File",
+			filters={
+				"attached_to_doctype": gre.doctype,
+				"attached_to_name": gre.name,
+				"is_private": 1,
 			},
+			fields=["file_name", "file_url"],
+		)
+		expected_filenames = {
+			f"20506005133-09-{series.serie}-00000001.pdf",
+			f"20506005133-09-{series.serie}-00000001.xml",
+			f"R-20506005133-09-{series.serie}-00000001.xml",
+			f"20506005133-09-{series.serie}-00000001-pdf-field.zip",
+		}
+		self.assertEqual({row.file_name for row in private_files}, expected_filenames)
+		self.assertEqual(
+			{row.file_url for row in private_files},
+			{f"/private/files/{filename}" for filename in expected_filenames},
+		)
+		self.assertTrue(
+			all(
+				Path(frappe.get_site_path("private", "files", filename)).is_file()
+				for filename in expected_filenames
+			)
 		)
 		self.assertTrue(public_cdr_path.exists())
 		self.assertTrue(all(not path.exists() for path in legacy_private_paths))
+		attachment_comments = frappe.get_all(
+			"Comment",
+			filters={
+				"reference_doctype": gre.doctype,
+				"reference_name": gre.name,
+				"comment_type": "Attachment",
+			},
+			pluck="content",
+		)
+		self.assertTrue(
+			all(
+				legacy_url not in comment
+				for legacy_url in legacy_attachment_urls
+				for comment in attachment_comments
+			)
+		)
+		self.assertTrue(
+			all(
+				any(f"/private/files/{filename}" in comment for comment in attachment_comments)
+				for filename in expected_filenames
+			)
+		)
 		collect.assert_not_called()
 
 	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job._dispatch_job")
@@ -606,28 +666,15 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		cdr = CDR_WITH_REFERENCE.replace(b"TTT1-00000001", f"{series.serie}-00000001".encode())
 		container = base64.b64decode(zip64("R-guide.xml", cdr))
 		attachments = {
-			f"{canonical_base}.pdf": b"existing-pdf",
+			f"{canonical_base}.pdf": pdf_bytes(series.serie),
 			f"{canonical_base}.xml": b"existing-xml",
 			f"20506005133-09-{series.serie}-1-cdr-field.zip": container,
 		}
 		paths = []
 		for filename, content in attachments.items():
-			path = Path(frappe.get_site_path("private", "files", filename))
-			path.write_bytes(content)
+			_file_doc, path = register_existing_file(filename, content, gre.doctype, gre.name)
 			paths.append(path)
 			self.addCleanup(path.unlink, missing_ok=True)
-			file_doc = frappe.get_doc(
-				{
-					"doctype": "File",
-					"file_name": filename,
-					"file_url": f"/private/files/{filename}",
-					"is_private": 1,
-					"attached_to_doctype": gre.doctype,
-					"attached_to_name": gre.name,
-				}
-			)
-			file_doc.flags.copy_from_existing_file = True
-			file_doc.insert(ignore_permissions=True)
 
 		item = frappe.get_doc(
 			{

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
@@ -78,7 +79,13 @@ class TestNubefactGuiaDeRemisionImport(FrappeTestCase):
 			],
 		}
 
-		name = crear_guia_de_remision_desde_json(json.dumps(payload))
+		# This test covers import field preservation, not the current user's
+		# last-used Local. Migration tests commit Locals for multiple companies.
+		with patch(
+			"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.get_last_used_local_for_user",
+			return_value=None,
+		):
+			name = crear_guia_de_remision_desde_json(json.dumps(payload))
 		doc = frappe.get_doc("Nubefact Guia De Remision", name)
 
 		self.assertEqual(str(doc.fecha_de_entrega_al_transportista), "2026-06-03")

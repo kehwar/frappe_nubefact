@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import base64
 import binascii
+import hashlib
 import ipaddress
 import json
+import os
 import socket
+from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
 import frappe
 import requests
+from filelock import FileLock, Timeout
 from frappe import throw
 from frappe.model.document import Document
 from frappe.utils import cstr, getdate
@@ -133,36 +137,106 @@ def _attachment_exists(doctype: str, docname: str, filename: str, *, private_onl
 		"file_name": filename,
 	}
 	if private_only:
-		filters["is_private"] = 1
+		filters.update(is_private=1, file_url=f"/private/files/{filename}")
 	return bool(frappe.db.exists("File", filters))
 
 
+def _remove_unreferenced_private_blob(file_url: str) -> None:
+	if not file_url.startswith("/private/files/") or frappe.db.exists("File", {"file_url": file_url}):
+		return
+	filename = file_url.removeprefix("/private/files/")
+	if filename and Path(filename).name == filename:
+		Path(frappe.get_site_path("private", "files", filename)).unlink(missing_ok=True)
+
+
+def _hold_exact_attachment_lock(filename: str) -> None:
+	"""Serialize one canonical path until the surrounding transaction finishes."""
+	lock_digest = hashlib.sha256(filename.encode()).hexdigest()
+	lock_path = Path(frappe.get_site_path("locks", f"nubefact-artifact-{lock_digest}.lock"))
+	lock_path.parent.mkdir(parents=True, exist_ok=True)
+	lock = FileLock(lock_path)
+	try:
+		lock.acquire(timeout=30)
+	except Timeout:
+		frappe.throw(f"No se pudo bloquear el archivo canónico {filename} para guardarlo.")
+
+	# Keeping the OS lock through commit prevents a second worker from observing
+	# the canonical blob before its File row becomes visible. A process crash
+	# releases the OS lock even though its harmless lock file remains on disk.
+	frappe.db.after_commit.add(lock.release)
+	frappe.db.after_rollback.add(lock.release)
+
+
+def _materialize_canonical_private_blob(source_path: Path, canonical_path: Path, content: bytes) -> None:
+	"""Atomically create or adopt an identical crash-left canonical blob."""
+	try:
+		os.link(source_path, canonical_path)
+	except FileExistsError:
+		if canonical_path.read_bytes() != content:
+			frappe.throw(f"Ya existe otro archivo privado con el nombre canónico {canonical_path.name}.")
+
+
 def _save_private_attachment_exact(filename: str, content: bytes, doctype: str, docname: str) -> None:
-	"""Save one private attachment without Frappe's content-hash filename suffix."""
+	"""Save one private attachment under its exact logical and physical name."""
+	if not filename or Path(filename).name != filename:
+		frappe.throw("El nombre canónico del archivo privado no es válido.")
+
+	_hold_exact_attachment_lock(filename)
 	if _attachment_exists(doctype, docname, filename, private_only=True):
 		return
 
 	file_url = f"/private/files/{filename}"
+	canonical_path = Path(frappe.get_site_path("private", "files", filename))
 	if frappe.db.exists("File", {"file_url": file_url}):
 		frappe.throw(f"Ya existe otro archivo privado con el nombre canónico {filename}.")
+
+	# Use a deterministic staging name while the transaction-scoped lock is held.
+	# A retry can remove this path if a crashed worker left it without a File row.
+	staging_digest = hashlib.sha256(file_url.encode()).hexdigest()
+	staging_filename = f".nubefact-{staging_digest}{Path(filename).suffix}"
+	staging_url = f"/private/files/{staging_filename}"
+	if frappe.db.exists("File", {"file_url": staging_url}):
+		frappe.throw(f"No se pudo preparar el archivo canónico {filename}.")
+	_remove_unreferenced_private_blob(staging_url)
+
+	# Insert without an attachment target first. This preserves Frappe's File
+	# validation lifecycle while avoiding its non-atomic writes to the canonical
+	# name and postponing the attachment comment until the final URL is known.
 	file_doc = frappe.get_doc(
 		{
 			"doctype": "File",
-			"file_name": filename,
+			"file_name": staging_filename,
 			"content": content,
+			"folder": frappe.db.get_value("File", {"is_attachments_folder": 1}, "name"),
 			"is_private": 1,
-			"attached_to_doctype": doctype,
-			"attached_to_name": docname,
 		}
 	)
-	file_doc.flags.new_file = True
-	file_doc.save_file(
-		content=content,
-		ignore_existing_file_check=True,
-		overwrite=True,
-	)
-	file_doc.flags.copy_from_existing_file = True
+	file_doc.attached_to_doctype = doctype
+	file_doc.attached_to_name = docname
+	file_doc.validate_attachment_limit()
+	file_doc.attached_to_doctype = None
+	file_doc.attached_to_name = None
 	file_doc.insert(ignore_permissions=True)
+
+	previous_url = cstr(file_doc.file_url)
+	source_path = Path(file_doc.get_full_path())
+	stored_content = source_path.read_bytes()
+	_materialize_canonical_private_blob(source_path, canonical_path, stored_content)
+
+	# Frappe's insert rollback callback now points at the staging/source URL.
+	# Disable it before changing the URL: an interrupted transaction deliberately
+	# leaves the canonical blob for an identical retry to adopt safely.
+	file_doc.flags.new_file = False
+	file_doc.file_name = filename
+	file_doc.file_url = file_url
+	file_doc.save(ignore_permissions=True)
+	_remove_unreferenced_private_blob(previous_url)
+
+	file_doc.attached_to_doctype = doctype
+	file_doc.attached_to_name = docname
+	file_doc.validate_attachment_limit()
+	file_doc.save(ignore_permissions=True)
+	file_doc.create_attachment_record()
 
 
 def attach_nubefact_json(payload: dict[str, Any], filename: str, doctype: str, docname: str) -> None:

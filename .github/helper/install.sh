@@ -7,9 +7,12 @@ pip install frappe-bench
 echo "::endgroup::"
 
 echo "::group::Init Bench"
-bench -v init frappe-bench --skip-assets --python "$(which python)" --frappe-path https://github.com/frappe/frappe --frappe-branch version-15
+bench -v init frappe-bench --skip-assets --python "$(which python)" --frappe-path https://github.com/frappe/frappe --frappe-branch v15.103.3
+test "$(git -C frappe-bench/apps/frappe rev-parse HEAD)" = "7abafc4824ec8d71e9127df965e54913bb41a870"
 cd ./frappe-bench || exit
 
+bench get-app --skip-assets --branch v15.103.1 https://github.com/frappe/erpnext.git
+test "$(git -C apps/erpnext rev-parse HEAD)" = "2597eaad5195ea4a3c89e0c2fae29e62451b742c"
 bench -v setup requirements --dev
 if [ "$TYPE" == "ui" ]
 then
@@ -73,6 +76,7 @@ then
 fi
 
 bench --site test_site reinstall --yes
+bench --site test_site install-app erpnext
 bench --site test_site install-app nubefact
 
 if [ "$TYPE" == "server" ]

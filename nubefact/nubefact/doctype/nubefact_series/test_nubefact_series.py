@@ -185,9 +185,7 @@ class TestNubefactSeries(FrappeTestCase):
 		self.assertEqual(frappe.db.get_value(documents[0].doctype, documents[0].name, "numero"), 3)
 		self.assertEqual(frappe.db.get_value(documents[1].doctype, documents[1].name, "numero"), 2)
 		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 4)
-		self.assertEqual(
-			frappe.db.get_value(series.doctype, series.name, "ultimo_numero_asignado"), 3
-		)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "ultimo_numero_asignado"), 3)
 
 	def test_stale_recovery_rechecks_the_document_before_updating(self):
 		company = self.make_company()
@@ -223,17 +221,13 @@ class TestNubefactSeries(FrappeTestCase):
 			}
 		).insert()
 		allocate_document_number(document, mark_as_issuing=True)
-		with patch(
-			"nubefact.nubefact.doctype.nubefact_series.nubefact_series.frappe.get_all"
-		) as get_all:
+		with patch("nubefact.nubefact.doctype.nubefact_series.nubefact_series.frappe.get_all") as get_all:
 			get_all.side_effect = lambda doctype, **kwargs: (
 				[document.name] if doctype == document.doctype else []
 			)
 			recover_stale_issuing_documents()
 
-		self.assertEqual(
-			frappe.db.get_value(document.doctype, document.name, "status"), "Enviando"
-		)
+		self.assertEqual(frappe.db.get_value(document.doctype, document.name, "status"), "Enviando")
 
 	def test_facturacion_must_match_the_selected_series_identity(self):
 		company = self.make_company()
@@ -256,7 +250,12 @@ class TestNubefactSeries(FrappeTestCase):
 				"nubefact_series": series.name,
 				"skip_field_validation": 1,
 			}
-		).insert()
+		)
+		# Frappe 15.103 applies the current user's Company default to new docs.
+		# Clear identity defaults so this assertion exercises series inference.
+		for fieldname in ("company", "local", "tipo_de_comprobante", "serie"):
+			document.set(fieldname, "")
+		document.insert()
 		self.assertEqual(document.company, company)
 		self.assertEqual(document.local, local.name)
 		self.assertEqual(document.tipo_de_comprobante, "1")
