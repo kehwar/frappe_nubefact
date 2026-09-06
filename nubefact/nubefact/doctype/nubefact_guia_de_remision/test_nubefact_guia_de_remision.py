@@ -12,8 +12,12 @@ from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, getdate, nowdate, random_string
 
 from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision import (
+	_save_response_status,
+	cancelar_solicitud_de_anulacion,
 	enviar_a_nubefact,
+	marcar_como_anulada,
 	refrescar_estado_sunat,
+	solicitar_anulacion,
 )
 
 
@@ -559,6 +563,202 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			2,
 		)
 
+	def test_manual_voiding_lifecycle_requires_an_accepted_gre_and_a_reason(self):
+		doc = make_valid_gre().insert()
+
+		with self.assertRaisesRegex(frappe.ValidationError, "estado Aceptada"):
+			solicitar_anulacion(doc.name, "Datos incorrectos")
+
+		doc.db_set("status", "Aceptada")
+		with self.assertRaisesRegex(frappe.ValidationError, "motivo de anulación"):
+			solicitar_anulacion(doc.name, "   ")
+
+		values = solicitar_anulacion(doc.name, "Datos incorrectos")
+		persisted = frappe.get_doc(doc.doctype, doc.name)
+
+		self.assertEqual(values["status"], "Anulación Solicitada")
+		self.assertEqual(persisted.status, "Anulación Solicitada")
+		self.assertEqual(persisted.motivo_de_anulacion, "Datos incorrectos")
+		self.assertEqual(persisted.anulacion_solicitada_por, frappe.session.user)
+		self.assertTrue(persisted.fecha_de_solicitud_de_anulacion)
+		self.assertFalse(persisted.anulado)
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision._has_nubefact_manager_role"
+	)
+	def test_only_a_manager_can_mark_a_requested_gre_as_voided(self, has_manager_role):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+		solicitar_anulacion(doc.name, "Duplicada")
+
+		has_manager_role.return_value = False
+		with self.assertRaises(frappe.PermissionError):
+			marcar_como_anulada(doc.name)
+
+		has_manager_role.return_value = True
+		values = marcar_como_anulada(doc.name)
+		persisted = frappe.get_doc(doc.doctype, doc.name)
+
+		self.assertEqual(values["status"], "Anulada")
+		self.assertEqual(persisted.status, "Anulada")
+		self.assertTrue(persisted.anulado)
+		self.assertEqual(persisted.anulado_por, frappe.session.user)
+		self.assertTrue(persisted.fecha_de_anulacion)
+
+	def test_a_nubefact_user_can_request_but_cannot_resolve_a_void_request(self):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+		user_email = f"gre-user-{random_string(8).lower()}@example.test"
+		frappe.get_doc(
+			{
+				"doctype": "User",
+				"email": user_email,
+				"first_name": "GRE User",
+				"send_welcome_email": 0,
+				"roles": [{"role": "Nubefact User"}],
+			}
+		).insert(ignore_permissions=True)
+
+		frappe.set_user(user_email)
+		try:
+			solicitar_anulacion(doc.name, "Duplicada")
+			with self.assertRaises(frappe.PermissionError):
+				marcar_como_anulada(doc.name)
+			with self.assertRaises(frappe.PermissionError):
+				cancelar_solicitud_de_anulacion(doc.name, "La guía sí es válida")
+		finally:
+			frappe.set_user("Administrator")
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision._has_nubefact_manager_role"
+	)
+	def test_only_a_manager_can_cancel_a_void_request_with_a_reason(self, has_manager_role):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+		solicitar_anulacion(doc.name, "Duplicada")
+
+		has_manager_role.return_value = False
+		with self.assertRaises(frappe.PermissionError):
+			cancelar_solicitud_de_anulacion(doc.name, "La guía sí es válida")
+
+		has_manager_role.return_value = True
+		with self.assertRaisesRegex(frappe.ValidationError, "motivo de reversión"):
+			cancelar_solicitud_de_anulacion(doc.name, "   ")
+
+		values = cancelar_solicitud_de_anulacion(doc.name, "La guía sí es válida")
+		persisted = frappe.get_doc(doc.doctype, doc.name)
+
+		self.assertEqual(values["status"], "Aceptada")
+		self.assertEqual(persisted.status, "Aceptada")
+		self.assertEqual(persisted.motivo_de_reversion_de_anulacion, "La guía sí es válida")
+		self.assertEqual(persisted.anulacion_revertida_por, frappe.session.user)
+		self.assertTrue(persisted.fecha_de_reversion_de_anulacion)
+		self.assertFalse(persisted.anulado)
+
+		with self.assertRaisesRegex(frappe.ValidationError, "anulación solicitada"):
+			cancelar_solicitud_de_anulacion(doc.name, "Segundo intento")
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision._has_nubefact_manager_role",
+		return_value=True,
+	)
+	def test_manual_void_transitions_are_recorded_in_the_version_history(self, _has_manager_role):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+		initial_versions = frappe.db.count("Version", {"ref_doctype": doc.doctype, "docname": doc.name})
+
+		solicitar_anulacion(doc.name, "Primera solicitud")
+		cancelar_solicitud_de_anulacion(doc.name, "Solicitud incorrecta")
+		solicitar_anulacion(doc.name, "Segunda solicitud")
+		marcar_como_anulada(doc.name)
+
+		self.assertEqual(
+			frappe.db.count("Version", {"ref_doctype": doc.doctype, "docname": doc.name}),
+			initial_versions + 4,
+		)
+
+	def test_manual_voiding_state_and_audit_fields_cannot_be_forged_by_saving(self):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+
+		forged = frappe.get_doc(doc.doctype, doc.name)
+		forged.status = "Anulada"
+		forged.anulado = 1
+		with self.assertRaisesRegex(frappe.ValidationError, "acciones de anulación"):
+			forged.save()
+
+		solicitar_anulacion(doc.name, "Duplicada")
+		for fieldname, value in (
+			("motivo_de_anulacion", "Motivo alterado"),
+			("motivo_de_reversion_de_anulacion", "Reversión falsificada"),
+		):
+			forged = frappe.get_doc(doc.doctype, doc.name)
+			forged.set(fieldname, value)
+			with self.assertRaisesRegex(frappe.ValidationError, "acciones de anulación"):
+				forged.save()
+
+	@patch("nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.make_request")
+	def test_manual_voiding_states_cannot_be_overwritten_by_sunat_refresh(self, make_request):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+		stale_doc = frappe.get_doc(doc.doctype, doc.name)
+		solicitar_anulacion(doc.name, "Duplicada")
+
+		with self.assertRaisesRegex(frappe.ValidationError, "anulación se gestiona manualmente"):
+			refrescar_estado_sunat(doc.name)
+
+		make_request.assert_not_called()
+		saved = _save_response_status(
+			stale_doc,
+			{"status": "Aceptada", "aceptada_por_sunat": 1},
+		)
+		self.assertEqual(saved["status"], "Anulación Solicitada")
+		self.assertEqual(
+			frappe.db.get_value(doc.doctype, doc.name, "status"),
+			"Anulación Solicitada",
+		)
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision._has_nubefact_manager_role",
+		return_value=True,
+	)
+	def test_a_stale_sunat_response_cannot_overwrite_a_manager_reversal(self, _has_manager_role):
+		doc = make_valid_gre().insert()
+		doc.db_set({"status": "Aceptada", "aceptada_por_sunat": 1})
+		stale_doc = frappe.get_doc(doc.doctype, doc.name)
+
+		solicitar_anulacion(doc.name, "Duplicada")
+		cancelar_solicitud_de_anulacion(doc.name, "La guía sí es válida")
+
+		with self.assertRaisesRegex(frappe.ValidationError, "cambió mientras se consultaba"):
+			_save_response_status(
+				stale_doc,
+				{"status": "Pendiente de Aceptacion", "aceptada_por_sunat": 0},
+				expected_modified=stale_doc.modified,
+			)
+
+		persisted = frappe.get_doc(doc.doctype, doc.name)
+		self.assertEqual(persisted.status, "Aceptada")
+		self.assertTrue(persisted.aceptada_por_sunat)
+
+	def test_gre_metadata_includes_manual_voiding_states_and_audit_fields(self):
+		meta = frappe.get_meta("Nubefact Guia De Remision")
+		status_options = set(meta.get_field("status").options.splitlines())
+
+		self.assertIn("Anulación Solicitada", status_options)
+		self.assertIn("Anulada", status_options)
+		for fieldname in (
+			"motivo_de_anulacion",
+			"fecha_de_solicitud_de_anulacion",
+			"anulacion_solicitada_por",
+			"motivo_de_reversion_de_anulacion",
+			"fecha_de_reversion_de_anulacion",
+			"anulacion_revertida_por",
+			"fecha_de_anulacion",
+			"anulado_por",
+		):
+			self.assertTrue(meta.get_field(fieldname).read_only)
+
 	@patch(
 		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
 	)
@@ -609,9 +809,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
 	)
 	@patch("nubefact.utils.nubefact.requests.post")
-	def test_duplicate_after_ambiguous_timeout_keeps_the_reserved_number(
-		self, post, enqueue_files
-	):
+	def test_duplicate_after_ambiguous_timeout_keeps_the_reserved_number(self, post, enqueue_files):
 		local = self.make_local()
 		series = self.make_series(local)
 		doc = make_valid_gre(

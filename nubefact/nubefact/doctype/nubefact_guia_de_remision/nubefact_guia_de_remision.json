@@ -100,6 +100,17 @@
   "cadena_para_codigo_qr",
   "codigo_hash",
   "codigo_de_barras",
+  "tab_anulacion",
+  "seccion_anulacion",
+  "anulado",
+  "fecha_de_solicitud_de_anulacion",
+  "anulacion_solicitada_por",
+  "motivo_de_anulacion",
+  "motivo_de_reversion_de_anulacion",
+  "fecha_de_reversion_de_anulacion",
+  "anulacion_revertida_por",
+  "fecha_de_anulacion",
+  "anulado_por",
   "tab_transportista",
   "seccion_vehiculo_principal_transportista",
   "tuc_vehiculo_principal",
@@ -131,7 +142,7 @@
    "in_list_view": 1,
    "label": "Estado",
    "no_copy": 1,
-   "options": "Borrador\nEnviando\nPendiente de Aceptacion\nAceptada\nError",
+   "options": "Borrador\nEnviando\nPendiente de Aceptacion\nAceptada\nAnulación Solicitada\nAnulada\nError",
    "read_only": 1
   },
   {
@@ -732,6 +743,84 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:doc.mostrar_todos_los_campos_condicionales || doc.fecha_de_solicitud_de_anulacion",
+   "fieldname": "tab_anulacion",
+   "fieldtype": "Tab Break",
+   "label": "Anulación"
+  },
+  {
+   "fieldname": "seccion_anulacion",
+   "fieldtype": "Section Break",
+   "label": "Anulación manual en SUNAT"
+  },
+  {
+   "default": "0",
+   "fieldname": "anulado",
+   "fieldtype": "Check",
+   "label": "Anulada",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "fecha_de_solicitud_de_anulacion",
+   "fieldtype": "Datetime",
+   "label": "Fecha de Solicitud de Anulación",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "anulacion_solicitada_por",
+   "fieldtype": "Link",
+   "label": "Anulación Solicitada Por",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motivo_de_anulacion",
+   "fieldtype": "Small Text",
+   "label": "Motivo de Anulación",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "motivo_de_reversion_de_anulacion",
+   "fieldtype": "Small Text",
+   "label": "Motivo de Reversión a Aceptada",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "fecha_de_reversion_de_anulacion",
+   "fieldtype": "Datetime",
+   "label": "Fecha de Reversión a Aceptada",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "anulacion_revertida_por",
+   "fieldtype": "Link",
+   "label": "Anulación Revertida Por",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fecha_de_anulacion",
+   "fieldtype": "Datetime",
+   "label": "Fecha de Anulación",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "anulado_por",
+   "fieldtype": "Link",
+   "label": "Anulada Por",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
    "fieldname": "tab_mas_informacion",
    "fieldtype": "Tab Break",
    "label": "M\u00e1s Informaci\u00f3n"
@@ -867,6 +956,14 @@
   {
    "color": "Green",
    "title": "Aceptada"
+  },
+  {
+   "color": "Orange",
+   "title": "Anulación Solicitada"
+  },
+  {
+   "color": "Gray",
+   "title": "Anulada"
   },
   {
    "color": "Red",

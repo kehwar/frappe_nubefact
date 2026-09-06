@@ -70,9 +70,13 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
         frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
 
         if (
-            ["Enviando", "Pendiente de Aceptacion", "Aceptada"].includes(
-                frm.doc.status || "Borrador"
-            )
+            [
+                "Enviando",
+                "Pendiente de Aceptacion",
+                "Aceptada",
+                "Anulación Solicitada",
+                "Anulada",
+            ].includes(frm.doc.status || "Borrador")
         ) {
             frm.disable_form();
         }
@@ -91,14 +95,38 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                 });
             }
 
-            frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
-                await watcher.refresh_now_and_continue();
+            if (!["Anulación Solicitada", "Anulada"].includes(frm.doc.status)) {
+                frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
+                    await watcher.refresh_now_and_continue();
 
-                frappe.show_alert({
-                    message: __("Estado SUNAT actualizado"),
-                    indicator: "green",
+                    frappe.show_alert({
+                        message: __("Estado SUNAT actualizado"),
+                        indicator: "green",
+                    });
                 });
-            });
+            }
+
+            if (frm.doc.status === "Aceptada" && frm.has_perm("write")) {
+                frm.add_custom_button(__("Solicitar Anulación"), () => {
+                    frm.trigger("open_void_request_dialog");
+                });
+            }
+
+            const canMarkAsVoided = ["Nubefact Manager", "System Manager"].some((role) =>
+                frappe.user_roles.includes(role)
+            );
+            if (
+                frm.doc.status === "Anulación Solicitada" &&
+                canMarkAsVoided &&
+                frm.has_perm("write")
+            ) {
+                frm.add_custom_button(__("Marcar como Anulado"), () => {
+                    frm.trigger("confirm_manual_void");
+                });
+                frm.add_custom_button(__("Cancelar Solicitud"), () => {
+                    frm.trigger("open_void_reversal_dialog");
+                });
+            }
 
             if (frm.doc.enlace_del_pdf) {
                 frm.add_custom_button(
@@ -161,6 +189,95 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
             });
         });
     },
+    open_void_request_dialog(frm) {
+        const dialog = new frappe.ui.Dialog({
+            title: __("Solicitar anulación de GRE"),
+            fields: [
+                {
+                    fieldname: "motivo",
+                    fieldtype: "Small Text",
+                    label: __("Motivo de anulación"),
+                    reqd: 1,
+                },
+            ],
+            primary_action_label: __("Solicitar Anulación"),
+            primary_action: async (values) => {
+                await frappe.call({
+                    method: "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.solicitar_anulacion",
+                    args: {
+                        name: frm.doc.name,
+                        motivo: values.motivo,
+                    },
+                    freeze: true,
+                    freeze_message: __("Registrando solicitud de anulación..."),
+                });
+
+                dialog.hide();
+                await frm.reload_doc();
+                frappe.show_alert({
+                    message: __("Solicitud de anulación registrada"),
+                    indicator: "orange",
+                });
+            },
+        });
+
+        dialog.show();
+    },
+    open_void_reversal_dialog(frm) {
+        const dialog = new frappe.ui.Dialog({
+            title: __("Cancelar solicitud de anulación"),
+            fields: [
+                {
+                    fieldname: "motivo",
+                    fieldtype: "Small Text",
+                    label: __("Motivo de reversión"),
+                    reqd: 1,
+                },
+            ],
+            primary_action_label: __("Revertir a Aceptada"),
+            primary_action: async (values) => {
+                await frappe.call({
+                    method: "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.cancelar_solicitud_de_anulacion",
+                    args: {
+                        name: frm.doc.name,
+                        motivo: values.motivo,
+                    },
+                    freeze: true,
+                    freeze_message: __("Revirtiendo GRE a Aceptada..."),
+                });
+
+                dialog.hide();
+                await frm.reload_doc();
+                frappe.show_alert({
+                    message: __("Solicitud cancelada; la GRE volvió a Aceptada"),
+                    indicator: "green",
+                });
+            },
+        });
+
+        dialog.show();
+    },
+    confirm_manual_void(frm) {
+        frappe.confirm(
+            __(
+                "¿Confirmas que esta GRE ya fue anulada en el portal SUNAT? Esta acción no consulta ni modifica SUNAT."
+            ),
+            async () => {
+                await frappe.call({
+                    method: "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.marcar_como_anulada",
+                    args: { name: frm.doc.name },
+                    freeze: true,
+                    freeze_message: __("Marcando GRE como anulada..."),
+                });
+
+                await frm.reload_doc();
+                frappe.show_alert({
+                    message: __("GRE marcada como anulada"),
+                    indicator: "green",
+                });
+            }
+        );
+    },
     open_help_dialog(frm) {
         const requiredFields = [
             "tipo_de_comprobante",
@@ -205,6 +322,8 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                     "Borrador = No enviada",
                     "Pendiente de Aceptacion = Enviada, esperando SUNAT",
                     "Aceptada = Aceptada por SUNAT",
+                    "Anulación Solicitada = Pendiente de anulación manual en el portal SUNAT",
+                    "Anulada = Anulación manual confirmada por un Nubefact Manager",
                     "Error = Último envío falló",
                 ],
             },

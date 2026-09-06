@@ -10,7 +10,16 @@ from typing import Any
 import frappe
 from frappe.model.document import Document
 from frappe.model.naming import getseries
-from frappe.utils import add_days, cint, cstr, getdate, now_datetime, nowdate, validate_email_address
+from frappe.utils import (
+	add_days,
+	cint,
+	cstr,
+	get_datetime,
+	getdate,
+	now_datetime,
+	nowdate,
+	validate_email_address,
+)
 
 from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision_schema import (
 	DOCUMENT_TYPES,
@@ -64,6 +73,19 @@ from nubefact.utils import (
 	to_nubefact_date,
 )
 
+_MANUAL_VOID_STATUSES = {"Anulación Solicitada", "Anulada"}
+_MANUAL_VOID_AUDIT_FIELDS = (
+	"anulado",
+	"fecha_de_solicitud_de_anulacion",
+	"anulacion_solicitada_por",
+	"motivo_de_anulacion",
+	"motivo_de_reversion_de_anulacion",
+	"fecha_de_reversion_de_anulacion",
+	"anulacion_revertida_por",
+	"fecha_de_anulacion",
+	"anulado_por",
+)
+
 _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
 	"aceptada_por_sunat": 0,
 	"last_sunat_check": None,
@@ -109,9 +131,30 @@ class NubefactGuiaDeRemision(Document):
 		self._set_inferred_values()
 
 	def validate(self):
+		self._validate_manual_void_updates()
 		if not cint(getattr(self, "skip_field_validation", 0)):
 			self._validate_required_fields()
 			self._validate_document_rules()
+
+	def _validate_manual_void_updates(self):
+		"""Require the audited RPC actions for every manual-void state change."""
+
+		previous = self.get_doc_before_save()
+		if previous:
+			status_changed = self.status != previous.status and bool(
+				{self.status, previous.status} & _MANUAL_VOID_STATUSES
+			)
+			audit_changed = any(
+				self.get(fieldname) != previous.get(fieldname) for fieldname in _MANUAL_VOID_AUDIT_FIELDS
+			)
+		else:
+			status_changed = self.status in _MANUAL_VOID_STATUSES
+			audit_changed = any(self.get(fieldname) for fieldname in _MANUAL_VOID_AUDIT_FIELDS)
+
+		if status_changed or audit_changed:
+			frappe.throw(
+				"Los estados y datos de anulación solo pueden cambiarse mediante las acciones de anulación."
+			)
 
 	def _set_inferred_values(self):
 		if cint(self.numero_asignado_automaticamente) and not self.nubefact_series:
@@ -897,6 +940,123 @@ def refrescar_estado_sunat(name: str):
 	return _refresh_sunat_status_doc(doc)
 
 
+@frappe.whitelist(methods=["POST"])
+def solicitar_anulacion(name: str, motivo: str) -> dict[str, Any]:
+	"""Record a user's request to void an accepted GRE manually in SUNAT."""
+
+	doc = frappe.get_doc("Nubefact Guia De Remision", name)
+	doc.check_permission("write")
+	frappe.db.sql(
+		"SELECT `name` FROM `tabNubefact Guia De Remision` WHERE `name` = %s FOR UPDATE",
+		(name,),
+	)
+	doc.reload()
+
+	if doc.status != "Aceptada":
+		frappe.throw("Solo se puede solicitar la anulación de una GRE en estado Aceptada.")
+
+	motivo = cstr(motivo or "").strip()
+	if not motivo:
+		frappe.throw("Se requiere un motivo de anulación.")
+	if len(motivo) > 500:
+		frappe.throw("El motivo de anulación admite hasta 500 caracteres.")
+
+	values = {
+		"status": "Anulación Solicitada",
+		"motivo_de_anulacion": motivo,
+		"fecha_de_solicitud_de_anulacion": now_datetime(),
+		"anulacion_solicitada_por": frappe.session.user,
+		"motivo_de_reversion_de_anulacion": "",
+		"fecha_de_reversion_de_anulacion": None,
+		"anulacion_revertida_por": "",
+		"anulado": 0,
+		"fecha_de_anulacion": None,
+		"anulado_por": "",
+	}
+	_persist_manual_void_transition(doc, values)
+	return values
+
+
+@frappe.whitelist(methods=["POST"])
+def cancelar_solicitud_de_anulacion(name: str, motivo: str) -> dict[str, Any]:
+	"""Let a manager reject a manual void request and restore the accepted state."""
+
+	if not _has_nubefact_manager_role():
+		frappe.throw(
+			"Solo un Nubefact Manager puede cancelar una solicitud de anulación.",
+			frappe.PermissionError,
+		)
+
+	doc = frappe.get_doc("Nubefact Guia De Remision", name)
+	doc.check_permission("write")
+	frappe.db.sql(
+		"SELECT `name` FROM `tabNubefact Guia De Remision` WHERE `name` = %s FOR UPDATE",
+		(name,),
+	)
+	doc.reload()
+
+	if doc.status != "Anulación Solicitada":
+		frappe.throw("Solo una GRE con anulación solicitada puede volver al estado Aceptada.")
+
+	motivo = cstr(motivo or "").strip()
+	if not motivo:
+		frappe.throw("Se requiere un motivo de reversión.")
+	if len(motivo) > 500:
+		frappe.throw("El motivo de reversión admite hasta 500 caracteres.")
+
+	values = {
+		"status": "Aceptada",
+		"motivo_de_reversion_de_anulacion": motivo,
+		"fecha_de_reversion_de_anulacion": now_datetime(),
+		"anulacion_revertida_por": frappe.session.user,
+	}
+	_persist_manual_void_transition(doc, values)
+	return values
+
+
+@frappe.whitelist(methods=["POST"])
+def marcar_como_anulada(name: str) -> dict[str, Any]:
+	"""Let a manager confirm that a requested GRE was voided in the SUNAT portal."""
+
+	if not _has_nubefact_manager_role():
+		frappe.throw(
+			"Solo un Nubefact Manager puede marcar una GRE como anulada.",
+			frappe.PermissionError,
+		)
+
+	doc = frappe.get_doc("Nubefact Guia De Remision", name)
+	doc.check_permission("write")
+	frappe.db.sql(
+		"SELECT `name` FROM `tabNubefact Guia De Remision` WHERE `name` = %s FOR UPDATE",
+		(name,),
+	)
+	doc.reload()
+
+	if doc.status != "Anulación Solicitada":
+		frappe.throw("Solo una GRE con anulación solicitada puede marcarse como anulada.")
+
+	values = {
+		"status": "Anulada",
+		"anulado": 1,
+		"fecha_de_anulacion": now_datetime(),
+		"anulado_por": frappe.session.user,
+	}
+	_persist_manual_void_transition(doc, values)
+	return values
+
+
+def _persist_manual_void_transition(doc: NubefactGuiaDeRemision, values: dict[str, Any]) -> None:
+	"""Persist one state transition and retain it in the Version audit trail."""
+
+	doc.db_set(values, update_modified=True)
+	doc.save_version()
+	frappe.db.commit()
+
+
+def _has_nubefact_manager_role() -> bool:
+	return bool({"Nubefact Manager", "System Manager"} & set(frappe.get_roles()))
+
+
 def consultar_guias_pendientes():
 	pending_names = frappe.get_all(
 		"Nubefact Guia De Remision",
@@ -923,6 +1083,7 @@ def _request_extract_and_save_response(
 	*,
 	clear_previous: bool = False,
 	expected_issuance_modified: Any = None,
+	expected_response_modified: Any = None,
 ) -> dict[str, Any]:
 	response = make_request(
 		payload=payload,
@@ -939,7 +1100,12 @@ def _request_extract_and_save_response(
 	if values:
 		if expected_issuance_modified is not None:
 			validate_document_issuance_lease(doc, expected_issuance_modified)
-		saved_values = _save_response_status(doc, values, clear_previous=clear_previous)
+		saved_values = _save_response_status(
+			doc,
+			values,
+			clear_previous=clear_previous,
+			expected_modified=expected_response_modified,
+		)
 		enqueue_nubefact_file_downloads(
 			doc.doctype,
 			doc.name,
@@ -953,6 +1119,8 @@ def _request_extract_and_save_response(
 
 
 def _refresh_sunat_status_doc(doc: NubefactGuiaDeRemision) -> dict[str, Any]:
+	if doc.status in _MANUAL_VOID_STATUSES:
+		frappe.throw("No se puede refrescar el estado SUNAT porque la anulación se gestiona manualmente.")
 	if not doc.numero:
 		frappe.throw("No se puede consultar el estado SUNAT porque falta el número del documento.")
 
@@ -964,6 +1132,7 @@ def _refresh_sunat_status_doc(doc: NubefactGuiaDeRemision) -> dict[str, Any]:
 			"serie": doc.serie,
 			"numero": cstr(doc.numero),
 		},
+		expected_response_modified=doc.modified,
 	)
 
 
@@ -972,6 +1141,7 @@ def _save_response_status(
 	values: dict[str, Any],
 	*,
 	clear_previous: bool = False,
+	expected_modified: Any = None,
 ) -> dict[str, Any]:
 	if not values:
 		return {}
@@ -980,6 +1150,18 @@ def _save_response_status(
 	saved_values.update(
 		{fieldname: value for fieldname, value in values.items() if fieldname not in NUBEFACT_BASE64_FIELDS}
 	)
+
+	# Serialize this write with manual cancellation. A SUNAT query started before
+	# a request must not move the GRE back to Aceptada when its response arrives.
+	current = frappe.db.sql(
+		"SELECT `status`, `modified` FROM `tabNubefact Guia De Remision` WHERE `name` = %s FOR UPDATE",
+		(doc.name,),
+		as_dict=True,
+	)[0]
+	if expected_modified is not None and get_datetime(current.modified) != get_datetime(expected_modified):
+		frappe.throw("La GRE cambió mientras se consultaba SUNAT; se descartó la respuesta anterior.")
+	if current.status in _MANUAL_VOID_STATUSES:
+		saved_values["status"] = current.status
 
 	doc.update(saved_values)
 	doc.db_set(saved_values, update_modified=True)
