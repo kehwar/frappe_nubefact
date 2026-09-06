@@ -7,6 +7,7 @@ import json
 import re
 import uuid
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
@@ -20,7 +21,6 @@ from frappe.utils import (
 	get_datetime,
 	now_datetime,
 )
-from frappe.utils.file_manager import save_file
 
 from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision_import import (
 	apply_historical_import_payload_to_doc,
@@ -676,7 +676,7 @@ def _process_claimed_number(job_name: str, token: str, item_name: str, number: i
 		as_dict=True,
 	)
 	attachment_state = (
-		_artifact_attachment_state(existing.name, job.serie, number)
+		_artifact_attachment_state(existing.name, job.company, job.serie, number)
 		if existing.name
 		else {"pdf": False, "xml": False, "cdr": False}
 	)
@@ -748,7 +748,7 @@ def _process_claimed_number(job_name: str, token: str, item_name: str, number: i
 		else:
 			base_status = "Created"
 
-	downloads = _attach_artifacts(job_name, token, gre_name, job.serie, number, artifacts)
+	downloads = _attach_artifacts(job_name, token, gre_name, job.company, job.serie, number, artifacts)
 	missing_optional = [kind.upper() for kind in ("pdf", "cdr") if not downloads[kind]]
 	status = "Warning" if missing_optional else base_status
 	message = ""
@@ -911,8 +911,7 @@ def _merge_existing_gre(
 	return gre_name
 
 
-def _artifact_attachment_state(gre_name: str, series: str, number: int) -> dict[str, bool]:
-	base = f"{series}-{str(number).zfill(6)}"
+def _artifact_attachment_state(gre_name: str, company: str, series: str, number: int) -> dict[str, bool]:
 	filenames = {
 		cstr(name).strip().lower()
 		for name in frappe.get_all(
@@ -925,55 +924,198 @@ def _artifact_attachment_state(gre_name: str, series: str, number: int) -> dict[
 			pluck="file_name",
 		)
 	}
-	base_pattern = re.escape(base.lower())
+	canonical_names, _ = _migration_artifact_names(company, series, number)
+	legacy_base = re.escape(f"{series}-{str(number).zfill(6)}".lower())
+	legacy_patterns = {kind: rf"{legacy_base}(?:[0-9a-f]{{6}})*\.{kind}" for kind in ("pdf", "xml", "cdr")}
 	return {
 		kind: any(
-			re.fullmatch(rf"{base_pattern}(?:[0-9a-f]{{6}})*\.{kind}", filename) for filename in filenames
+			_filename_matches(filename, canonical_names[kind])
+			or re.fullmatch(legacy_patterns[kind], filename)
+			for filename in filenames
 		)
 		for kind in ("pdf", "xml", "cdr")
 	}
+
+
+def _migration_artifact_names(
+	company: str, series: str, number: int
+) -> tuple[dict[str, str], dict[str, str]]:
+	tax_id = cstr(frappe.db.get_value("Company", company, "tax_id")).strip()
+	if not re.fullmatch(r"\d{11}", tax_id):
+		frappe.throw("La compañía debe tener un RUC de 11 dígitos para nombrar los artefactos GRE.")
+	base = f"{tax_id}-09-{cstr(series).strip().upper()}-{cint(number)}"
+	return (
+		{"pdf": f"{base}.pdf", "xml": f"{base}.xml", "cdr": f"R-{base}.xml"},
+		{
+			"pdf_zip_base64": f"{base}-pdf-field.zip",
+			"xml_zip_base64": f"{base}-xml-field.zip",
+			"cdr_zip_base64": f"{base}-cdr-field.zip",
+		},
+	)
+
+
+def _filename_matches(actual: str, expected: str) -> bool:
+	stem, extension = expected.lower().rsplit(".", 1)
+	return bool(re.fullmatch(rf"{re.escape(stem)}(?:[0-9a-f]{{6}})*\.{extension}", actual))
 
 
 def _attach_artifacts(
 	job_name: str,
 	token: str,
 	gre_name: str,
+	company: str,
 	series: str,
 	number: int,
 	artifacts: InspectedArtifacts,
 ) -> dict[str, bool]:
-	base = f"{series}-{str(number).zfill(6)}"
-	logical_names = {"pdf": f"{base}.pdf", "xml": f"{base}.xml", "cdr": f"{base}.cdr"}
-	container_names = {
-		"pdf_zip_base64": f"{base}-pdf-field.zip",
-		"xml_zip_base64": f"{base}-xml-field.zip",
-		"cdr_zip_base64": f"{base}-cdr-field.zip",
-	}
+	_normalize_existing_artifact_names(job_name, token, gre_name, company, series, number)
+	logical_names, container_names = _migration_artifact_names(company, series, number)
 	for kind, content in artifacts.logical.items():
 		_save_owned_file(job_name, token, gre_name, logical_names[kind], content)
 	for source_field, content in artifacts.containers.items():
 		_save_owned_file(job_name, token, gre_name, container_names[source_field], content)
-	return _artifact_attachment_state(gre_name, series, number)
+	return _artifact_attachment_state(gre_name, company, series, number)
+
+
+def _normalize_existing_artifact_names(
+	job_name: str,
+	token: str,
+	gre_name: str,
+	company: str,
+	series: str,
+	number: int,
+) -> None:
+	_lock_owned_job(job_name, token)
+	canonical_names, container_names = _migration_artifact_names(company, series, number)
+	legacy_base = re.escape(f"{series}-{str(number).zfill(6)}".lower())
+	targets = (
+		("PDF", canonical_names["pdf"], rf"{legacy_base}(?:[0-9a-f]{{6}})*\.pdf"),
+		("XML", canonical_names["xml"], rf"{legacy_base}(?:[0-9a-f]{{6}})*\.xml"),
+		("CDR", canonical_names["cdr"], rf"{legacy_base}(?:[0-9a-f]{{6}})*\.cdr"),
+		(
+			"contenedor PDF",
+			container_names["pdf_zip_base64"],
+			rf"{legacy_base}-pdf-field(?:[0-9a-f]{{6}})*\.zip",
+		),
+		(
+			"contenedor XML",
+			container_names["xml_zip_base64"],
+			rf"{legacy_base}-xml-field(?:[0-9a-f]{{6}})*\.zip",
+		),
+		(
+			"contenedor CDR",
+			container_names["cdr_zip_base64"],
+			rf"{legacy_base}-cdr-field(?:[0-9a-f]{{6}})*\.zip",
+		),
+	)
+	files = frappe.get_all(
+		"File",
+		filters={
+			"attached_to_doctype": "Nubefact Guia De Remision",
+			"attached_to_name": gre_name,
+			"is_private": 1,
+		},
+		fields=["name", "file_name", "file_url"],
+	)
+	for label, canonical_name, legacy_pattern in targets:
+		candidates = [
+			row
+			for row in files
+			if _filename_matches(cstr(row.file_name).strip().lower(), canonical_name)
+			or re.fullmatch(legacy_pattern, cstr(row.file_name).strip().lower())
+		]
+		if not candidates:
+			continue
+
+		readable = []
+		missing = []
+		for row in candidates:
+			try:
+				content = frappe.get_doc("File", row.name).get_content()
+			except FileNotFoundError:
+				missing.append(row)
+			else:
+				readable.append((row, content))
+
+		# A crash while removing a replaced blob can leave its File row behind.
+		# Remove those stale rows before selecting or recreating the canonical file.
+		_lock_owned_job(job_name, token)
+		for row in missing:
+			_remove_replaced_private_file(row)
+		if missing:
+			frappe.db.commit()
+		if not readable:
+			continue
+
+		exact = next(
+			(
+				row
+				for row, _content in readable
+				if cstr(row.file_name).strip().lower() == canonical_name.lower()
+			),
+			None,
+		)
+		source, source_content = next(
+			((row, content) for row, content in readable if exact and row.name == exact.name),
+			readable[0],
+		)
+		if any(content != source_content for row, content in readable if row.name != source.name):
+			frappe.throw(f"Hay múltiples artefactos {label} distintos para esta GRE.")
+
+		# Commit the canonical copy before deleting any legacy attachment. After
+		# a process crash, recovery therefore always has at least one readable copy.
+		if not exact:
+			_save_owned_file(job_name, token, gre_name, canonical_name, source_content)
+
+		_lock_owned_job(job_name, token)
+		for row, _content in readable:
+			if not exact or row.name != exact.name:
+				_remove_replaced_private_file(row)
+		frappe.db.commit()
+
+
+def _remove_replaced_private_file(file_record: Document) -> None:
+	"""Remove one obsolete attachment without deleting a blob shared by another File row."""
+	file_doc = frappe.get_doc("File", file_record.name)
+	if frappe.db.count("File", {"file_url": file_doc.file_url}) == 1:
+		Path(file_doc.get_full_path()).unlink(missing_ok=True)
+	frappe.delete_doc("File", file_doc.name, ignore_permissions=True)
 
 
 def _save_owned_file(job_name: str, token: str, gre_name: str, filename: str, content: bytes):
 	_lock_owned_job(job_name, token)
-	if not frappe.db.exists(
-		"File",
-		{
-			"attached_to_doctype": "Nubefact Guia De Remision",
-			"attached_to_name": gre_name,
-			"file_name": filename,
-			"is_private": 1,
-		},
-	):
-		save_file(
-			fname=filename,
-			content=content,
-			dt="Nubefact Guia De Remision",
-			dn=gre_name,
-			is_private=1,
+	filters = {
+		"attached_to_doctype": "Nubefact Guia De Remision",
+		"attached_to_name": gre_name,
+		"file_name": filename,
+		"is_private": 1,
+	}
+	if not frappe.db.exists("File", filters):
+		file_url = f"/private/files/{filename}"
+		conflict = frappe.db.exists("File", {"file_url": file_url})
+		if conflict:
+			frappe.throw(f"Ya existe otro archivo privado con el nombre canónico {filename}.")
+		file_doc = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": filename,
+				"content": content,
+				"is_private": 1,
+				"attached_to_doctype": "Nubefact Guia De Remision",
+				"attached_to_name": gre_name,
+			}
 		)
+		# Frappe's file-manager helper always appends a content-hash suffix.
+		# Write through File with overwrite=True, then insert the exact private
+		# URL so SUNAT identity filenames remain deterministic.
+		file_doc.flags.new_file = True
+		file_doc.save_file(
+			content=content,
+			ignore_existing_file_check=True,
+			overwrite=True,
+		)
+		file_doc.flags.copy_from_existing_file = True
+		file_doc.insert(ignore_permissions=True)
 	frappe.db.commit()
 
 
@@ -1413,6 +1555,9 @@ def _validate_start_configuration(job: Document, *, snapshot: bool = False):
 	company = frappe.db.exists("Company", job.company)
 	if not company:
 		frappe.throw("La compañía seleccionada no existe.")
+	company_tax_id = cstr(frappe.db.get_value("Company", job.company, "tax_id")).strip()
+	if not re.fullmatch(r"\d{11}", company_tax_id):
+		frappe.throw("La compañía debe tener un RUC de 11 dígitos para migrar artefactos GRE.")
 	local = frappe.get_doc("Nubefact Local", job.local)
 	series = frappe.get_doc("Nubefact Series", job.nubefact_series)
 	if local.company != job.company:

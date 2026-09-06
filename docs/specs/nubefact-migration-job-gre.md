@@ -211,14 +211,15 @@ Starting a job performs all of the following server-side checks:
 
 1. The caller has `Nubefact Manager` or `System Manager`.
 2. Company, Local, and Series exist.
-3. `Nubefact Local.company == job.company`.
-4. `Nubefact Series.company == job.company` and `Nubefact Series.local == job.local`.
-5. The series type is exactly `7` (GRE Remitente); type `8` is rejected as out of scope.
-6. The Series is exactly four valid characters and begins with `T` (`Txxx`).
-7. Both range bounds are valid integers and the inclusive range is at most 1,000.
-8. The Local has a usable API route and token. The token is checked for presence but is never copied to the job.
-9. The Local is an Online/Reseller configuration. Offline/localhost routes are rejected in version 1 because their artifact URLs cannot pass the public-address download policy.
-10. There is no other active migration job for the same `Nubefact Series`. Overlapping active jobs are rejected; completed jobs may overlap safely.
+3. The Company has an 11-digit RUC in `Company.tax_id`; this RUC supplies the canonical artifact identity.
+4. `Nubefact Local.company == job.company`.
+5. `Nubefact Series.company == job.company` and `Nubefact Series.local == job.local`.
+6. The series type is exactly `7` (GRE Remitente); type `8` is rejected as out of scope.
+7. The Series is exactly four valid characters and begins with `T` (`Txxx`).
+8. Both range bounds are valid integers and the inclusive range is at most 1,000.
+9. The Local has a usable API route and token. The token is checked for presence but is never copied to the job.
+10. The Local is an Online/Reseller configuration. Offline/localhost routes are rejected in version 1 because their artifact URLs cannot pass the public-address download policy.
+11. There is no other active migration job for the same `Nubefact Series`. Overlapping active jobs are rejected; completed jobs may overlap safely.
 
 The Series values are copied to the read-only snapshots at start. The worker always uses those snapshots and re-verifies that the referenced Series has not changed.
 
@@ -329,7 +330,8 @@ Requirements:
 - The source XML is mandatory for recreating a missing GRE. It must use the UBL DespatchAdvice namespace/root and have a canonical identity matching the request. A CDR `ApplicationResponse` is not accepted as the source document.
 - All three Base64 fields are treated as ZIP containers. Reject encoded input above 100 MiB, decoded archives above 75 MiB, more than 20 entries, any entry or total uncompressed content above 100 MiB, or a compression ratio above 100:1. Reject encrypted entries, traversal/absolute names, links, and nested archives. Decode and inspect in memory without extracting to disk.
 - A classified PDF ZIP must contain exactly one PDF with `%PDF` magic bytes. A source-XML ZIP must contain exactly one matching `DespatchAdvice`. A CDR ZIP must contain exactly one expected receipt file, normally an `ApplicationResponse` XML; preserve every accepted provider container under a filename derived from its source field.
-- URL artifacts use `{title}.pdf`, `{title}.xml`, and `{title}.cdr`. Base64 containers are preserved as `{title}-pdf-field.zip`, `{title}-xml-field.zip`, and `{title}-cdr-field.zip`, even when content classification reveals a transposed PDF/XML field; extracted logical artifacts use `{title}.pdf`, `{title}.xml`, and `{title}.cdr`. The extracted source XML is always attached because it drives reconstruction.
+- Logical artifacts use the canonical SUNAT identity built from the selected Company's RUC, GRE Remitente document type `09`, uppercase Series, and unpadded numeric number: `{ruc}-09-{serie}-{numero}.pdf`, `{ruc}-09-{serie}-{numero}.xml`, and `R-{ruc}-09-{serie}-{numero}.xml` for the CDR. For example, number 2 is stored as `20506005133-09-T001-2.pdf`, `20506005133-09-T001-2.xml`, and `R-20506005133-09-T001-2.xml`. Base64 containers are preserved as `{ruc}-09-{serie}-{numero}-pdf-field.zip`, `{ruc}-09-{serie}-{numero}-xml-field.zip`, and `{ruc}-09-{serie}-{numero}-cdr-field.zip`, even when content classification reveals a transposed PDF/XML field. The extracted source XML is always attached because it drives reconstruction.
+- A retry recognizes prior private `{serie}-{zero-padded-number}` attachments, including Frappe collision suffixes, and replaces them with exact canonical names without downloading an artifact already present. Public same-name files never satisfy or block the required private attachment.
 - A response that is still processing or temporarily lacks XML waits according to section 8 instead of failing immediately.
 - PDF or CDR absence/failure after readiness/network retries is non-fatal: create the GRE with the XML and mark the result `Warning`. `retry_migration(..., include_warnings=True)` attempts only missing artifacts.
 - Invalid or still-missing XML after the complete readiness budget is fatal for that number and no GRE is created.
@@ -388,7 +390,7 @@ Normal issuance and migration share the Series lock and `issued_identity_hash` i
 
 - Re-running the same range does not create duplicate GREs or duplicate attachments.
 - The identity check uses Company + NubeFact type + Series + Number, not the internal GRE name.
-- Artifact attachment checks use target DocType/name and deterministic filename.
+- Artifact attachment checks use target DocType/name, private storage, and the deterministic Company-RUC/SUNAT identity filename. Legacy migration names are normalized on retry.
 - A worker crash after creation but before files or the item result are saved is repaired by lease recovery: it finds the compatible GRE, links it, ensures attachments/counter state, and records `Existing` or `Warning`.
 - The unique `issued_identity_hash`, populated by both normal allocation and migration, prevents two claimed issued records from winning the same identity race.
 - Retrying a `Failed` item increments `attempts` and resumes at the earliest incomplete phase where safe. Retrying a `Warning` only fills missing artifacts. Neither path ever reissues a document.
@@ -430,7 +432,7 @@ A job-level fatal error stores a concise `last_error`; full tracebacks go to Fra
 
 ### 13.1 Unit tests
 
-1. Validate Company/Local/Series consistency, Online/Reseller policy, type `7` only, `Txxx` Series format, range bounds, range limit, permissions, and immutability after start.
+1. Validate Company/Local/Series consistency, an 11-digit Company RUC, Online/Reseller policy, type `7` only, `Txxx` Series format, range bounds, range limit, permissions, and immutability after start.
 2. Verify exact `consultar_guia` payload construction and prove no migration path can construct `generar_guia`.
 3. Classify identity-free code 24 responses as `Not Found` before strict successful-response identity validation, then continue.
 4. Classify authentication/account failures as job-fatal and network/429/5xx failures as retryable using structured HTTP metadata.

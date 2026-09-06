@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_to_date, now_datetime, random_string
+from pypdf import PdfWriter
 
 from nubefact.nubefact.doctype.nubefact_api_log.nubefact_api_log import (
 	create_api_log,
@@ -205,7 +206,10 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			self.assertFalse(meta.get_field(fieldname).reqd)
 
 	def make_job(self, *, start=1, end=2):
-		company = frappe.get_all("Company", pluck="name", limit=1)[0]
+		company = (
+			frappe.defaults.get_user_default("Company") or frappe.get_all("Company", pluck="name", limit=1)[0]
+		)
+		frappe.db.set_value("Company", company, "tax_id", "20506005133", update_modified=False)
 		local = frappe.get_doc(
 			{
 				"doctype": "Nubefact Local",
@@ -243,6 +247,16 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			}
 		).insert()
 		return job, series
+
+	def test_start_requires_an_eleven_digit_company_ruc(self):
+		job, _series = self.make_job()
+		original_tax_id = frappe.db.get_value("Company", job.company, "tax_id")
+		frappe.db.set_value("Company", job.company, "tax_id", "", update_modified=False)
+		try:
+			with self.assertRaisesRegex(frappe.ValidationError, "RUC de 11 dígitos"):
+				start_migration(job.name)
+		finally:
+			frappe.db.set_value("Company", job.company, "tax_id", original_tax_id, update_modified=False)
 
 	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job._dispatch_job")
 	def test_start_cancel_and_retry_are_server_managed(self, dispatch):
@@ -322,7 +336,13 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			"sunat_responsecode": "0",
 			"cadena_para_codigo_qr": qr_value,
 		}
-		collect.return_value = InspectedArtifacts(logical={"xml": xml})
+		pdf = io.BytesIO()
+		pdf_writer = PdfWriter()
+		pdf_writer.add_blank_page(width=72, height=72)
+		pdf_writer.add_metadata({"/Subject": series.serie})
+		pdf_writer.write(pdf)
+		cdr = CDR_WITH_REFERENCE.replace(b"TTT1-00000001", f"{series.serie}-00000199".encode())
+		collect.return_value = InspectedArtifacts(logical={"pdf": pdf.getvalue(), "xml": xml, "cdr": cdr})
 		start_migration(job.name)
 		dispatch.reset_mock()
 
@@ -330,7 +350,7 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 
 		job.reload()
 		series.reload()
-		self.assertEqual(job.status, "Completed with Warnings")
+		self.assertEqual(job.status, "Completed", msg=job.results[0].message)
 		self.assertEqual(job.created_count, 1)
 		self.assertEqual(series.numero, 200)
 		self.assertGreaterEqual(series.ultimo_numero_asignado, 199)
@@ -348,7 +368,14 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			filters={"attached_to_doctype": gre.doctype, "attached_to_name": gre.name},
 			fields=["file_name", "is_private"],
 		)
-		self.assertEqual(len(files), 1)
+		self.assertEqual(
+			{row.file_name for row in files},
+			{
+				f"20506005133-09-{series.serie}-199.pdf",
+				f"20506005133-09-{series.serie}-199.xml",
+				f"R-20506005133-09-{series.serie}-199.xml",
+			},
+		)
 		self.assertTrue(all(row.is_private for row in files))
 		with self.assertRaisesRegex(frappe.ValidationError, "no se pueden eliminar"):
 			gre.delete()
@@ -382,10 +409,12 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			update_modified=False,
 		)
 		base = f"{series.serie}-000001"
+		legacy_private_paths = []
 		for kind in ("pdf", "xml"):
 			filename = f"{base}a1b2c3.{kind}"
 			file_path = Path(frappe.get_site_path("private", "files", filename))
 			file_path.write_bytes(f"{series.serie}-{kind}".encode())
+			legacy_private_paths.append(file_path)
 			self.addCleanup(file_path.unlink, missing_ok=True)
 			file_doc = frappe.get_doc(
 				{
@@ -399,7 +428,43 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			)
 			file_doc.flags.copy_from_existing_file = True
 			file_doc.insert(ignore_permissions=True)
-		public_cdr_name = f"{base}.cdr"
+
+		missing_legacy_name = f"{base}d4e5f6.pdf"
+		missing_legacy_path = Path(frappe.get_site_path("private", "files", missing_legacy_name))
+		missing_legacy_path.write_bytes(f"{series.serie}-pdf".encode())
+		missing_legacy = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": missing_legacy_name,
+				"file_url": f"/private/files/{missing_legacy_name}",
+				"is_private": 1,
+				"attached_to_doctype": gre.doctype,
+				"attached_to_name": gre.name,
+			}
+		)
+		missing_legacy.flags.copy_from_existing_file = True
+		missing_legacy.insert(ignore_permissions=True)
+		missing_legacy_path.unlink()
+
+		legacy_container_name = f"{base}-pdf-field.zip"
+		legacy_container_path = Path(frappe.get_site_path("private", "files", legacy_container_name))
+		legacy_container_path.write_bytes(f"{series.serie}-pdf-container".encode())
+		legacy_private_paths.append(legacy_container_path)
+		self.addCleanup(legacy_container_path.unlink, missing_ok=True)
+		legacy_container = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": legacy_container_name,
+				"file_url": f"/private/files/{legacy_container_name}",
+				"is_private": 1,
+				"attached_to_doctype": gre.doctype,
+				"attached_to_name": gre.name,
+			}
+		)
+		legacy_container.flags.copy_from_existing_file = True
+		legacy_container.insert(ignore_permissions=True)
+
+		public_cdr_name = f"R-20506005133-09-{series.serie}-1.xml"
 		public_cdr_path = Path(frappe.get_site_path("public", "files", public_cdr_name))
 		public_cdr_path.write_bytes(b"public-placeholder")
 		self.addCleanup(public_cdr_path.unlink, missing_ok=True)
@@ -469,6 +534,28 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertTrue(item.pdf_downloaded)
 		self.assertTrue(item.xml_downloaded)
 		self.assertTrue(item.cdr_downloaded)
+		private_filenames = set(
+			frappe.get_all(
+				"File",
+				filters={
+					"attached_to_doctype": gre.doctype,
+					"attached_to_name": gre.name,
+					"is_private": 1,
+				},
+				pluck="file_name",
+			)
+		)
+		self.assertEqual(
+			private_filenames,
+			{
+				f"20506005133-09-{series.serie}-1.pdf",
+				f"20506005133-09-{series.serie}-1.xml",
+				f"R-20506005133-09-{series.serie}-1.xml",
+				f"20506005133-09-{series.serie}-1-pdf-field.zip",
+			},
+		)
+		self.assertTrue(public_cdr_path.exists())
+		self.assertTrue(all(not path.exists() for path in legacy_private_paths))
 		collect.assert_called_once()
 		self.assertEqual(collect.call_args.kwargs["kinds"], {"cdr"})
 
