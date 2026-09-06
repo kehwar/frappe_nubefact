@@ -169,13 +169,14 @@ after_migrate = "nubefact.setup.setup"
 # }
 
 scheduler_events = {
-    "cron": {
-        "*/5 * * * *": [
-            "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.consultar_guias_pendientes",
-            "nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.poll_pending_invoices",
-            "nubefact.nubefact.doctype.nubefact_series.nubefact_series.recover_stale_issuing_documents",
-        ]
-    }
+	"cron": {
+		"*/5 * * * *": [
+			"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.consultar_guias_pendientes",
+			"nubefact.nubefact.doctype.nubefact_facturacion.nubefact_facturacion.poll_pending_invoices",
+			"nubefact.nubefact.doctype.nubefact_series.nubefact_series.recover_stale_issuing_documents",
+			"nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.recover_stale_migration_jobs",
+		]
+	}
 }
 
 # Testing

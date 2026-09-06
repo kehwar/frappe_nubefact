@@ -73,6 +73,8 @@ from nubefact.utils import (
 	to_nubefact_date,
 )
 
+HISTORICAL_IMPORT_CAPABILITY = object()
+
 _MANUAL_VOID_STATUSES = {"Anulación Solicitada", "Anulada"}
 _MANUAL_VOID_AUDIT_FIELDS = (
 	"anulado",
@@ -131,10 +133,69 @@ class NubefactGuiaDeRemision(Document):
 		self._set_inferred_values()
 
 	def validate(self):
+		self._validate_migration_fields()
 		self._validate_manual_void_updates()
-		if not cint(getattr(self, "skip_field_validation", 0)):
+		if self._is_historical_import():
+			self._validate_historical_import()
+		elif not cint(getattr(self, "skip_field_validation", 0)):
 			self._validate_required_fields()
 			self._validate_document_rules()
+
+	def _is_historical_import(self) -> bool:
+		return self.flags.get("nubefact_historical_import") is HISTORICAL_IMPORT_CAPABILITY
+
+	def _validate_migration_fields(self):
+		if self._is_historical_import():
+			return
+		previous = self.get_doc_before_save()
+		if not previous and not self.is_new():
+			previous = frappe.db.get_value(
+				self.doctype,
+				self.name,
+				["migrated_from_nubefact", "migration_job", "issued_identity_hash"],
+				as_dict=True,
+			)
+		if previous and cint(previous.migrated_from_nubefact) and not self._is_historical_import():
+			frappe.throw("Las GRE migradas son inmutables y se conservan para auditoría.")
+		if not previous:
+			if (
+				cint(self.migrated_from_nubefact)
+				or cstr(self.migration_job or "").strip()
+				or cstr(self.issued_identity_hash or "").strip()
+			):
+				frappe.throw(
+					"Los campos de migración solo pueden ser administrados por el proceso de migración."
+				)
+			return
+		if cint(previous.migrated_from_nubefact) != cint(self.migrated_from_nubefact) or any(
+			cstr(previous.get(fieldname) or "") != cstr(self.get(fieldname) or "")
+			for fieldname in ("migration_job", "issued_identity_hash")
+		):
+			frappe.throw("La procedencia y la identidad emitida de la GRE son inmutables.")
+
+	def _validate_historical_import(self):
+		if cstr(self.tipo_de_comprobante) != "7":
+			frappe.throw("La migración histórica solo admite GRE Remitente tipo 7.")
+		if not re.fullmatch(r"T[A-Z0-9]{3}", cstr(self.serie).strip().upper()):
+			frappe.throw("La serie histórica debe tener formato Txxx.")
+		if not 1 <= cint(self.numero) <= 99_999_999:
+			frappe.throw("El número histórico no es válido.")
+		require_fields(
+			self,
+			["company", "local", "nubefact_series", "migration_job", "issued_identity_hash"],
+			"La GRE histórica no contiene su identidad controlada completa.",
+		)
+		# Reuse the complete business/catalog validator and bypass only the rule
+		# that ties an issuance request to today's date.
+		self._validate_required_fields()
+		self._validate_document_rules(validate_issue_window=False, historical_source=True)
+
+	def on_trash(self):
+		migrated = cint(self.migrated_from_nubefact) or cint(
+			frappe.db.get_value(self.doctype, self.name, "migrated_from_nubefact")
+		)
+		if migrated:
+			frappe.throw("Las GRE migradas no se pueden eliminar; consérvelas para auditoría.")
 
 	def _validate_manual_void_updates(self):
 		"""Require the audited RPC actions for every manual-void state change."""
@@ -175,7 +236,7 @@ class NubefactGuiaDeRemision(Document):
 
 			set_company_from_local(self)
 
-		local_origin_values = get_local_origin_values(self.local)
+		local_origin_values = {} if self._is_historical_import() else get_local_origin_values(self.local)
 		inferred_origin_fields = (
 			(
 				"punto_de_partida_ubigeo",
@@ -476,7 +537,9 @@ class NubefactGuiaDeRemision(Document):
 					"Los campos del conductor son obligatorios para GRE Transportista.",
 				)
 
-	def _validate_document_rules(self):
+	def _validate_document_rules(
+		self, *, validate_issue_window: bool = True, historical_source: bool = False
+	):
 		document_type = cstr(self.tipo_de_comprobante)
 		if document_type not in GRE_DOCUMENT_TYPES:
 			frappe.throw("El tipo de comprobante no pertenece al catálogo GRE de NubeFact.")
@@ -499,9 +562,10 @@ class NubefactGuiaDeRemision(Document):
 				frappe.throw("El número debe ser un entero de 1 a 8 dígitos, sin ceros a la izquierda.")
 
 		issue_date = getdate(self.fecha_de_emision)
-		allowed_issue_dates = {getdate(nowdate()), getdate(add_days(nowdate(), -1))}
-		if issue_date not in allowed_issue_dates:
-			frappe.throw("La fecha de emisión debe ser hoy o, como máximo, un día anterior.")
+		if validate_issue_window:
+			allowed_issue_dates = {getdate(nowdate()), getdate(add_days(nowdate(), -1))}
+			if issue_date not in allowed_issue_dates:
+				frappe.throw("La fecha de emisión debe ser hoy o, como máximo, un día anterior.")
 		if getdate(self.fecha_de_inicio_de_traslado) < issue_date:
 			frappe.throw("La fecha de inicio del traslado no puede ser anterior a la fecha de emisión.")
 		if (
@@ -606,7 +670,7 @@ class NubefactGuiaDeRemision(Document):
 		if indicator != "06":
 			self._validate_plate(self.transportista_placa_numero, "Placa del vehículo principal")
 		self._validate_optional_uppercase_code("tuc_vehiculo_principal", 10, 15)
-		if document_type != "8" and cstr(self.tuc_vehiculo_principal).strip():
+		if not historical_source and document_type != "8" and cstr(self.tuc_vehiculo_principal).strip():
 			frappe.throw("El TUC del vehículo principal sólo aplica a GRE Transportista.")
 		self._validate_optional_uppercase_code("mtc", 1, 20)
 
@@ -620,7 +684,7 @@ class NubefactGuiaDeRemision(Document):
 			frappe.throw("El formato de PDF debe ser A4, TICKET o vacío.")
 
 		self._validate_driver_rules(document_type)
-		self._validate_child_rules(document_type)
+		self._validate_child_rules(document_type, historical_source=historical_source)
 
 	def _validate_driver_rules(self, document_type: str):
 		driver_required = cstr(self.sunat_envio_indicador).strip() != "06" and (
@@ -637,12 +701,17 @@ class NubefactGuiaDeRemision(Document):
 		self._validate_text_length("conductor_apellidos", 1, 250)
 		self._validate_license(self.conductor_numero_licencia, "Licencia del conductor principal")
 
-	def _validate_child_rules(self, document_type: str):
+	def _validate_child_rules(self, document_type: str, *, historical_source: bool = False):
 		if len(self.vehiculos_secundarios or []) > MAX_SECONDARY_ROWS:
 			frappe.throw("Se permiten como máximo 2 vehículos secundarios.")
 		if len(self.conductores_secundarios or []) > MAX_SECONDARY_ROWS:
 			frappe.throw("Se permiten como máximo 2 conductores secundarios.")
-		if document_type == "7" and cstr(self.tipo_de_transporte) != "02" and self.conductores_secundarios:
+		if (
+			not historical_source
+			and document_type == "7"
+			and cstr(self.tipo_de_transporte) != "02"
+			and self.conductores_secundarios
+		):
 			frappe.throw("Los conductores secundarios sólo aplican al transporte privado en GRE Remitente.")
 
 		motive = cstr(self.motivo_de_traslado).strip() if document_type == "7" else ""
@@ -700,7 +769,7 @@ class NubefactGuiaDeRemision(Document):
 		for row in self.vehiculos_secundarios or []:
 			self._validate_plate(row.placa_numero, f"Vehículos secundarios fila #{row.idx}: placa")
 			tuc = cstr(row.tuc).strip()
-			if tuc and document_type != "8":
+			if tuc and document_type != "8" and not historical_source:
 				frappe.throw("El TUC de vehículos secundarios sólo aplica a GRE Transportista.")
 			if tuc and (not re.fullmatch(r"[A-Z0-9]{10,15}", tuc)):
 				frappe.throw(f"Vehículos secundarios fila #{row.idx}: TUC no válido.")
@@ -778,10 +847,10 @@ class NubefactGuiaDeRemision(Document):
 			return {}
 
 		response_type = response.get("tipo_de_comprobante")
-		response_series = cstr(response.get("serie") or "").strip()
+		response_series = cstr(response.get("serie") or "").strip().upper()
 		if response_type is not None and cint(response_type) != cint(self.tipo_de_comprobante):
 			frappe.throw("La respuesta de NubeFact pertenece a otro tipo de comprobante.")
-		if response_series and response_series != cstr(self.serie).strip():
+		if response_series and response_series != cstr(self.serie).strip().upper():
 			frappe.throw("La respuesta de NubeFact pertenece a otra serie.")
 
 		accepted_value = response.get("aceptada_por_sunat")
@@ -852,16 +921,20 @@ class NubefactGuiaDeRemision(Document):
 		return values
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def enviar_a_nubefact(name: str):
 	doc = frappe.get_doc("Nubefact Guia De Remision", name)
 	doc.check_permission("write")
+	if cint(doc.migrated_from_nubefact):
+		frappe.throw("Una GRE migrada desde NubeFact no puede volver a emitirse.")
 	frappe.db.sql(
 		"SELECT `name` FROM `tabNubefact Guia De Remision` WHERE `name` = %s FOR UPDATE",
 		(name,),
 	)
 	doc.reload()
 
+	if cint(doc.migrated_from_nubefact):
+		frappe.throw("Una GRE migrada desde NubeFact no puede volver a emitirse.")
 	if doc.status not in {"Borrador", "Error"}:
 		frappe.throw("Solo se pueden enviar guías en estado Borrador o Error.")
 
@@ -933,10 +1006,10 @@ def enviar_a_nubefact(name: str):
 	return values
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def refrescar_estado_sunat(name: str):
 	doc = frappe.get_doc("Nubefact Guia De Remision", name)
-	doc.check_permission("read")
+	doc.check_permission("write")
 	return _refresh_sunat_status_doc(doc)
 
 
@@ -1089,6 +1162,7 @@ def _request_extract_and_save_response(
 		payload=payload,
 		local=doc.local,
 		referencia_guia_de_remision=doc.name,
+		migration_job=doc.migration_job if cint(doc.migrated_from_nubefact) else None,
 	)
 	if not isinstance(response, dict) or not response:
 		frappe.throw("NubeFact devolvió una respuesta vacía o inválida.")

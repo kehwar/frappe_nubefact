@@ -40,92 +40,89 @@ def without_nubefact_base64_fields(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def to_nubefact_date(value: str) -> str:
-    return getdate(value).strftime("%d-%m-%Y")
+	return getdate(value).strftime("%d-%m-%Y")
 
 
 def set_if_value(payload: dict[str, Any], key: str, value: Any):
-    if value is None:
-        return
-    if isinstance(value, str) and not value.strip():
-        return
-    if isinstance(value, int | float) and not isinstance(value, bool) and value == 0:
-        return
+	if value is None:
+		return
+	if isinstance(value, str) and not value.strip():
+		return
+	if isinstance(value, int | float) and not isinstance(value, bool) and value == 0:
+		return
 
-    payload[key] = value
+	payload[key] = value
 
 
 def omit_empty_values(values: dict[str, Any]) -> dict[str, Any]:
-    cleaned: dict[str, Any] = {}
+	cleaned: dict[str, Any] = {}
 
-    for key, value in values.items():
-        set_if_value(cleaned, key, value)
+	for key, value in values.items():
+		set_if_value(cleaned, key, value)
 
-    return cleaned
+	return cleaned
 
 
 def require_fields(doc: Document, fields: list[str], message: str):
-    missing = get_missing_fields(doc, fields)
+	missing = get_missing_fields(doc, fields)
 
-    if missing:
-        throw(f"{message} Missing: {format_missing_fields(doc, missing)}")
+	if missing:
+		throw(f"{message} Missing: {format_missing_fields(doc, missing)}")
 
 
 def require_child_fields(row: Document, fields: list[str], message: str):
-    missing = get_missing_fields(row, fields)
+	missing = get_missing_fields(row, fields)
 
-    if missing:
-        throw(f"{message} Missing: {format_missing_fields(row, missing)}")
+	if missing:
+		throw(f"{message} Missing: {format_missing_fields(row, missing)}")
 
 
 def format_missing_fields(doc: Document, fieldnames: list[str]) -> str:
-    labels: list[str] = []
+	labels: list[str] = []
 
-    for fieldname in fieldnames:
-        field = doc.meta.get_field(fieldname)
-        labels.append(cstr(field.label).strip() if field and field.label else fieldname)
+	for fieldname in fieldnames:
+		field = doc.meta.get_field(fieldname)
+		labels.append(cstr(field.label).strip() if field and field.label else fieldname)
 
-    return ", ".join(labels)
+	return ", ".join(labels)
 
 
 def get_missing_fields(doc: Document, fields: list[str]) -> list[str]:
-    return [
-        fieldname
-        for fieldname in fields
-        if not doc.get(fieldname)
-        or (isinstance(doc.get(fieldname), str) and not doc.get(fieldname).strip())
-    ]
+	return [
+		fieldname
+		for fieldname in fields
+		if not doc.get(fieldname) or (isinstance(doc.get(fieldname), str) and not doc.get(fieldname).strip())
+	]
 
 
-def apply_raw_payload_overrides(
-    payload: dict[str, Any], raw_value: Any, context: str
-) -> dict[str, Any]:
-    raw_payload = parse_raw_payload(raw_value, context)
-    if not raw_payload:
-        return payload
+def apply_raw_payload_overrides(payload: dict[str, Any], raw_value: Any, context: str) -> dict[str, Any]:
+	raw_payload = parse_raw_payload(raw_value, context)
+	if not raw_payload:
+		return payload
 
-    merged_payload = dict(payload)
-    merged_payload.update(raw_payload)
-    return merged_payload
+	merged_payload = dict(payload)
+	merged_payload.update(raw_payload)
+	return merged_payload
 
 
 def parse_raw_payload(raw_value: Any, context: str) -> dict[str, Any]:
-    if raw_value in (None, ""):
-        return {}
+	if raw_value in (None, ""):
+		return {}
 
-    if isinstance(raw_value, dict):
-        return raw_value
+	if isinstance(raw_value, dict):
+		return raw_value
 
-    if isinstance(raw_value, str):
-        try:
-            parsed = json.loads(raw_value)
-        except json.JSONDecodeError as exc:
-            throw(f"Invalid raw JSON for {context}: {exc.msg}")
+	if isinstance(raw_value, str):
+		try:
+			parsed = json.loads(raw_value)
+		except json.JSONDecodeError as exc:
+			throw(f"Invalid raw JSON for {context}: {exc.msg}")
 
-        if isinstance(parsed, dict):
-            return parsed
+		if isinstance(parsed, dict):
+			return parsed
 
-    throw(f"Raw payload for {context} must be a JSON object.")
-    return {}
+	throw(f"Raw payload for {context} must be a JSON object.")
+	return {}
 
 
 def _attachment_exists(doctype: str, docname: str, filename: str) -> bool:
@@ -141,9 +138,7 @@ def _attachment_exists(doctype: str, docname: str, filename: str) -> bool:
 	)
 
 
-def attach_nubefact_json(
-	payload: dict[str, Any], filename: str, doctype: str, docname: str
-) -> None:
+def attach_nubefact_json(payload: dict[str, Any], filename: str, doctype: str, docname: str) -> None:
 	"""Attach a structured issuance payload without encoded response artifacts."""
 	if _attachment_exists(doctype, docname, filename):
 		return
@@ -251,8 +246,7 @@ def _is_safe_download_url(url: str) -> bool:
 			type=socket.SOCK_STREAM,
 		)
 		return bool(addresses) and all(
-			ipaddress.ip_address(address[4][0].split("%", 1)[0]).is_global
-			for address in addresses
+			ipaddress.ip_address(address[4][0].split("%", 1)[0]).is_global for address in addresses
 		)
 	except (OSError, ValueError):
 		return False
@@ -260,11 +254,12 @@ def _is_safe_download_url(url: str) -> bool:
 
 def _download_public_file(url: str) -> bytes:
 	current_url = url
+	max_bytes = 100 * 1024 * 1024
 	for _redirect in range(4):
 		if not _is_safe_download_url(current_url):
 			raise requests.RequestException("NubeFact devolvió una URL de descarga no permitida.")
 
-		response = requests.get(current_url, timeout=60, allow_redirects=False)
+		response = requests.get(current_url, timeout=60, allow_redirects=False, stream=True)
 		if response.status_code in {301, 302, 303, 307, 308}:
 			location = response.headers.get("Location")
 			if not location:
@@ -273,10 +268,21 @@ def _download_public_file(url: str) -> bytes:
 			continue
 
 		response.raise_for_status()
-		content = response.content
-		if len(content) > 100 * 1024 * 1024:
+		try:
+			declared_size = int(response.headers.get("Content-Length") or 0)
+		except (TypeError, ValueError):
+			declared_size = 0
+		if declared_size > max_bytes:
 			raise requests.RequestException("El archivo de NubeFact supera el límite de 100 MB.")
-		return content
+
+		content = bytearray()
+		for chunk in response.iter_content(chunk_size=1024 * 1024):
+			if not chunk:
+				continue
+			content.extend(chunk)
+			if len(content) > max_bytes:
+				raise requests.RequestException("El archivo de NubeFact supera el límite de 100 MB.")
+		return bytes(content)
 
 	raise requests.TooManyRedirects("La descarga de NubeFact excedió el límite de redirecciones.")
 
@@ -345,9 +351,7 @@ def enqueue_nubefact_file_downloads(
 	json_payloads = {
 		"request": request_payload,
 		"response": (
-			without_nubefact_base64_fields(response_payload)
-			if response_payload is not None
-			else None
+			without_nubefact_base64_fields(response_payload) if response_payload is not None else None
 		),
 	}
 	for suffix, payload in json_payloads.items():
@@ -392,6 +396,7 @@ def enqueue_nubefact_file_downloads(
 				queue="short",
 				enqueue_after_commit=True,
 			)
+
 
 __all__ = [
 	"MAX_DUPLICATE_NUMBER_SKIPS",

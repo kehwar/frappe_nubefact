@@ -192,6 +192,17 @@
    "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Migraciones GRE Remitente",
+   "link_count": 0,
+   "link_to": "Nubefact Migration Job",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "API Log",
    "link_count": 0,
    "link_to": "Nubefact API Log",
@@ -200,7 +211,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-09-04 23:00:41.920038",
+ "modified": "2026-09-06 00:00:00",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact",

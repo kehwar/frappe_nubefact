@@ -1,0 +1,1010 @@
+﻿INTEGRACIÓN FÁCIL CON ARCHIVO JSON
+Para consultas generar un Ticket de atención en ayuda.nubefact.com 
+API NUBEFACT
+GUÍA DE REMISIÓN
+GRE REMITENTE Y TRANSPORTISTA
+NUEVAS GUÍAS DESDE EL 1 DIC 2022
+Para generar el PDF en las Guías de Remisión se requiere que la Sunat la acepte primero. 
+Después de usar la operación 'generar_guia' usa la operación 'consultar_guia' para obtener el PDF o CDR. La Sunat puede tomar un tiempo en aceptarla.
+	
+
+LISTA DE CAMBIOS        
+FECHA
+	VERSIÓN
+	DESCRIPCIÓN
+	30/11/2022
+	1.1
+	Cambio en la respuesta de Sunat.
+Para generar Guías se necesitan DOS PASOS.
+MUY IMPORTANTE:
+PASO 1) Enviar la Guía con la operación "generar_guia" (NO se generará un PDF ni XML).
+PASO 2) Consultar la Guía con la operación "consultar_guia", si la Sunat acepta la Guías se generará un PDF, XML y CRD en la respuesta. Esto podría tomar segundos o minutos.
+	3/12/2022
+	1.2
+	Información para descargar GRE desde la misma Sunat.
+Dar de baja una GRE desde la Sunat con Clave Sol
+	17/12/2022
+	1.3
+	Generar GRE Transportista. Las GRE ahora se pueden probar en modo DEMO.
+Se adjunta en ejemplo en JSON.
+	20/09/2023
+	1.4
+	Documento relacionado a la guía de Remisión
+	30/11/2023
+	1.5
+	Vehículos Secundarios y Conductores Secundarios.
+
+
+	01/12/2023 
+	1.6 
+	Se agrega el indicador SUNAT_Envio_IndicadorTrasladoVehiculoM1L
+
+
+	01/06/2026 
+	1.7
+	Se agrega el nuevo campo “Fecha de entrega de bienes al transportista” para GRE Remitente
+	AUTENTICACIÓN
+Nuestro servicio está protegido para evitar intrusos.
+Lo primero que debes saber es que para usar nuestra API debes autenticarte o loguearte. Para ello necesitas DOS datos: una RUTA y un TOKEN.
+
+
+RUTA: Cada cliente tiene una RUTA distinta y única.
+* EJEMPLO (Versión ONLINE): https://api.nubefact.com/api/v1/48239908-7ae7-4353-824d-071765d4
+* EJEMPLO RESELLER: https://api.pse.pe/api/v1/48239908-7ae7-4353-824d-071765d4
+TOKEN: Puedes tener uno o varios TOKEN.
+* EJEMPLO: 1c4239064a3f441880d7ced75eea4383b831c0bf26944169b
+Estos datos los podemos conseguir en tu cuenta en NUBEFACT o RESELLER.
+CONSEGUIR UNA CUENTA DEMO EN NUBEFACT
+Sigue los siguiente pasos:
+* Regístrate gratis en www.nubefact.com/register o ingresar a tu cuenta en tuempresa.pse.pe (Reseller)
+* Ir la opción API (Integración). Si la opción API (Integración) no está activada generar un Ticket de atención en ayuda.nubefact.com
+CÓMO USAR LA RUTA Y EL TOKEN
+Para usar la RUTA y el TOKEN tener en cuenta lo siguiente:
+1. Todas las solicitudes se hacen vía POST a la RUTA, ejemplo: https://www.nubefact.com/api/v1/48239908-7ae7-071765d4
+2. Debes enviar en el HEADER de tu solicitud lo siguiente:
+Authorization                  8d19d8c7c1f6402687720eab85cd57a54f5a7a3fa163476bbcf381ee2b5e0c69
+Content-Type                application/json
+3. Adjuntar en el CUERPO o BODY el archivo JSON
+4. Recibirás una respuesta inmediatamente.
+HERRAMIENTAS PARA LA RUTA Y EL TOKEN:
+Para hacer PRUEBAS de RECOMENDAMOS usar:
+* INSOMNIA: Un probador de API gratuito https://insomnia.rest/
+* JSONLINT: Para comprobar que el archivo JSON fue construido correctamente https://jsonlint.com/
+________________
+OPERACIÓN: GENERAR GRE REMITENTE
+La explicación de la estructura y las validaciones de esta operación para ENVIAR y de RESPUESTA se detallan al final de este manual:
+JSON PARA ENVIAR A NUBEFACT
+	JSON DE RESPUESTA DE NUBEFACT
+	{
+        "operacion": "generar_guia",
+        "tipo_de_comprobante": 7,
+        "serie": "TTT1",
+        "numero": "1",
+        "cliente_tipo_de_documento": 6,
+        "cliente_numero_de_documento": "20600695771",
+        "cliente_denominacion": "NUBEFACT SA",
+        "cliente_direccion": "MIRAFLORES LIMA",
+        "cliente_email": "demo@gmail.com",
+        "cliente_email_1": "",
+        "cliente_email_2": "",
+        "fecha_de_emision": "01-06-2026",
+        "observaciones": "observaciones",
+        "motivo_de_traslado": "01",
+        "peso_bruto_total": "1",
+        "peso_bruto_unidad_de_medida": "KGM",
+        "numero_de_bultos": "1",
+        "tipo_de_transporte": "01",
+        "fecha_de_inicio_de_traslado": "01-06-2026",
+        "fecha_de_entrega_al_transportista": "01-07-2026",
+        "transportista_documento_tipo": "6",
+        "transportista_documento_numero": "20600695771",
+        "transportista_denominacion": "NUBEFACT SA",
+        "transportista_placa_numero": "ABC444",
+        "conductor_documento_tipo": "1",
+        "conductor_documento_numero": "XXXXXXXX",
+        "conductor_nombre": "JORGE",
+        "conductor_apellidos": "LOPEZ",
+        "conductor_numero_licencia": "QXXXXXXXX",
+        "punto_de_partida_ubigeo": "151021",
+        "punto_de_partida_direccion": "DIRECCION PARTIDA",
+        "punto_de_partida_codigo_establecimiento_sunat": "0000",
+        "punto_de_llegada_ubigeo": "211101",
+        "punto_de_llegada_direccion": "DIRECCION LLEGADA",
+        "punto_de_llegada_codigo_establecimiento_sunat": "0000",
+        "enviar_automaticamente_al_cliente": "false",
+        "formato_de_pdf": "",
+        "items": [
+                {
+                        "unidad_de_medida": "NIU",
+                        "codigo": "001",
+                        "descripcion": "DETALLE DEL PRODUCTO 1",
+                        "cantidad": "1"
+                },
+                {
+                        "unidad_de_medida": "NIU",
+                        "codigo": "002",
+                        "descripcion": "DETALLE DEL PRODUCTO 2",
+                        "cantidad": "1"
+                }
+        ],
+        "documento_relacionado": [
+                {
+                        "tipo": "01",
+                        "serie": "F001",
+                        "numero": "1"
+                },
+                {
+                        "tipo": "01",
+                        "serie": "F001",
+                        "numero": "2"
+                }
+        ],
+        "vehiculos_secundarios": [
+                {
+                        "placa_numero": "ABC445"                },
+                {
+                        "placa_numero": "ABC446"                }
+        ],
+        
+         "conductores_secundarios":[
+                {
+                        "documento_tipo": "1",
+                        "documento_numero": "06123457",
+                        "nombre": "LUIS",
+                        "apellidos": "FERNANDEZ",
+                        "numero_licencia": "QXXXXXXXZ"                
+          },{
+                         "documento_tipo": "1",
+                        "documento_numero": "06123458",
+                        "nombre": "JORGE",
+                        "apellidos": "QUISPE",
+                        "numero_licencia": "QXXXXXXAZ"                
+          }
+        ]
+
+
+
+
+
+
+}
+	{
+        "nota_importante": "Para generar el PDF en las Guías de Remisión se requiere que la Sunat la acepte primero. Usa la operación 'consultar_guia' para obtener el PDF o CDR. La Sunat puede tomar un tiempo en aceptarla.",
+        "tipo_de_comprobante": 7,
+        "serie": "TTT1",
+        "numero": 1,
+        "enlace": "",
+        "aceptada_por_sunat": false,
+        "sunat_description": null,
+        "sunat_note": null,
+        "sunat_responsecode": null,
+        "sunat_soap_error": null,
+        "pdf_zip_base64": "",
+        "xml_zip_base64": "",
+        "cdr_zip_base64": "",
+        "cadena_para_codigo_qr": "",
+        "enlace_del_pdf": "",
+        "enlace_del_xml": "",
+        "enlace_del_cdr": ""
+}
+
+
+
+
+	________________
+OPERACIÓN: GENERAR GRE TRANSPORTISTA
+La explicación de la estructura y las validaciones de esta operación para ENVIAR y de RESPUESTA se detallan al final de este manual:
+JSON PARA ENVIAR A NUBEFACT
+	JSON DE RESPUESTA DE NUBEFACT
+	{
+        "operacion": "generar_guia",
+        "tipo_de_comprobante": 8,
+        "serie": "VVV1",
+        "numero": "1",
+        "cliente_tipo_de_documento": 6,
+        "cliente_numero_de_documento": "20600695771",
+        "cliente_denominacion": "NUBEFACT SA",
+        "cliente_direccion": "MIRAFLORES LIMA",
+        "cliente_email": "demo@gmail.com",
+        "cliente_email_1": "",
+        "cliente_email_2": "",
+        "fecha_de_emision": "01-06-2026",
+        "observaciones": "observaciones",
+        "peso_bruto_total": "1",
+        "peso_bruto_unidad_de_medida": "KGM",
+        "fecha_de_inicio_de_traslado": "01-06-2026",
+        "fecha_de_entrega_al_transportista": "01-07-2026",
+        "transportista_placa_numero": "ABC444",
+        "conductor_documento_tipo": "7",
+        "conductor_documento_numero": "XXXXXXXX",
+        "conductor_nombre": "JORGE",
+        "conductor_apellidos": "LOPEZ",
+        "conductor_numero_licencia": "QXXXXXXXX",
+        "destinatario_documento_tipo": "7",
+        "destinatario_documento_numero": "87654321",
+        "destinatario_denominacion": "DESTINATARIO",
+        "punto_de_partida_ubigeo": "151021",
+        "punto_de_partida_direccion": "DIRECCION PARTIDA",
+        "punto_de_partida_codigo_establecimiento_sunat": "0000",
+        "punto_de_llegada_ubigeo": "211101",
+        "punto_de_llegada_direccion": "DIRECCION LLEGADA",
+        "punto_de_llegada_codigo_establecimiento_sunat": "0000",
+        "enviar_automaticamente_al_cliente": "false",
+        "formato_de_pdf": "",
+        "items": [
+                {
+                        "unidad_de_medida": "NIU",
+                        "codigo": "001",
+                        "descripcion": "DETALLE DEL PRODUCTO 1",
+                        "cantidad": "1"
+                },
+                {
+                        "unidad_de_medida": "NIU",
+                        "codigo": "002",
+                        "descripcion": "DETALLE DEL PRODUCTO 2",
+                        "cantidad": "1"
+                }
+        ],
+        "documento_relacionado": [
+                {
+                        "tipo": "01",
+                        "serie": "F001",
+                        "numero": "1"
+                },
+                {
+                        "tipo": "01",
+                        "serie": "F001",
+                        "numero": "2"
+                }
+        ],
+        "vehiculos_secundarios": [
+                {
+                         "placa_numero": "ABC445",
+                         "tuc": "ABC321981R"  
+                }, 
+                {
+                         "placa_numero": "ABC446",
+                         "tuc": "ABC321981S"  
+                }
+        ],
+
+
+   
+         "conductores_secundarios":[
+               {
+                         "documento_tipo": "1",
+                         "documento_numero": "06123457",
+                         "nombre": "LUIS",
+                         "apellidos": "FERNANDEZ",
+                         "numero_licencia": "QXXXXXXXZ"     
+     },
+     {
+                         "documento_tipo": "1",
+                         "documento_numero": "06123458",
+                         "nombre": "JORGE",
+                         "apellidos": "QUISPE",
+                         "numero_licencia": "QXXXXXXAZ"     
+     }
+   ]
+
+
+
+
+}
+	{
+        "nota_importante": "Para generar el PDF en las Guías de Remisión se requiere que la Sunat la acepte primero. Usa la operación 'consultar_guia' para obtener el PDF o CDR.",
+        "tipo_de_comprobante": 8,
+        "serie": "VVV1",
+        "numero": 1,
+        "enlace": "",
+        "aceptada_por_sunat": false,
+        "sunat_description": null,
+        "sunat_note": null,
+        "sunat_responsecode": null,
+        "sunat_soap_error": null,
+        "pdf_zip_base64": "",
+        "xml_zip_base64": "",
+        "cdr_zip_base64": "",
+        "cadena_para_codigo_qr": "",
+        "enlace_del_pdf": "",
+        "enlace_del_xml": "",
+        "enlace_del_cdr": ""
+}
+
+
+
+
+	
+
+ESTRUCTURA PARA GENERAR GUÍA DE REMISIÓN REMITENTE
+CABECERA DEL DOCUMENTO
+	ATRIBUTO
+	VALOR
+	TIPO DE DATO
+	REQUISITO
+	LONGITUD
+	operación
+	Este valor siempre deberá ser "generar_guia" exactamente.
+	String
+	Obligatorio
+	11 exactos
+	tipo_de_comprobante
+	Tipo de COMPROBANTE que desea generar:
+7 = GUÍA REMISIÓN REMITENTE
+8 = GUÍA REMISIÓN TRANSPORTISTA
+	Integer
+	Obligatorio
+	1 exacto
+	serie
+	Para GRE Remitente: debe empezar con "T" (Ejm: TTT1)
+Para GRE Transportista: debe empezar con "V" (Ejm: VVV1)
+	String
+	Obligatorio
+	4 exactos
+	número
+	Número correlativo del documento, sin ceros a la izquierda
+	Integer
+	Obligatorio
+	1 hasta 8
+	cliente_tipo_de_documento
+	6 = RUC - REGISTRO ÚNICO DE CONTRIBUYENTE
+1 = DNI - DOC. NACIONAL DE IDENTIDAD
+4 = CARNET DE EXTRANJERÍA
+7 = PASAPORTE
+A = CÉDULA DIPLOMÁTICA DE IDENTIDAD
+0 = NO DOMICILIADO, SIN RUC (EXPORTACIÓN)
+Para GRE Remitente: este campo se refiere al Destinatario.
+Para GRE Transportista: este campo se refiere al Remitente.
+	Integer
+	Obligatorio
+	1 exacto
+	cliente_numero_de_documento
+	Ejemplo: RUC del CLIENTE, número de DNI, Etc.
+	String
+	Obligatorio
+	1 hasta 15
+	cliente_denominacion
+	Razón o nombre completo del CLIENTE.
+	String
+	Obligatorio
+	1 hasta 100
+	cliente_direccion
+	Dirección completa.
+	String
+	Obligatorio
+	1 hasta 100
+	cliente_email
+	Dirección de email debe ser válido.
+	String
+	Opcional
+	1 hasta 250
+	cliente_email_1
+	Dirección de email debe ser válido.
+	String
+	Opcional
+	1 hasta 250
+	cliente_email_2
+	Dirección de email debe ser válido.
+	String
+	Opcional
+	1 hasta 250
+	fecha_de_emision
+	Debe ser la fecha actual. Formato DD-MM-AAAA
+Importante: Como máximo puede emitir con 1 día anterior a la fecha actual.
+Ejemplo: 10-05-2017
+	Date
+	Obligatorio
+	10 exactos
+	observaciones
+	Texto de 0 hasta 1000 caracteres. Si se desea saltos de línea para la representación impresa o PDF usar <br>. 
+Ejemplo: XXXXX <br> YYYYYY
+	Text
+	Opcional
+	Hasta 5
+	motivo_de_traslado
+	Solo para GRE REMITENTE:
+
+
+"01" = "VENTA"
+"14" = "VENTA SUJETA A CONFIRMACION DEL COMPRADOR"
+"02" = "COMPRA"
+"04" = "TRASLADO ENTRE ESTABLECIMIENTOS DE LA MISMA EMPRESA"
+"18" = "TRASLADO EMISOR ITINERANTE CP"
+"08" = "IMPORTACION"
+"09" = "EXPORTACION"
+"13" = "OTROS"
+“05” = “CONSIGNACION”
+“17” = “TRASLADO DE BIENES PARA TRANSFORMACION”
+“03” = “VENTA CON ENTREGA A TERCEROS”
+“06” = “DEVOLUCION”
+“07” = “RECOJO DE BIENES TRANSFORMADOS”
+	String
+	Obligatorio
+	2 exactos
+	motivo_de_traslado_otros_descripcion
+	Solo se aplica para Motivo de traslado: “13” - OTROS
+
+Descripción adicional alfanumérico con espaciados simples.
+	String
+	Opcional
+	Hasta 70 caracteres.
+	documento_relacionado_codigo
+
+
+	Solo para motivo de traslado importación ó exportación)
+50 = "Declaración Aduanera de Mercancías"
+52 = "Declaración Simplificada (DS)"
+CÓDIGO DAM o DS
+* Enviar primero la SERIE del código DAM o DS hasta 4 dígitos numéricos.
+* Posteriormente enviar el código DAM o DS.
+
+
+IMPORTANTE:
+Si el motivo de traslado es IMPORTACIÓN debe registrar el siguiente formato en el formulario del código DAM o DS.
+a) Si el tipo de documento relacionado es 50 - Declaración Aduanera de Mercancías el formato sería:
+xxxx(serie)/xxx-xxxx-10-xxxxxx(DAM)
+Ejemplo: 1/123-1234-10-123456
+b) Si el tipo de documento relacionado es 52 - Declaración Simplificada (DS) el formato sería:
+xxxx(serie)/xxx-xxxx-18-xxxxxx(DS)
+Ejemplo: 1/123-1234-18-123456
+_____________________________________________
+Si el motivo de traslado es EXPORTACIÓN debe registrar el siguiente formato en el formulario del código DAM o DS.
+
+
+a) Si el tipo de documento relacionado es 50 - Declaración Aduanera de Mercancías el formato sería:
+xxxx(serie)/xxx-xxxx-40-xxxxxx(DAM)
+Ejemplo: 1/123-1234-40-123456
+b) Si el tipo de documento relacionado es 52 - Declaración Simplificada (DS) el formato sería:
+xxxx(serie)/xxx-xxxx-48-xxxxxx(DS)
+Ejemplo: 1/123-1234-48-123456
+
+
+	String
+	Condicional
+	2 exactos
+	peso_bruto_total
+	En KILOGRAMOS, ejemplo: 4.00
+Importante: debe ser mayor a “0”.
+	Decimal
+	Obligatorio
+	1 hasta
+ 12 enteros, hasta con
+ 10 decimales
+	peso_bruto_unidad_de_medida
+
+
+	Código de la unidad de medida, solo se aceptan:
+KGM = “Kilogramos”
+ó
+TNE = “Toneladas”
+	String
+	Obligatorio
+	3 dígitos.
+	numero_de_bultos
+	Sólo para GRE Remitente
+Cantidad de bultos.
+Importante: debe ser numérico (entero)
+	Decimal
+	Obligatorio
+	1 hasta
+ 6 enteros
+	tipo_de_transporte
+	Sólo para GRE Remitente
+"01" = "TRANSPORTE PÚBLICO"
+"02" = "TRANSPORTE PRIVADO"
+	String
+	Obligatorio
+	2 exactos
+	fecha_de_inicio_de_traslado
+	Para GRE Remitente y Transportista
+Fecha de inicio del traslado. Formato DD-MM-AAAA
+Ejemplo: 10-05-2017
+	Date
+	Obligatorio
+	10 exactos
+	fecha_de_entrega_al_transportista
+	Para GRE Remitente
+Solo para “TRANSPORTE PÚBLICO” = 01
+Fecha de inicio del traslado. Formato DD-MM-AAAA
+Ejemplo: 10-05-2017
+	Date
+	Obligatorio
+	
+
+	transportista_documento_tipo
+	Sólo para GRE Remitente
+6 = RUC - REGISTRO ÚNICO DE CONTRIBUYENTE
+Sólo cuando 'tipo_de_transporte' es "01"
+	Integer
+	Condicional
+	1 exacto
+	transportista_documento_numero
+	Sólo para GRE Remitente
+Ejemplo: RUC del CLIENTE
+Sólo cuando 'tipo_de_transporte' es "01"
+	String
+	Condicional
+	11 exacto
+	transportista_denominacion
+	Sólo para GRE Remitente
+Razón o nombre completo del TRANSPORTISTA.
+Sólo cuando 'tipo_de_transporte' es "01"
+	String
+	Condicional
+	1 hasta 100
+	transportista_placa_numero
+	Para GRE Remitente y Transportista
+Ejemplo: ABC321 (no deben ser ceros ni debe tener guiones)
+	String
+	Obligatorio
+	6 hasta 8
+	tuc_vehiculo_principal
+	Para GRE Transportista
+Tarjeta Única de Circulación Electrónica o Certificado de Habilitación vehicular
+Ejemplo: ABC321981R (Solo se permite mayúsculas y números alfanumérico sin guiones o cualquier otro caracter)
+	String
+	Opcional
+	10 hasta 15 dígitos.
+	conductor_documento_tipo
+	1 = DNI - DOC. NACIONAL DE IDENTIDAD
+4 = CARNET DE EXTRANJERÍA
+7 = PASAPORTE
+A = CÉDULA DIPLOMÁTICA DE IDENTIDAD
+0 = NO DOMICILIADO, SIN RUC (EXPORTACIÓN)
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+Para GRE Transportista: dato obligatorio.
+	Integer
+	Condicional
+	1 exacto
+	conductor_documento_numero
+	Ejemplo: Número de DNI, Etc.
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+Para GRE Transportista: dato obligatorio.
+	String
+	Condicional
+	1 hasta 15
+	conductor_denominacion
+	Razón o nombre completo del CONDUCTOR.
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+Para GRE Transportista: dato obligatorio.
+	String
+	Condicional
+	1 hasta 100
+	conductor_nombre
+	Es obligatorio Si el tipo de transporte es PRIVADO
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+Para GRE Transportista: dato obligatorio.
+	String
+	Condicional
+	Hasta 250
+	conductor_apellidos
+	Es obligatorio Si el tipo de transporte es PRIVADO
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+Para GRE Transportista: dato obligatorio.
+	String
+	Condicional
+	Hasta 250
+	conductor_numero_licencia
+	Es obligatorio Si el tipo de transporte es PRIVADO
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+Para GRE Transportista: dato obligatorio.
+	String
+	Condicional
+	9 hasta 10
+	destinatario_documento_tipo
+	A quién va dirigido el envío
+Sólo para GRE Transportista
+6 = RUC - REGISTRO ÚNICO DE CONTRIBUYENTE
+1 = DNI - DOC. NACIONAL DE IDENTIDAD
+4 = CARNET DE EXTRANJERÍA
+7 = PASAPORTE
+A = CÉDULA DIPLOMÁTICA DE IDENTIDAD
+0 = NO DOMICILIADO, SIN RUC (EXPORTACIÓN)
+	String
+	Condicional
+	1 exacto
+	destinatario_documento_numero
+	Sólo para GRE Transportista
+	String
+	Condicional
+	1 hasta 15
+	destinatario_denominacion
+	Sólo para GRE Transportista
+	String
+	Condicional
+	1 hasta 100
+	mtc
+	Solo se permite Alfanumérico Mayúsculas.
+	String
+	Opcional
+	Hasta 20 
+	sunat_envio_indicador
+	GRE Transportista
+01 = SUNAT_Envio_IndicadorPagadorFlete_Remitente
+02 = SUNAT_Envio_IndicadorPagadorFlete_Subcontratador
+03 = SUNAT_Envio_IndicadorPagadorFlete_Tercero
+04 = SUNAT_Envio_IndicadorRetornoVehiculoEnvaseVacio
+05 = SUNAT_Envio_IndicadorRetornoVehiculoVacio
+06 = SUNAT_Envio_IndicadorTrasporteSubcontratado
+
+
+GRE Remitente
+04 = SUNAT_Envio_IndicadorRetornoVehiculoEnvaseVacio
+05 = SUNAT_Envio_IndicadorRetornoVehiculoVacio
+06 = SUNAT_Envio_IndicadorTrasladoVehiculoM1L
+07 = SUNAT_Envio_IndicadorVehiculoConductoresTransp
+
+
+	String
+	Opcional
+	2 exactos
+	subcontratador_documento_tipo
+	Solo se aplica si "sunat_envio_indicador" es 02 = SUNAT_Envio_IndicadorPagadorFlete_Subcontratador
+
+
+Solo se acepta el tipo de documento 6 =  RUC
+	Integer
+	Condicional
+	1 exacto
+	subcontratador_documento_numero
+	Solo se aplica si "sunat_envio_indicador" es 02 = SUNAT_Envio_IndicadorPagadorFlete_Subcontratador
+	String
+	Condicional
+	11 caracteres exactos
+	subcontratador_denominacion
+	Solo se aplica si "sunat_envio_indicador" es 02 = SUNAT_Envio_IndicadorPagadorFlete_Subcontratador
+	String
+	Condicional
+	hasta 250
+	pagador_servicio_documento_tipo_identidad
+	Solo se aplica si “sunat_envio_indicador” es 03 = SUNAT_Envio_IndicadorPagadorFlete_Tercero
+
+
+6 = RUC - REGISTRO ÚNICO DE CONTRIBUYENTE
+1 = DNI - DOC. NACIONAL DE IDENTIDAD
+4 = CARNET DE EXTRANJERÍA
+7 = PASAPORTE
+A = CÉDULA DIPLOMÁTICA DE IDENTIDAD
+0 = NO DOMICILIADO, SIN RUC (EXPORTACIÓN)
+
+
+	String
+	Condicional
+	1 exacto
+	pagador_servicio_documento_numero_identidad
+	Solo se aplica si “sunat_envio_indicador” es 03 = SUNAT_Envio_IndicadorPagadorFlete_Tercero
+	String
+	Condicional
+	Hasta 15 
+	pagador_servicio_denominacion
+	Solo se aplica si “sunat_envio_indicador” es 03 = SUNAT_Envio_IndicadorPagadorFlete_Tercero
+	String
+	Condicional
+	Hasta 250
+	punto_de_partida_ubigeo
+	Usar la siguiente tabla según corresponda:
+https://drive.google.com/open?id=1-aHRVG5c5-IUkTC_jOJ4ktna6MCR86rK8Bc7AwW2whA
+	String
+	Obligatorio
+	Hasta 6
+	punto_de_partida_direccion
+	Dirección exacta
+	String
+	Obligatorio
+	Hasta 150
+	punto_de_partida_codigo_establecimiento_sunat
+	Para los motivos de traslado con código 04, 18
+Ejemplo: “0000”
+	String
+	Condicional
+	4 exactos
+	punto_de_llegada_ubigeo
+	Usar la siguiente tabla según corresponda:
+https://drive.google.com/open?id=1-aHRVG5c5-IUkTC_jOJ4ktna6MCR86rK8Bc7AwW2whA
+	String
+	Obligatorio
+	Hasta 6
+	punto_de_llegada_direccion
+	Dirección exacta
+	String
+	Obligatorio
+	Hasta 150
+	punto_de_llegada_codigo_establecimiento_sunat
+	Para los motivos de traslado con código 04, 18
+Ejemplo: “0000”
+	String
+	Condicional
+	4 exactos
+	enviar_automaticamente_al_cliente
+	false = FALSO (En minúsculas)
+true = VERDADERO (En minúsculas)
+Se envía sólo si la GRE fue aceptada por la Sunat.
+	Boolean
+	Condicional
+	Hasta 5
+	formato_de_pdf
+	Formato de PDF que se desea generar para la representación, si se deja en blanco se genera el formato definido por defecto en NUBEFACT. Se puede elegir entre A4 o TICKET.
+	String
+	Opcional
+	2 hasta 5
+	items
+	Permite items anidados, se refiere a los ITEMS o LÍNEAS del comprobante, el detalle en un cuadro más abajo.
+	-
+	-
+	-
+	documento_relacionado
+	Permite documentos anidados, se refiere a los Documentos que van relacionados a una Guia, el detalle en un cuadro más abajo
+	-
+	-
+	-
+	
+
+PARA ITEMS O LÍNEAS DEL DOCUMENTO
+	ATRIBUTO
+	VALOR
+	TIPO DE DATO
+	REQUISITO
+	LONGITUD
+	unidad_de_medida
+	NIU = PRODUCTO
+ZZ = SERVICIO
+Si necesitas más unidades de medida, debes crearlas primeramente en tu cuenta de NUBEFACT para que estén disponibles.
+
+En caso de que el motivo sea Importación o Exportación debe usar las unidades de medida del Catálogo 65 de la SUNAT:  Código de unidades de medida (para uso solo para la GRE en DAM o DS)
+
+https://cpe.sunat.gob.pe/node/116
+	String
+	Obligatorio
+	2 hasta 5
+	codigo
+	Código interno del producto o servicio, asignado por ti. Ejemplo: C001
+	String
+	Opcional
+	1 hasta 250
+	descripcion
+	Descripción del producto o servicio. Ejemplo: SERVICIO DE REPARACIÓN DE PC, ETC.
+	Text
+	Obligatorio
+	1 hasta 250
+	cantidad
+	Ejemplo: 1.215
+	Numeric
+	Obligatorio
+	1 hasta
+ 12 enteros, hasta con 
+10 decimales
+	codigo_dam
+	Solo para motivo de traslado exportación o importación:
+
+a) Ejemplo (DAM):
+xxxx(serie)/xxx-xxxx-10-xxxxxx(DAM)
+ 1/123-1234-10-123456
+b) Ejemplo (DS):
+xxxx(serie)/xxx-xxxx-18-xxxxxx(DS)
+ 1/123-1234-18-123456
+	String
+	Condicional
+	23 caracteres
+	
+
+PARA DOCUMENTOS RELACIONADOS AL DOCUMENTO
+	ATRIBUTO
+	VALOR
+	TIPO DE DATO
+	REQUISITO
+	LONGITUD
+	tipo
+	01 = Factura 
+03 = Boleta de Venta
+09 = Guía de Remisión Remitente
+31 = Guía de Remisión Transportista 
+	Integer
+	Obligatorio
+	2 exactos
+	serie
+	Serie del Documento relacionado 
+
+
+Ejemplo F001, B001
+	String
+	Obligatorio
+	4 exactos
+	número
+	Número correlativo del documento, sin ceros a la izquierda
+
+
+Ejemplo 1, 10, 100
+	Integer
+	Obligatorio
+	1 hasta 8
+	
+
+
+
+PARA VEHÍCULOS SECUNDARIOS - OPCIONAL (Máximo hasta 2 vehículos)
+	ATRIBUTO
+	VALOR
+	TIPO DE DATO
+	REQUISITO
+	LONGITUD
+	placa_numero
+	Para GRE Remitente y Transportista
+Ejemplo: ABC321 (no deben ser ceros ni debe tener guiones)
+	String
+	Obligatorio
+	6 hasta 8
+	tuc
+	Para GRE Transportista
+Tarjeta Única de Circulación Electrónica o Certificado de Habilitación vehicular
+Ejemplo: ABC321981R (Solo se permite mayúsculas y números alfanumérico sin guiones o cualquier otro caracter)
+	String
+	Opcional
+	10 hasta 15 dígitos.
+	
+
+
+
+
+
+
+
+
+
+
+
+PARA CONDUCTORES SECUNDARIOS - OPCIONAL (Máximo hasta 2 Conductores)
+	ATRIBUTO
+	VALOR
+	TIPO DE DATO
+	REQUISITO
+	LONGITUD
+	documento_tipo
+	1 = DNI - DOC. NACIONAL DE IDENTIDAD
+4 = CARNET DE EXTRANJERÍA
+7 = PASAPORTE
+A = CÉDULA DIPLOMÁTICA DE IDENTIDAD
+0 = NO DOMICILIADO, SIN RUC (EXPORTACIÓN)
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+	Integer
+	Condicional
+	1 exacto
+	documento_numero
+	Ejemplo: Número de DNI, Etc.
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+	String
+	Condicional
+	1 hasta 15
+	nombre
+	Es obligatorio Si el tipo de transporte es PRIVADO
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+	String
+	Condicional
+	Hasta 250
+	apellidos
+	Es obligatorio Si el tipo de transporte es PRIVADO
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+	String
+	Condicional
+	Hasta 250
+	numero_licencia
+	Es obligatorio Si el tipo de transporte es PRIVADO
+Para GRE Remitente: sólo cuando 'tipo_de_transporte' es "02".
+	String
+	Condicional
+	9 hasta 10
+	
+
+ESTRUCTURA DE RESPUESTA DE NUBEFACT
+MUY IMPORTANTE: En ambiente de DEMO las validaciones son parciales (por ejemplo si DNI o RUC existe). En modo PRODUCCIÓN la respuesta será de la SUNAT que tiene una validación más estricta.
+ESTRUCTURAS DE JSON DE RESPUESTA DE NUBEFACT PARA FACTURAS, BOLETAS Y NOTAS
+	ATRIBUTO
+	VALOR
+	TIPO DE DATO
+	tipo_de_comprobante
+	Tipo de COMPROBANTE que se generó:
+7 = GUÍA REMISIÓN REMITENTE
+8 = GUÍA REMISIÓN TRANSPORTISTA
+	Integer
+	serie
+	Serie de documento generado.
+	String
+	numero
+	Número de documento generado.
+	Integer
+	enlace
+	ENLACE único asignado por NUBEFACT.
+Para ver el PDF puedes agregar la extensión .pdf, ejemplo: https://www.nubefact.com/guia/xxxxxxxx.pdf
+https://www.pse.pe/guia/xxxxxxxx.pdf
+Sólo si la Guía fue aceptada por la SUNAT, caso contrario no recibirás la respuesta.
+	String
+	aceptada_por_sunat
+	false = FALSO (En minúsculas)
+true = VERDADERO (En minúsculas)
+	Boolean
+	sunat_description
+	Cuando hay errores en la SUNAT se describirá el error
+	String
+	sunat_note
+	Cuando hay errores en la SUNAT se describirá el error
+	String
+	sunat_responsecode
+	Cuando hay errores en la SUNAT se describirá el error
+	String
+	sunat_soap_error
+	Otros errores que imposibilitan el envío a la SUNAT
+	String
+	pdf_zip_base64
+	Contenido del archivo xml zipeado en base64 que puedes almacenar de ser necesario. (Se debe activar esta opción desde “Configuración principal” en NUBEFACT).
+Sólo si la Guía fue aceptada por la SUNAT, caso contrario no recibirás la respuesta.
+	Text
+	xml_zip_base64
+	Contenido del archivo pdf zipeado en base64 que puedes almacenar de ser necesario. (Se debe activar esta opción desde “Configuración principal” en NUBEFACT).
+Sólo si la Guía fue aceptada por la SUNAT, caso contrario no recibirás la respuesta.
+	Text
+	cdr_zip_base64
+	Contenido del archivo cdr de sunat zipeado en base64 que puedes almacenar de ser necesario. (Se debe activar esta opción desde “Configuración principal” en NUBEFACT).
+Sólo si la Guía fue aceptada por la SUNAT, caso contrario no recibirás la respuesta.
+	Text
+	cadena_para_codigo_qr
+	Si tienes tu propia representación impresa, debes generar un QR con este dato.
+	Text
+	enlace_del_pdf
+	Recibirás el link completo del PDF ya generado: https://www.nubefact.com/guia/xxxxxxxx.pdf
+Sólo si la Guía fue aceptada por la SUNAT, caso contrario no recibirás la respuesta.
+	Text
+	enlace_del_xml
+	Recibirás el link completo del XML ya generado: https://www.nubefact.com/guia/xxxxxxxx.xml
+Sólo si la Guía fue aceptada por la SUNAT, caso contrario no recibirás la respuesta.
+	Text
+	enlace_del_cdr
+	Recibirás el link completo el CDR (Constancia de Recepción de SUNAT) si la SUNAT ya respondió: https://www.nubefact.com/guia/xxxxxxxx.cdr 
+Sólo si la Guía fue aceptada por la SUNAT, caso contrario no recibirás la respuesta.
+	Text
+	
+
+OPERACIÓN: CONSULTAR GRE REMITENTE O TRANSPORTISTA
+La explicación de la estructura y las validaciones de esta operación para ENVIAR y de RESPUESTA se detallan al final de este manual:
+JSON PARA ENVIAR A NUBEFACT
+	JSON DE RESPUESTA DE NUBEFACT
+	{
+        "operacion": "consultar_guia",
+        "tipo_de_comprobante": 7,
+        "serie": "TTT1",
+        "numero": "1"
+}
+	{
+        "tipo_de_comprobante": 7,
+        "serie": "TTT1",
+        "numero": 1,
+        "enlace": "http://www.nubefact.com/guia/564db835-fd3f-4ac0-937b-cdabb9d8a04f-5ff5525f-dc23-43a8-9f0e-bd033f7f6f0e",
+        "aceptada_por_sunat": true,
+        "sunat_description": null,
+        "sunat_note": null,
+        "sunat_responsecode": null,
+        "sunat_soap_error": null,
+        "pdf_zip_base64": null,
+        "xml_zip_base64": null,
+        "cdr_zip_base64": null,
+        "cadena_para_codigo_qr": "https://e-factura.sunat.gob.pe/v1/contribuyente/gre/comprobantes/descargaqr?hashqr=PB9GHszJi9h3WYsVW00fVfgqrn",
+        "enlace_del_pdf": "http://www.nubefact.com/guia/564db835-fd3f-4ac0-937b-cdabb9d8a04f-5ff5525f-dc23-43a8-9f0e-bd033f7f6f0e.pdf",
+        "enlace_del_xml": "http://www.nubefact.com/guia564db835-fd3f-4ac0-937b-cdabb9d8a04f-5ff5525f-dc23-43a8-9f0e-bd033f7f6f0e.xml",
+        "enlace_del_cdr": "http://www.nubefact.com/guia564db835-fd3f-4ac0-937b-cdabb9d8a04f-5ff5525f-dc23-43a8-9f0e-bd033f7f6f0e.crd"
+}
+
+
+
+
+	CONSULTA GUÍA DE REMISIÓN EN LA SUNAT
+Las Guías de Remisión Electrónica (GRE) se pueden consultar en la SUNAT con la Clave Sol.
+Esta opción es muy útil para consultar las GRE que tengan error “1033 - El comprobante fue registrado previamente con otros datos” 
+Desde esta opción se puede imprimir el PDF con QR.
+
+
+  
+
+	  
+
+	
+
+DAR DE BAJA UNA GUÍA DE REMISIÓN EN LA SUNAT
+Las Guías de Remisión Electrónica (GRE) se pueden dar de baja únicamente desde la SUNAT con la Clave Sol.

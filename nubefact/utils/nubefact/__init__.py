@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from typing import Any
 
 import frappe
 import requests
 from frappe.utils import now_datetime
 
-from nubefact.nubefact.doctype.nubefact_api_log.nubefact_api_log import create_api_log
+from nubefact.nubefact.doctype.nubefact_api_log.nubefact_api_log import (
+	create_api_log,
+	sanitize_migration_log_payload,
+	sanitize_migration_log_text,
+)
 from nubefact.nubefact.doctype.nubefact_local.nubefact_local import get_request_config
 
 NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE = "23"
@@ -15,142 +20,182 @@ MAX_DUPLICATE_NUMBER_SKIPS = 10
 
 
 class NubefactAPIError(frappe.ValidationError):
-    """Structured NubeFact request failure with its provider error code."""
+	"""Structured NubeFact request failure with its provider error code."""
 
-    def __init__(
-        self,
-        message: str,
-        *,
-        error_code: str | None = None,
-        log_name: str | None = None,
-    ):
-        self.error_code = str(error_code) if error_code is not None else None
-        self.log_name = log_name
-        detail = f"{message} (Log: {log_name})" if log_name else message
-        super().__init__(detail)
+	def __init__(
+		self,
+		message: str,
+		*,
+		error_code: str | None = None,
+		log_name: str | None = None,
+		http_status: int | None = None,
+		retryable: bool = False,
+		fatal: bool = False,
+	):
+		self.error_code = str(error_code) if error_code is not None else None
+		self.log_name = log_name
+		self.http_status = http_status
+		self.retryable = bool(retryable)
+		self.fatal = bool(fatal)
+		detail = f"{message} (Log: {log_name})" if log_name else message
+		super().__init__(detail)
 
 
 def make_request(
-    payload: dict[str, Any],
-    local: str,
-    referencia_guia_de_remision: str | None = None,
-    reference_invoice: str | None = None,
-    timeout: int = 60,
+	payload: dict[str, Any],
+	local: str,
+	referencia_guia_de_remision: str | None = None,
+	reference_invoice: str | None = None,
+	timeout: int = 60,
+	*,
+	migration_job: str | None = None,
+	log_guard: Callable[[], None] | None = None,
+	log_callback: Callable[[str], None] | None = None,
 ) -> Any:
-    if not isinstance(payload, dict):
-        frappe.throw("El payload de Nubefact debe ser un diccionario.")
+	if not isinstance(payload, dict):
+		frappe.throw("El payload de Nubefact debe ser un diccionario.")
 
-    operacion = payload.get("operacion")
-    if not operacion:
-        frappe.throw("La operación es obligatoria en el campo 'operacion' del payload.")
+	operacion = payload.get("operacion")
+	if not operacion:
+		frappe.throw("La operación es obligatoria en el campo 'operacion' del payload.")
 
-    if not local:
-        frappe.throw("El local es obligatorio para llamar a la API de Nubefact.")
+	if not local:
+		frappe.throw("El local es obligatorio para llamar a la API de Nubefact.")
 
-    local_doc, url, token = get_request_config(local)
+	local_doc, url, token = get_request_config(local)
 
-    headers = {
-        "Authorization": token,
-        "Content-Type": "application/json",
-    }
+	headers = {
+		"Authorization": token,
+		"Content-Type": "application/json",
+	}
 
-    request_timestamp = now_datetime()
-    start = time.perf_counter()
+	request_timestamp = now_datetime()
+	start = time.perf_counter()
 
-    response_status_code: int | None = None
-    response_payload: Any = None
-    error_code: str | None = None
-    error_message: str | None = None
-    status = "Error"
+	response_status_code: int | None = None
+	response_payload: Any = None
+	error_code: str | None = None
+	error_message: str | None = None
+	status = "Error"
 
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=timeout)
-        response_status_code = response.status_code
+	try:
+		response = requests.post(url, json=payload, headers=headers, timeout=timeout)
+		response_status_code = response.status_code
 
-        try:
-            response_payload = response.json()
-        except ValueError:
-            response_payload = response.text
+		try:
+			response_payload = response.json()
+		except ValueError:
+			response_payload = response.text
 
-        status = (
-            "OK" if response.ok and not _has_api_error(response_payload) else "Error"
-        )
-        if status == "Error":
-            error_code, error_message = _extract_error_details(response_payload)
-            if not error_message and error_code:
-                error_message = f"NubeFact devolvió el código de error {error_code}."
-            if not error_message:
-                error_message = f"La solicitud a Nubefact falló con código de estado {response_status_code}."
+		status = "OK" if response.ok and not _has_api_error(response_payload) else "Error"
+		if status == "Error":
+			error_code, error_message = _extract_error_details(response_payload)
+			if not error_message and error_code:
+				error_message = f"NubeFact devolvió el código de error {error_code}."
+			if not error_message:
+				error_message = f"La solicitud a Nubefact falló con código de estado {response_status_code}."
 
-    except requests.RequestException as exc:
-        error_message = str(exc)
-        status = "Error"
-    finally:
-        duration_ms = int((time.perf_counter() - start) * 1000)
-        response_timestamp = now_datetime()
-        log_name = create_api_log(
-            operacion=operacion,
-            local=local_doc.name,
-            ruta_api=url,
-            referencia_guia_de_remision=referencia_guia_de_remision,
-            reference_invoice=reference_invoice,
-            request_timestamp=request_timestamp,
-            request_payload=payload,
-            response_timestamp=response_timestamp,
-            response_status_code=response_status_code,
-            response_payload=response_payload,
-            status=status,
-            error_code=error_code,
-            error_message=error_message,
-            duration_ms=duration_ms,
-        )
+	except requests.RequestException as exc:
+		error_message = str(exc)
+		status = "Error"
+	finally:
+		duration_ms = int((time.perf_counter() - start) * 1000)
+		response_timestamp = now_datetime()
+		if migration_job:
+			response_payload_for_log = sanitize_migration_log_payload(response_payload)
+			error_message = sanitize_migration_log_text(error_message)
+		else:
+			response_payload_for_log = response_payload
+		if log_guard:
+			# The guard locks and verifies the migration lease. create_api_log commits
+			# while that lock is held, fencing stale workers from persistent logging.
+			log_guard()
+		log_name = create_api_log(
+			operacion=operacion,
+			local=local_doc.name,
+			ruta_api=url,
+			referencia_guia_de_remision=referencia_guia_de_remision,
+			reference_invoice=reference_invoice,
+			request_timestamp=request_timestamp,
+			request_payload=payload,
+			response_timestamp=response_timestamp,
+			response_status_code=response_status_code,
+			response_payload=response_payload_for_log,
+			status=status,
+			error_code=error_code,
+			error_message=error_message,
+			duration_ms=duration_ms,
+			migration_job=migration_job,
+		)
+		if log_callback:
+			log_callback(log_name)
 
-    if status == "Error":
-        raise NubefactAPIError(
-            error_message or "La solicitud a Nubefact falló.",
-            error_code=error_code,
-            log_name=log_name,
-        )
+	if status == "Error":
+		retryable, fatal = _classify_request_failure(error_code, response_status_code)
+		if response_status_code is None and error_message:
+			retryable = True
+		raise NubefactAPIError(
+			error_message or "La solicitud a Nubefact falló.",
+			error_code=error_code,
+			log_name=log_name,
+			http_status=response_status_code,
+			retryable=retryable,
+			fatal=fatal,
+		)
 
-    return response_payload
+	return response_payload
+
+
+def sanitize_nubefact_payload(response_payload: Any) -> dict[str, Any]:
+	"""Backward-compatible name for the bounded migration-log sanitizer."""
+
+	return sanitize_migration_log_payload(response_payload)
+
+
+def _classify_request_failure(error_code: str | None, http_status: int | None) -> tuple[bool, bool]:
+	code = str(error_code) if error_code is not None else None
+	fatal = code in {"10", "11", "12", "50", "51"} or http_status in {401, 403}
+	retryable = not fatal and (code == "40" or http_status == 429 or bool(http_status and http_status >= 500))
+	return retryable, fatal
 
 
 def _has_api_error(response_payload: Any) -> bool:
-    if not isinstance(response_payload, dict):
-        return False
+	if not isinstance(response_payload, dict):
+		return False
 
-    if response_payload.get("errors"):
-        return True
+	if response_payload.get("errors"):
+		return True
 
-    if response_payload.get("error"):
-        return True
+	if response_payload.get("error"):
+		return True
 
-    error_code = response_payload.get("codigo")
-    return error_code is not None and str(error_code).strip() not in {"", "0"}
+	error_code = response_payload.get("codigo")
+	return error_code is not None and str(error_code).strip() not in {"", "0"}
 
 
 def _extract_error_details(response_payload: Any) -> tuple[str | None, str | None]:
-    if not isinstance(response_payload, dict):
-        return None, str(response_payload) if response_payload else None
+	if not isinstance(response_payload, dict):
+		return None, str(response_payload) if response_payload else None
 
-    error_code = response_payload.get("codigo")
-    error_message = response_payload.get("errors") or response_payload.get("error")
+	error_code = response_payload.get("codigo")
+	error_message = response_payload.get("errors") or response_payload.get("error")
 
-    if isinstance(error_message, list):
-        error_message = "\n".join(str(item) for item in error_message)
+	if isinstance(error_message, list):
+		error_message = "\n".join(str(item) for item in error_message)
 
-    if error_code is not None:
-        error_code = str(error_code)
+	if error_code is not None:
+		error_code = str(error_code)
 
-    if error_message is not None:
-        error_message = str(error_message)
+	if error_message is not None:
+		error_message = str(error_message)
 
-    return error_code, error_message
+	return error_code, error_message
 
 
 __all__ = [
-    "MAX_DUPLICATE_NUMBER_SKIPS",
-    "NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE",
-    "NubefactAPIError",
-    "make_request",
+	"MAX_DUPLICATE_NUMBER_SKIPS",
+	"NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE",
+	"NubefactAPIError",
+	"make_request",
+	"sanitize_nubefact_payload",
 ]

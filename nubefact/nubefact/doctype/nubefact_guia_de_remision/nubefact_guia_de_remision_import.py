@@ -44,6 +44,17 @@ def crear_guia_de_remision_desde_json(json_payload: str) -> str:
 	return doc.name
 
 
+def apply_historical_import_payload_to_doc(doc: Document, payload: dict[str, Any]) -> None:
+	"""Apply signed XML data through the controlled historical-validation path."""
+
+	from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision import (
+		HISTORICAL_IMPORT_CAPABILITY,
+	)
+
+	apply_import_payload_to_doc(doc, payload)
+	doc.flags.nubefact_historical_import = HISTORICAL_IMPORT_CAPABILITY
+
+
 def apply_import_payload_to_doc(doc: Document, payload: dict[str, Any]):
 	scalar_map = {
 		"tipo_de_comprobante": "tipo_de_comprobante",

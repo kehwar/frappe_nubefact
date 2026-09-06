@@ -97,3 +97,23 @@ class TestNubefactGuiaDeRemisionImportXML(FrappeTestCase):
 			with self.subTest(xml=xml):
 				with self.assertRaises(frappe.ValidationError):
 					parse_import_despatch_xml_payload(xml)
+
+	def test_parse_rejects_structurally_incomplete_historical_xml(self):
+		complete = DESPATCH_XML.format(
+			series="TTT1",
+			packages="<cbc:TotalTransportHandlingUnitQuantity>3</cbc:TotalTransportHandlingUnitQuantity>",
+		)
+		for malformed in (
+			complete.replace("<cbc:IssueDate>2026-06-01</cbc:IssueDate>", ""),
+			complete.replace(
+				complete[
+					complete.index(" <cac:DespatchLine>") : complete.index("</cac:DespatchLine>")
+					+ len("</cac:DespatchLine>")
+				],
+				"",
+			),
+			complete.replace('<cbc:DeliveredQuantity unitCode="NIU">2</cbc:DeliveredQuantity>', ""),
+		):
+			with self.subTest(malformed=malformed[:120]):
+				with self.assertRaisesRegex(frappe.ValidationError, "estructural|ítem"):
+					parse_import_despatch_xml_payload(malformed)

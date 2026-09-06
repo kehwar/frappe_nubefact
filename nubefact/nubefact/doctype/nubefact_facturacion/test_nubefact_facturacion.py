@@ -137,15 +137,11 @@ class TestNubefactFacturacion(FrappeTestCase):
 		result = send_to_nubefact(document.name)
 
 		self.assertEqual(result["status"], "Aceptada")
-		self.assertEqual(
-			[call.kwargs["json"]["numero"] for call in post.call_args_list], [17, 18]
-		)
+		self.assertEqual([call.kwargs["json"]["numero"] for call in post.call_args_list], [17, 18])
 		self.assertEqual(frappe.db.get_value(document.doctype, document.name, "numero"), 18)
 		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 19)
 		self.assertEqual(
-			frappe.db.get_value(
-				series.doctype, series.name, "ultimo_numero_asignado"
-			),
+			frappe.db.get_value(series.doctype, series.name, "ultimo_numero_asignado"),
 			18,
 		)
 		self.assertEqual(
@@ -246,9 +242,7 @@ class TestNubefactFacturacion(FrappeTestCase):
 		self.assertEqual(first_result["status"], "Error")
 		self.assertEqual(second_result["status"], "Error")
 		self.assertIn("Este documento ya existe", second_result["error_message"])
-		self.assertEqual(
-			[call.kwargs["json"]["numero"] for call in post.call_args_list], [30, 30]
-		)
+		self.assertEqual([call.kwargs["json"]["numero"] for call in post.call_args_list], [30, 30])
 		self.assertEqual(frappe.db.get_value(document.doctype, document.name, "numero"), 30)
 		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 31)
 
@@ -462,8 +456,9 @@ class TestNubefactFacturacion(FrappeTestCase):
 	@patch("nubefact.utils.socket.getaddrinfo")
 	def test_downloads_only_public_urls_as_private_attachments(self, getaddrinfo, get, _exists, save_file):
 		getaddrinfo.return_value = [(2, 1, 6, "", ("93.184.216.34", 443))]
-		response = Mock(status_code=200, headers={}, content=b"pdf-content")
+		response = Mock(status_code=200, headers={})
 		response.raise_for_status.return_value = None
+		response.iter_content.return_value = [b"pdf-content"]
 		get.return_value = response
 
 		download_and_attach_file(
@@ -473,7 +468,9 @@ class TestNubefactFacturacion(FrappeTestCase):
 			"CPE-TEST",
 		)
 
-		get.assert_called_once_with("https://files.example.test/doc.pdf", timeout=60, allow_redirects=False)
+		get.assert_called_once_with(
+			"https://files.example.test/doc.pdf", timeout=60, allow_redirects=False, stream=True
+		)
 		self.assertEqual(save_file.call_args.kwargs["content"], b"pdf-content")
 		self.assertEqual(save_file.call_args.kwargs["is_private"], 1)
 

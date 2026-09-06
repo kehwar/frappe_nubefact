@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from typing import Any
 
@@ -38,6 +39,19 @@ SUNAT_DOCUMENT_TYPE_BY_NUBEFACT_TYPE = {
 SUPPORTED_DOCTYPES = set(DOCTYPE_BY_DOCUMENT_TYPE.values())
 ISSUABLE_STATUSES = {"Borrador", "Error"}
 MAX_DOCUMENT_NUMBER = 99_999_999
+
+
+def make_issued_identity_hash(company: Any, document_type: Any, series: Any, number: Any) -> str:
+	"""Return the canonical race-guard identity shared by allocation and migration."""
+
+	company_text = cstr(company or "").strip()
+	type_text = cstr(document_type or "").strip()
+	series_text = cstr(series or "").strip().upper()
+	number_value = cint(number)
+	if not company_text or not type_text or not series_text or number_value < 1:
+		frappe.throw("No se puede reclamar una identidad emitida incompleta.")
+	canonical = "\x1f".join((company_text, type_text, series_text, str(number_value)))
+	return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def compose_series_title(company: str, nubefact_document_type: str, series: str) -> str:
@@ -284,6 +298,11 @@ def allocate_document_number(document: Document, *, mark_as_issuing: bool = Fals
 		"numero_asignado_automaticamente": 1,
 		"title": document.title,
 	}
+	if document.doctype == "Nubefact Guia De Remision":
+		document.issued_identity_hash = make_issued_identity_hash(
+			document.company, document.tipo_de_comprobante, document.serie, number
+		)
+		values["issued_identity_hash"] = document.issued_identity_hash
 	if mark_as_issuing:
 		document.status = "Enviando"
 		values["status"] = "Enviando"
@@ -330,9 +349,7 @@ def advance_document_number_after_nubefact_duplicate(
 	tracker = tracker_rows[0]
 	_apply_locked_tracker_values(document, tracker)
 	new_number = max(cint(tracker.numero), expected_number + 1)
-	while new_number <= MAX_DOCUMENT_NUMBER and _number_belongs_to_another_document(
-		document, new_number
-	):
+	while new_number <= MAX_DOCUMENT_NUMBER and _number_belongs_to_another_document(document, new_number):
 		new_number += 1
 	if new_number > MAX_DOCUMENT_NUMBER:
 		frappe.throw("La Serie NubeFact no tiene más números válidos disponibles.")
@@ -342,9 +359,7 @@ def advance_document_number_after_nubefact_duplicate(
 		series_name,
 		{
 			"numero": new_number + 1,
-			"ultimo_numero_asignado": max(
-				new_number, cint(tracker.get("ultimo_numero_asignado"))
-			),
+			"ultimo_numero_asignado": max(new_number, cint(tracker.get("ultimo_numero_asignado"))),
 		},
 		update_modified=True,
 	)
@@ -352,14 +367,20 @@ def advance_document_number_after_nubefact_duplicate(
 	document.numero = new_number
 	document.numero_asignado_automaticamente = 1
 	document.title = document._compose_title()
+	values: dict[str, Any] = {
+		"numero": new_number,
+		"numero_asignado_automaticamente": 1,
+		"title": document.title,
+	}
+	if document.doctype == "Nubefact Guia De Remision":
+		document.issued_identity_hash = make_issued_identity_hash(
+			document.company, document.tipo_de_comprobante, document.serie, new_number
+		)
+		values["issued_identity_hash"] = document.issued_identity_hash
 	frappe.db.set_value(
 		document.doctype,
 		document.name,
-		{
-			"numero": new_number,
-			"numero_asignado_automaticamente": 1,
-			"title": document.title,
-		},
+		values,
 		# Preserve the issuance lease in ``modified``. Stale recovery or a newer
 		# issuance changes it and prevents this worker from renumbering the document.
 		update_modified=False,
@@ -392,9 +413,7 @@ def _lock_current_document_issuance(document: Document, expected_modified: Any) 
 		frappe.throw("No se encontró el documento que se está emitiendo.")
 
 	current = current_rows[0]
-	if current.status != "Enviando" or get_datetime(current.modified) != get_datetime(
-		expected_modified
-	):
+	if current.status != "Enviando" or get_datetime(current.modified) != get_datetime(expected_modified):
 		frappe.throw("El documento ya no pertenece a este intento de envío.")
 	return current
 

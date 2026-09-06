@@ -9,6 +9,7 @@
   "local",
   "referencia_guia_de_remision",
   "reference_invoice",
+  "migration_job",
   "column_break_requests",
   "ruta_api",
   "request_timestamp",
@@ -16,7 +17,7 @@
   "response_timestamp",
   "response_status_code",
   "duration_ms",
-    "status",
+  "status",
   "column_break_response",
   "error_code",
   "error_message",
@@ -28,49 +29,56 @@
   {
    "fieldname": "request_details_section",
    "fieldtype": "Section Break",
-    "label": "Detalles de la solicitud"
+   "label": "Detalles de la solicitud"
   },
   {
-  "fieldname": "operacion",
+   "fieldname": "operacion",
    "fieldtype": "Select",
    "in_list_view": 1,
-    "label": "Operación",
+   "label": "Operación",
    "options": "generar_comprobante\nconsultar_comprobante\ngenerar_anulacion\nconsultar_anulacion\ngenerar_guia\nconsultar_guia",
    "read_only": 1
   },
   {
-  "fieldname": "local",
+   "fieldname": "local",
    "fieldtype": "Link",
    "in_list_view": 1,
-  "label": "Local",
-  "options": "Nubefact Local",
+   "label": "Local",
+   "options": "Nubefact Local",
    "read_only": 1
   },
   {
-  "fieldname": "ruta_api",
+   "fieldname": "ruta_api",
    "fieldtype": "Data",
-    "label": "Ruta API",
+   "label": "Ruta API",
    "read_only": 1
   },
   {
    "fieldname": "referencia_guia_de_remision",
    "fieldtype": "Link",
-    "label": "Guía de remisión de referencia",
-  "options": "Nubefact Guia De Remision",
+   "label": "Guía de remisión de referencia",
+   "options": "Nubefact Guia De Remision",
    "read_only": 1
   },
   {
    "fieldname": "reference_invoice",
    "fieldtype": "Link",
-    "label": "Factura de referencia",
+   "label": "Factura de referencia",
    "options": "Nubefact Facturacion",
+   "read_only": 1
+  },
+  {
+   "fieldname": "migration_job",
+   "fieldtype": "Link",
+   "label": "Trabajo de Migración",
+   "options": "Nubefact Migration Job",
    "read_only": 1
   },
   {
    "fieldname": "request_timestamp",
    "fieldtype": "Datetime",
    "in_list_view": 1,
-    "label": "Fecha y hora de solicitud",
+   "label": "Fecha y hora de solicitud",
    "read_only": 1
   },
   {
@@ -80,32 +88,32 @@
   {
    "fieldname": "request_payload",
    "fieldtype": "Code",
-    "label": "Payload de solicitud",
+   "label": "Payload de solicitud",
    "options": "JSON",
    "read_only": 1
   },
   {
    "fieldname": "response_details_section",
    "fieldtype": "Section Break",
-    "label": "Detalles de la respuesta"
+   "label": "Detalles de la respuesta"
   },
   {
    "fieldname": "response_timestamp",
    "fieldtype": "Datetime",
-    "label": "Fecha y hora de respuesta",
+   "label": "Fecha y hora de respuesta",
    "read_only": 1
   },
   {
    "fieldname": "response_status_code",
    "fieldtype": "Int",
    "in_list_view": 1,
-    "label": "Código de estado de respuesta",
+   "label": "Código de estado de respuesta",
    "read_only": 1
   },
   {
    "fieldname": "duration_ms",
    "fieldtype": "Int",
-    "label": "Duración (ms)",
+   "label": "Duración (ms)",
    "read_only": 1
   },
   {
@@ -115,42 +123,42 @@
   {
    "fieldname": "response_payload",
    "fieldtype": "Code",
-    "label": "Payload de respuesta",
+   "label": "Payload de respuesta",
    "options": "JSON",
    "read_only": 1
   },
   {
    "fieldname": "error_code",
    "fieldtype": "Data",
-    "label": "Código de error",
+   "label": "Código de error",
    "read_only": 1
   },
   {
    "fieldname": "error_message",
    "fieldtype": "Text",
-    "label": "Mensaje de error",
+   "label": "Mensaje de error",
    "read_only": 1
   },
   {
    "collapsible": 1,
    "fieldname": "section_break_crau",
    "fieldtype": "Section Break",
-    "label": "Payload de solicitud"
+   "label": "Payload de solicitud"
   },
-    {
-    "default": "OK",
-     "fieldname": "status",
-     "fieldtype": "Select",
-     "in_list_view": 1,
-    "label": "Estado",
-    "options": "OK\nError",
-     "read_only": 1
-    }
+  {
+   "default": "OK",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Estado",
+   "options": "OK\nError",
+   "read_only": 1
+  }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-26 22:26:18.874998",
+ "modified": "2026-09-06 00:00:00",
  "modified_by": "Administrator",
  "module": "Nubefact",
  "name": "Nubefact API Log",
@@ -193,7 +201,7 @@
  "states": [
   {
    "color": "Green",
-  "title": "OK"
+   "title": "OK"
   },
   {
    "color": "Red",

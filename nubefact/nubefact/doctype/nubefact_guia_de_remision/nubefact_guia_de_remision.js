@@ -70,6 +70,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
         frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
 
         if (
+            frm.doc.migrated_from_nubefact ||
             [
                 "Enviando",
                 "Pendiente de Aceptacion",
@@ -89,7 +90,10 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
             watcher.on_refresh();
             watcher.schedule_if_needed();
 
-            if (["Borrador", "Error"].includes(frm.doc.status || "Borrador")) {
+            if (
+                !frm.doc.migrated_from_nubefact &&
+                ["Borrador", "Error"].includes(frm.doc.status || "Borrador")
+            ) {
                 frm.add_custom_button(__("Enviar a Nubefact"), () => {
                     frm.trigger("open_send_dialog");
                 });

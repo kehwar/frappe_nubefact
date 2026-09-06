@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import re
 import xml.etree.ElementTree as ET
 from typing import Any
 
 import frappe
 from frappe.utils import cstr
+
+DESPATCH_ADVICE_NAMESPACE = "urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2"
 
 
 def parse_import_despatch_xml_payload(text: str) -> dict[str, Any]:
@@ -13,17 +16,17 @@ def parse_import_despatch_xml_payload(text: str) -> dict[str, Any]:
 	except ET.ParseError:
 		frappe.throw("Formato XML inválido.")
 
-	root_name = _xml_local_name(root.tag)
+	root_namespace, root_name = _xml_tag_parts(root.tag)
 	if root_name == "ApplicationResponse":
 		frappe.throw("El XML CDR no se puede usar para crear una guía. Use XML DespatchAdvice.")
-	if root_name != "DespatchAdvice":
-		frappe.throw("Tipo de XML no soportado. Se esperaba XML SUNAT DespatchAdvice.")
+	if root_name != "DespatchAdvice" or root_namespace != DESPATCH_ADVICE_NAMESPACE:
+		frappe.throw("Tipo de XML no soportado. Se esperaba XML UBL DespatchAdvice con namespace válido.")
 
 	full_number = _xml_get_nested_text(root, ["ID"])
-	series, number = _split_series_number(full_number)
+	series, number = _split_gre_identity(full_number)
 	document_type = _infer_document_type_from_series(series)
 	if not document_type:
-		frappe.throw("La serie del XML debe empezar con T (GRE Remitente) o V (GRE Transportista).")
+		frappe.throw("La serie del XML debe ser Txxx (GRE Remitente) o Vxxx (GRE Transportista).")
 
 	sender_id_node = _party_id_node(root, "DespatchSupplierParty")
 	recipient_id_node = _party_id_node(root, "DeliveryCustomerParty")
@@ -159,13 +162,33 @@ def parse_import_despatch_xml_payload(text: str) -> dict[str, Any]:
 	}
 	payload.update(_parse_import_xml_transport(root))
 	payload.update(_parse_import_xml_sunat_indicator(root))
+	payload.update(_parse_import_xml_customs_code(payload))
 
 	if cstr(document_type) == "8":
 		payload["destinatario_documento_tipo"] = _node_scheme_id(recipient_id_node)
 		payload["destinatario_documento_numero"] = _node_text(recipient_id_node)
 		payload["destinatario_denominacion"] = _party_registration_name(root, "DeliveryCustomerParty")
 
+	_validate_despatch_structure(payload)
 	return {key: value for key, value in payload.items() if value not in (None, "", [])}
+
+
+def _validate_despatch_structure(payload: dict[str, Any]) -> None:
+	if not cstr(payload.get("fecha_de_emision")).strip():
+		frappe.throw("El XML histórico no contiene la fecha de emisión estructural.")
+	items = payload.get("items") or []
+	if not items:
+		frappe.throw("El XML histórico debe contener al menos un ítem.")
+	for index, item in enumerate(items, start=1):
+		missing = [
+			fieldname
+			for fieldname in ("unidad_de_medida", "descripcion", "cantidad")
+			if not cstr(item.get(fieldname)).strip()
+		]
+		if missing:
+			frappe.throw(
+				f"El ítem #{index} del XML no contiene su estructura obligatoria: " + ", ".join(missing)
+			)
 
 
 def _parse_import_xml_items(root: ET.Element) -> list[dict[str, Any]]:
@@ -180,7 +203,7 @@ def _parse_import_xml_items(root: ET.Element) -> list[dict[str, Any]]:
 				"unidad_de_medida": (
 					cstr(delivered_quantity.get("unitCode")).strip()
 					if delivered_quantity is not None and delivered_quantity.get("unitCode")
-					else "NIU"
+					else ""
 				),
 				"codigo": _xml_get_nested_text(
 					item_node,
@@ -198,6 +221,19 @@ def _parse_import_xml_items(root: ET.Element) -> list[dict[str, Any]]:
 		)
 
 	return items
+
+
+def _parse_import_xml_customs_code(payload: dict[str, Any]) -> dict[str, str]:
+	motive = cstr(payload.get("motivo_de_traslado"))
+	markers = {"08": {"10": "50", "18": "52"}, "09": {"40": "50", "48": "52"}}.get(motive)
+	if not markers:
+		return {}
+	for item in payload.get("items") or []:
+		customs_number = cstr(item.get("codigo_dam") or "")
+		match = re.search(r"-(\d{2})-\d{6}$", customs_number)
+		if match and match.group(1) in markers:
+			return {"documento_relacionado_codigo": markers[match.group(1)]}
+	return {}
 
 
 def _parse_import_xml_related_documents(root: ET.Element) -> list[dict[str, Any]]:
@@ -375,23 +411,42 @@ def _xml_first_child(node: ET.Element, local_name: str) -> ET.Element | None:
 
 
 def _xml_local_name(tag: str) -> str:
-	return tag.split("}", 1)[1] if "}" in tag else tag
+	return _xml_tag_parts(tag)[1]
+
+
+def _xml_tag_parts(tag: str) -> tuple[str, str]:
+	if tag.startswith("{") and "}" in tag:
+		namespace, local_name = tag[1:].split("}", 1)
+		return namespace, local_name
+	return "", tag
+
+
+def _split_gre_identity(value: Any) -> tuple[str, str]:
+	series, number_text = _split_series_number(value)
+	series = series.strip().upper()
+	if not re.fullmatch(r"[TV][A-Z0-9]{3}", series):
+		frappe.throw("La serie del XML debe tener exactamente cuatro caracteres válidos.")
+	if not re.fullmatch(r"\d+", number_text.strip()):
+		frappe.throw("El número del XML debe ser un entero positivo.")
+	number = int(number_text)
+	if not 1 <= number <= 99_999_999:
+		frappe.throw("El número del XML debe ser un entero de 1 a 8 dígitos.")
+	return series, str(number)
 
 
 def _split_series_number(value: Any) -> tuple[str, str]:
 	text = cstr(value or "").strip()
 	if not text or "-" not in text:
 		return text, ""
-
 	series, *rest = text.split("-")
 	return series, "-".join(rest)
 
 
 def _infer_document_type_from_series(series: Any) -> str:
 	normalized = cstr(series or "").strip().upper()
-	if normalized.startswith("T"):
+	if re.fullmatch(r"T[A-Z0-9]{3}", normalized):
 		return "7"
-	if normalized.startswith("V"):
+	if re.fullmatch(r"V[A-Z0-9]{3}", normalized):
 		return "8"
 	return ""
 
