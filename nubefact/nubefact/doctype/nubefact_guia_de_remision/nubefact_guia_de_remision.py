@@ -52,9 +52,11 @@ from nubefact.nubefact.doctype.nubefact_local.nubefact_local import (
 	get_origin_values as get_local_origin_values,
 )
 from nubefact.nubefact.doctype.nubefact_series.nubefact_series import (
+	MAX_DOCUMENT_NUMBER,
 	advance_document_number_after_nubefact_duplicate,
 	allocate_document_number,
 	apply_and_validate_document_series,
+	compose_series_title,
 	make_gre_artifact_names,
 	set_company_from_local,
 	validate_document_is_not_being_issued,
@@ -106,6 +108,31 @@ _CLEARED_RESPONSE_VALUES: dict[str, Any] = {
 	"codigo_hash": "",
 	"codigo_de_barras": "",
 }
+
+
+def make_gre_title(
+	company: Any,
+	document_type: Any,
+	series: Any,
+	number: Any,
+	*,
+	require_complete: bool = True,
+) -> str:
+	"""Return the canonical GRE title: company abbreviation, SUNAT type, series and number."""
+
+	company = cstr(company or "").strip()
+	document_type = cstr(document_type or "").strip()
+	series = cstr(series or "").strip().upper()
+	number = cint(number)
+	complete = (
+		bool(company) and document_type in {"7", "8"} and bool(series) and 1 <= number <= MAX_DOCUMENT_NUMBER
+	)
+	if not complete:
+		if require_complete:
+			frappe.throw("No se puede generar el título de una GRE con una identidad incompleta.")
+		return ""
+
+	return f"{compose_series_title(company, document_type, series)}-{number:08d}"
 
 
 class NubefactGuiaDeRemision(Document):
@@ -260,10 +287,21 @@ class NubefactGuiaDeRemision(Document):
 		self.title = self._compose_title()
 
 	def _compose_title(self, numero: Any | None = None) -> str:
+		raw_number = self.numero if numero is None else numero
+		canonical_title = make_gre_title(
+			self.company,
+			self.tipo_de_comprobante,
+			self.serie,
+			raw_number,
+			require_complete=False,
+		)
+		if canonical_title:
+			return canonical_title
+
 		serie = cstr(self.serie or "").strip()
-		raw_number = cstr((self.numero if numero is None else numero) or "").strip()
-		numero_texto = raw_number.zfill(6) if raw_number else ""
-		return f"{serie}-{numero_texto}" if (serie or numero_texto) else ""
+		raw_number = cstr(raw_number or "").strip()
+		number_text = raw_number.zfill(6) if raw_number else ""
+		return f"{serie}-{number_text}" if (serie or number_text) else ""
 
 	def _build_generate_payload(self) -> dict[str, Any]:
 		document_type = cstr(self.tipo_de_comprobante)

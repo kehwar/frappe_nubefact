@@ -20,10 +20,12 @@ from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remisi
 	_save_response_status,
 	cancelar_solicitud_de_anulacion,
 	enviar_a_nubefact,
+	make_gre_title,
 	marcar_como_anulada,
 	refrescar_estado_sunat,
 	solicitar_anulacion,
 )
+from nubefact.patches.retitle_guia_de_remision_documents import execute as retitle_existing_gres
 from nubefact.utils import download_and_attach_file
 
 
@@ -151,6 +153,36 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 
 		self.assertFalse(doc.numero)
 		self.assertEqual(doc.title, "TTT1-")
+
+	def test_assigned_number_changes_title_without_changing_generated_name(self):
+		doc = make_valid_gre(serie="T005", numero=1).insert()
+		draft_name = doc.name
+
+		self.assertTrue(draft_name.startswith("GRE-"))
+		self.assertEqual(
+			doc.title,
+			make_gre_title(doc.company, "7", doc.serie, doc.numero),
+		)
+		self.assertEqual(doc.name, draft_name)
+
+	@patch("nubefact.patches.retitle_guia_de_remision_documents.frappe.db.set_value")
+	@patch("nubefact.patches.retitle_guia_de_remision_documents.frappe.get_all")
+	def test_retitle_patch_updates_only_the_title(self, get_all, set_value):
+		doc = make_valid_gre(serie="T005", numero=1)
+		doc.name = "GRE-2026-000034"
+		doc.title = "T005-000001"
+		get_all.return_value = [doc]
+
+		retitle_existing_gres()
+
+		set_value.assert_called_once_with(
+			doc.doctype,
+			doc.name,
+			"title",
+			make_gre_title(doc.company, "7", doc.serie, doc.numero),
+			update_modified=False,
+		)
+		self.assertEqual(doc.name, "GRE-2026-000034")
 
 	def test_public_remitente_requires_delivery_date_and_transporter_identity(self):
 		for fieldname in (
@@ -558,9 +590,15 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			),
 		]
 
+		draft_name = doc.name
 		generated = enviar_a_nubefact(doc.name)
 		self.assertEqual(generated["status"], "Pendiente de Aceptacion")
-		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 1)
+		self.assertEqual(doc.name, draft_name)
+		self.assertEqual(frappe.db.get_value(doc.doctype, draft_name, "numero"), 1)
+		self.assertEqual(
+			frappe.db.get_value(doc.doctype, draft_name, "title"),
+			make_gre_title(local.company, "7", series.serie, 1),
+		)
 		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 2)
 		first_request = post.call_args_list[0]
 		self.assertEqual(first_request.args[0], "https://api.example.test/gre")

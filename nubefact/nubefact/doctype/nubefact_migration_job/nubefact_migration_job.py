@@ -22,6 +22,9 @@ from frappe.utils import (
 	now_datetime,
 )
 
+from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision import (
+	make_gre_title,
+)
 from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision_import import (
 	apply_historical_import_payload_to_doc,
 )
@@ -918,6 +921,7 @@ def _merge_existing_gre(
 	if not current.issued_identity_hash:
 		updates["issued_identity_hash"] = make_issued_identity_hash(job.company, "7", job.serie, number)
 	updates["numero_asignado_automaticamente"] = 1
+	updates["title"] = make_gre_title(job.company, "7", job.serie, number)
 	if updates:
 		frappe.db.set_value("Nubefact Guia De Remision", gre_name, updates, update_modified=True)
 	_reconcile_locked_series(job.nubefact_series, number)

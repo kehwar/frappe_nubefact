@@ -22,6 +22,7 @@ from nubefact.nubefact.doctype.nubefact_api_log.nubefact_api_log import (
 )
 from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision import (
 	enviar_a_nubefact,
+	make_gre_title,
 	refrescar_estado_sunat,
 )
 from nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_artifacts import (
@@ -401,6 +402,8 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertEqual(series.numero, 200)
 		self.assertGreaterEqual(series.ultimo_numero_asignado, 199)
 		gre = frappe.get_doc("Nubefact Guia De Remision", job.results[0].guia_de_remision)
+		self.assertTrue(gre.name.startswith("GRE-"))
+		self.assertEqual(gre.title, make_gre_title(job.company, "7", series.serie, 199))
 		self.assertTrue(gre.migrated_from_nubefact)
 		self.assertEqual(gre.migration_job, job.name)
 		self.assertTrue(gre.issued_identity_hash)
