@@ -351,6 +351,11 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			)
 			.replace(f"{series.serie}-25", f"{series.serie}-00000199")
 			.replace(
+				"<cbc:HandlingCode>08</cbc:HandlingCode>",
+				"<cbc:HandlingCode>13</cbc:HandlingCode>"
+				"<cbc:HandlingInstructions>OTROS - SERVICIO TECNICO</cbc:HandlingInstructions>",
+			)
+			.replace(
 				"<cbc:TransportModeCode>02</cbc:TransportModeCode>",
 				"<cbc:TransportModeCode>01</cbc:TransportModeCode>",
 			)
@@ -401,6 +406,7 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertTrue(gre.issued_identity_hash)
 		self.assertEqual(gre.fecha_de_emision.isoformat(), "2026-06-01")
 		self.assertEqual(gre.tipo_de_transporte, "01")
+		self.assertEqual(gre.motivo_de_traslado_otros_descripcion, "SERVICIO TECNICO")
 		self.assertFalse(gre.fecha_de_entrega_al_transportista)
 		self.assertFalse(gre.transportista_placa_numero)
 		self.assertEqual(gre.cadena_para_codigo_qr, qr_value)

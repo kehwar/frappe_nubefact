@@ -51,6 +51,14 @@ def parse_import_despatch_xml_payload(text: str) -> dict[str, Any]:
 		)[:100]
 	)
 	gross_weight_node = _xml_get_nested_node(root, ["Shipment", "GrossWeightMeasure"])
+	transfer_reason = _xml_get_nested_text(root, ["Shipment", "HandlingCode"])
+	other_transfer_reason_description = (
+		_clean_other_transfer_reason_description(
+			_xml_get_nested_text(root, ["Shipment", "HandlingInstructions"])
+		)
+		if transfer_reason == "13"
+		else ""
+	)
 
 	payload: dict[str, Any] = {
 		"tipo_de_comprobante": document_type,
@@ -79,10 +87,8 @@ def parse_import_despatch_xml_payload(text: str) -> dict[str, Any]:
 		),
 		"cliente_denominacion": _party_registration_name(root, customer_party_name),
 		"cliente_direccion": customer_address,
-		"motivo_de_traslado": _xml_get_nested_text(
-			root,
-			["Shipment", "HandlingCode"],
-		),
+		"motivo_de_traslado": transfer_reason,
+		"motivo_de_traslado_otros_descripcion": other_transfer_reason_description,
 		"tipo_de_transporte": _xml_get_nested_text(
 			root,
 			["Shipment", "ShipmentStage", "TransportModeCode"],
@@ -468,3 +474,9 @@ def _clean_import_note(value: Any) -> str:
 	if text.lower().startswith("obs:"):
 		return text[4:].strip()
 	return text
+
+
+def _clean_other_transfer_reason_description(value: Any) -> str:
+	text = cstr(value or "").strip()
+	text = re.sub(r"^OTROS\s*-\s*", "", text, count=1, flags=re.IGNORECASE)
+	return re.sub(r"\s+", " ", text).strip()
