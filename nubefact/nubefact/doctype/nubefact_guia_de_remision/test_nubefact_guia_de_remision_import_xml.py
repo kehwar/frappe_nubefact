@@ -82,6 +82,21 @@ class TestNubefactGuiaDeRemisionImportXML(FrappeTestCase):
 		self.assertEqual(payload["vehiculos_secundarios"][0], {"placa_numero": "ABC124", "tuc": "ABC1234568"})
 		self.assertEqual(payload["conductores_secundarios"][0]["documento_tipo"], "A")
 
+	def test_parse_remitente_truncates_arrival_address_used_as_client_reference(self):
+		arrival_address = (
+			"AV. DESTINO DE REFERENCIA 123, ZONA INDUSTRIAL, DISTRITO DE PRUEBA - "
+			"PROVINCIA DE PRUEBA - DEPARTAMENTO DE PRUEBA"
+		)
+		payload = parse_import_despatch_xml_payload(
+			DESPATCH_XML.format(
+				series="TTT1",
+				packages="<cbc:TotalTransportHandlingUnitQuantity>3</cbc:TotalTransportHandlingUnitQuantity>",
+			).replace("DESTINO XML", arrival_address)
+		)
+
+		self.assertEqual(payload["punto_de_llegada_direccion"], arrival_address)
+		self.assertEqual(payload["cliente_direccion"], arrival_address[:100])
+
 	def test_parse_transportista_maps_sender_and_recipient_without_inventing_packages(self):
 		payload = parse_import_despatch_xml_payload(DESPATCH_XML.format(series="VVV1", packages=""))
 

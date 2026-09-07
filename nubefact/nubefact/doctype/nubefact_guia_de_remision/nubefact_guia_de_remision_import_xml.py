@@ -48,7 +48,7 @@ def parse_import_despatch_xml_payload(text: str) -> dict[str, Any]:
 		else _xml_get_nested_text(
 			root,
 			["Shipment", "Delivery", "DeliveryAddress", "AddressLine", "Line"],
-		)
+		)[:100]
 	)
 	gross_weight_node = _xml_get_nested_node(root, ["Shipment", "GrossWeightMeasure"])
 
