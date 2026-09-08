@@ -9,9 +9,12 @@ NubeFact is a Frappe app for Peruvian electronic invoicing and SUNAT compliance.
 - API request logging in `nubefact/nubefact/doctype/nubefact_api_log/`
 - API credentials and establishment data in `nubefact/nubefact/doctype/nubefact_local/`
 
-## NubeFact API reference
+## References
 
-Read `references/nubefact-docs/NUBEFACT DOC API JSON V1.md` when changing API payloads, response handling, validation, status polling, or document fields.
+- Read `references/nubefact-docs/NUBEFACT DOC API JSON V1.md` when changing API payloads, response handling, validation, status polling, or document fields.
+- Read `./references/frappe/` when work depends on Frappe Framework behavior, APIs, internals, or conventions.
+- Read `./references/press/` when working on or diagnosing how the app is deployed and operated in production.
+- Read `./.devcontainer/` and `./DEVELOPMENT.md` when setting up or changing the development container, running end-to-end tests, or using the containerized development site for manual or agent-driven development.
 
 ## Validation
 
