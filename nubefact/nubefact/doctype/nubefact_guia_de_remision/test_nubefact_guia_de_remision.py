@@ -26,7 +26,7 @@ from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remisi
 	solicitar_anulacion,
 )
 from nubefact.patches.retitle_guia_de_remision_documents import execute as retitle_existing_gres
-from nubefact.utils import download_and_attach_file
+from nubefact.utils import _mark_attachment_job_complete, download_and_attach_file
 
 
 def make_valid_gre(**overrides):
@@ -685,6 +685,18 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			frappe.db.set_value("Company", local.company, "tax_id", original_tax_id, update_modified=False)
 			frappe.db.commit()
 
+		attachment_jobs = [call.kwargs for call in enqueue.call_args_list]
+		self.assertEqual(len(attachment_jobs), 5)
+		self.assertEqual(len({job["attachment_batch_id"] for job in attachment_jobs}), 1)
+		self.assertEqual(
+			len({job["attachment_job_id"] for job in attachment_jobs}),
+			len(attachment_jobs),
+		)
+		self.assertEqual(
+			{job["attachment_job_count"] for job in attachment_jobs},
+			{len(attachment_jobs)},
+		)
+
 		download_jobs = [
 			call.kwargs
 			for call in enqueue.call_args_list
@@ -741,6 +753,47 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertEqual({row.file_name for row in files}, expected_filenames)
 		self.assertEqual(
 			{row.file_url for row in files}, {f"/private/files/{name}" for name in expected_filenames}
+		)
+
+	def test_gre_attachment_batch_notifies_only_after_every_unique_job_finishes(self):
+		batch_id = random_string(16)
+		cache_key = f"nubefact:attachment-batch:{batch_id}"
+		self.addCleanup(frappe.cache.delete_value, cache_key)
+
+		with patch("nubefact.utils.frappe.publish_realtime") as publish_realtime:
+			_mark_attachment_job_complete(
+				batch_id,
+				"1:request.json",
+				2,
+				"Nubefact Guia De Remision",
+				"GRE-TEST",
+			)
+			_mark_attachment_job_complete(
+				batch_id,
+				"1:request.json",
+				2,
+				"Nubefact Guia De Remision",
+				"GRE-TEST",
+			)
+			publish_realtime.assert_not_called()
+
+			_mark_attachment_job_complete(
+				batch_id,
+				"2:document.pdf",
+				2,
+				"Nubefact Guia De Remision",
+				"GRE-TEST",
+			)
+
+		publish_realtime.assert_called_once_with(
+			"nubefact_attachments_ready",
+			{
+				"doctype": "Nubefact Guia De Remision",
+				"name": "GRE-TEST",
+				"batch_id": batch_id,
+			},
+			doctype="Nubefact Guia De Remision",
+			docname="GRE-TEST",
 		)
 
 	def test_exact_gre_attachment_does_not_overwrite_an_unmanaged_canonical_blob(self):

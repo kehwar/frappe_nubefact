@@ -4,6 +4,8 @@
 
 frappe.ui.form.on("Nubefact Guia De Remision", {
     setup(frm) {
+        setup_attachment_completion_listener();
+
         frm.set_query("local", () => ({
             filters: frm.doc.company ? { company: frm.doc.company } : {},
         }));
@@ -96,6 +98,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
         }
     },
     refresh(frm) {
+        void reload_completed_attachment_batches(frm);
         frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
 
         if (
@@ -675,6 +678,51 @@ async function apply_catalog_selection(frm, options, selectedName) {
         }
     }
     await frm.set_value(targetValues);
+}
+
+function setup_attachment_completion_listener() {
+    if (!frappe.realtime || frappe._nubefact_attachment_completion_listener) return;
+
+    frappe._nubefact_attachment_completion_listener = true;
+    frappe._nubefact_attachment_reload_state = {
+        pending: new Set(),
+        reloading: new Set(),
+    };
+    frappe.realtime.on("nubefact_attachments_ready", async ({ doctype, name }) => {
+        const currentForm = globalThis.cur_page?.page?.frm;
+        if (currentForm?.doctype !== doctype || currentForm?.docname !== name) return;
+
+        const key = `${doctype}:${name}`;
+        frappe._nubefact_attachment_reload_state.pending.add(key);
+        await reload_completed_attachment_batches(currentForm);
+    });
+}
+
+async function reload_completed_attachment_batches(frm) {
+    const state = frappe._nubefact_attachment_reload_state;
+    if (!state) return;
+
+    const key = `${frm.doctype}:${frm.docname}`;
+    if (state.reloading.has(key) || frm.is_dirty()) return;
+
+    state.reloading.add(key);
+    try {
+        while (state.pending.has(key)) {
+            const currentForm = globalThis.cur_page?.page?.frm;
+            if (
+                currentForm?.doctype !== frm.doctype ||
+                currentForm?.docname !== frm.docname ||
+                currentForm.is_dirty()
+            ) {
+                return;
+            }
+
+            state.pending.delete(key);
+            await currentForm.reload_doc();
+        }
+    } finally {
+        state.reloading.delete(key);
+    }
 }
 
 function format_error_message_banner(errorMessage) {

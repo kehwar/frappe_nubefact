@@ -37,6 +37,52 @@ _API_LOG_REFERENCE_FIELDS = {
 	"Nubefact Facturacion": "reference_invoice",
 	"Nubefact Guia De Remision": "referencia_guia_de_remision",
 }
+_ATTACHMENT_BATCH_EVENT = "nubefact_attachments_ready"
+_ATTACHMENT_BATCH_TTL_SECONDS = 60 * 60
+
+
+def _register_attachment_job_completion(
+	batch_id: str | None,
+	job_id: str | None,
+	job_count: int | None,
+	doctype: str,
+	docname: str,
+) -> None:
+	"""Count this job only after its attachment transaction commits."""
+	if not batch_id or not job_id or not job_count:
+		return
+
+	frappe.db.after_commit.add(
+		lambda: _mark_attachment_job_complete(batch_id, job_id, job_count, doctype, docname)
+	)
+
+
+def _mark_attachment_job_complete(
+	batch_id: str,
+	job_id: str,
+	job_count: int,
+	doctype: str,
+	docname: str,
+) -> None:
+	"""Publish one realtime event when every job in an attachment batch has committed."""
+	cache_key = frappe.cache.make_key(f"nubefact:attachment-batch:{batch_id}")
+	try:
+		with frappe.cache.pipeline(transaction=True) as pipeline:
+			pipeline.sadd(cache_key, job_id)
+			pipeline.scard(cache_key)
+			pipeline.expire(cache_key, _ATTACHMENT_BATCH_TTL_SECONDS)
+			added, completed, _expires = pipeline.execute()
+	except Exception:
+		frappe.logger("nubefact").exception("Failed to track NubeFact attachment batch completion")
+		return
+
+	if added and completed >= job_count:
+		frappe.publish_realtime(
+			_ATTACHMENT_BATCH_EVENT,
+			{"doctype": doctype, "name": docname, "batch_id": batch_id},
+			doctype=doctype,
+			docname=docname,
+		)
 
 
 def without_nubefact_base64_fields(payload: dict[str, Any]) -> dict[str, Any]:
@@ -239,21 +285,39 @@ def _save_private_attachment_exact(filename: str, content: bytes, doctype: str, 
 	file_doc.create_attachment_record()
 
 
-def attach_nubefact_json(payload: dict[str, Any], filename: str, doctype: str, docname: str) -> None:
+def attach_nubefact_json(
+	payload: dict[str, Any],
+	filename: str,
+	doctype: str,
+	docname: str,
+	*,
+	attachment_batch_id: str | None = None,
+	attachment_job_id: str | None = None,
+	attachment_job_count: int | None = None,
+) -> None:
 	"""Attach a structured issuance payload without encoded response artifacts."""
-	if _attachment_exists(doctype, docname, filename):
-		return
+	try:
+		if _attachment_exists(doctype, docname, filename):
+			return
 
-	if filename.endswith("-response.json"):
-		payload = without_nubefact_base64_fields(payload)
-	content = json.dumps(payload, ensure_ascii=False, default=str, indent=2).encode("utf-8")
-	save_file(
-		fname=filename,
-		content=content,
-		dt=doctype,
-		dn=docname,
-		is_private=1,
-	)
+		if filename.endswith("-response.json"):
+			payload = without_nubefact_base64_fields(payload)
+		content = json.dumps(payload, ensure_ascii=False, default=str, indent=2).encode("utf-8")
+		save_file(
+			fname=filename,
+			content=content,
+			dt=doctype,
+			dn=docname,
+			is_private=1,
+		)
+	finally:
+		_register_attachment_job_completion(
+			attachment_batch_id,
+			attachment_job_id,
+			attachment_job_count,
+			doctype,
+			docname,
+		)
 
 
 def attach_nubefact_base64_file(
@@ -264,41 +328,53 @@ def attach_nubefact_base64_file(
 	*,
 	encoded_content: str | None = None,
 	exact_filename: bool = False,
+	attachment_batch_id: str | None = None,
+	attachment_job_id: str | None = None,
+	attachment_job_count: int | None = None,
 ) -> None:
 	"""Decode a transient NubeFact Base64 ZIP into a private attachment.
 
 	``fieldname`` remains supported for jobs queued before Base64 DocType fields
 	were removed. Those jobs recover the artifact from the purgeable API log.
 	"""
-	if not filename or not doctype or not docname:
-		return
-	if _attachment_exists(doctype, docname, filename, private_only=exact_filename):
-		return
-
-	encoded_content = cstr(encoded_content or "")
-	if not encoded_content and fieldname:
-		encoded_content = _get_logged_base64_artifact(doctype, docname, fieldname)
-	if not encoded_content:
-		return
-
 	try:
-		content = base64.b64decode("".join(encoded_content.split()), validate=True)
-	except (ValueError, binascii.Error) as exc:
-		frappe.log_error(
-			title=f"Nubefact: contenido Base64 inválido para {filename}",
-			message=str(exc),
-		)
-		return
+		if not filename or not doctype or not docname:
+			return
+		if _attachment_exists(doctype, docname, filename, private_only=exact_filename):
+			return
 
-	if exact_filename:
-		_save_private_attachment_exact(filename, content, doctype, docname)
-	else:
-		save_file(
-			fname=filename,
-			content=content,
-			dt=doctype,
-			dn=docname,
-			is_private=1,
+		encoded_content = cstr(encoded_content or "")
+		if not encoded_content and fieldname:
+			encoded_content = _get_logged_base64_artifact(doctype, docname, fieldname)
+		if not encoded_content:
+			return
+
+		try:
+			content = base64.b64decode("".join(encoded_content.split()), validate=True)
+		except (ValueError, binascii.Error) as exc:
+			frappe.log_error(
+				title=f"Nubefact: contenido Base64 inválido para {filename}",
+				message=str(exc),
+			)
+			return
+
+		if exact_filename:
+			_save_private_attachment_exact(filename, content, doctype, docname)
+		else:
+			save_file(
+				fname=filename,
+				content=content,
+				dt=doctype,
+				dn=docname,
+				is_private=1,
+			)
+	finally:
+		_register_attachment_job_completion(
+			attachment_batch_id,
+			attachment_job_id,
+			attachment_job_count,
+			doctype or "",
+			docname or "",
 		)
 
 
@@ -402,6 +478,9 @@ def download_and_attach_file(
 	fallback_fieldname: str | None = None,
 	*,
 	exact_filename: bool = False,
+	attachment_batch_id: str | None = None,
+	attachment_job_id: str | None = None,
+	attachment_job_count: int | None = None,
 ):
 	"""Download a NubeFact artifact and attach it privately to its document.
 
@@ -409,36 +488,45 @@ def download_and_attach_file(
 	transient value as a fallback. Attachment failures are logged without changing
 	issuance state.
 	"""
-	if _attachment_exists(doctype, docname, filename, private_only=exact_filename):
-		return
-
 	try:
-		content = _download_public_file(url)
-	except requests.RequestException as exc:
-		frappe.log_error(
-			title=f"Nubefact: error al descargar el archivo {filename}",
-			message=str(exc),
-		)
-		if (fallback_content or fallback_fieldname) and fallback_filename:
-			attach_nubefact_base64_file(
-				fieldname=fallback_fieldname,
-				filename=fallback_filename,
-				doctype=doctype,
-				docname=docname,
-				encoded_content=fallback_content,
-				exact_filename=exact_filename,
-			)
-		return
+		if _attachment_exists(doctype, docname, filename, private_only=exact_filename):
+			return
 
-	if exact_filename:
-		_save_private_attachment_exact(filename, content, doctype, docname)
-	else:
-		save_file(
-			fname=filename,
-			content=content,
-			dt=doctype,
-			dn=docname,
-			is_private=1,
+		try:
+			content = _download_public_file(url)
+		except requests.RequestException as exc:
+			frappe.log_error(
+				title=f"Nubefact: error al descargar el archivo {filename}",
+				message=str(exc),
+			)
+			if (fallback_content or fallback_fieldname) and fallback_filename:
+				attach_nubefact_base64_file(
+					fieldname=fallback_fieldname,
+					filename=fallback_filename,
+					doctype=doctype,
+					docname=docname,
+					encoded_content=fallback_content,
+					exact_filename=exact_filename,
+				)
+			return
+
+		if exact_filename:
+			_save_private_attachment_exact(filename, content, doctype, docname)
+		else:
+			save_file(
+				fname=filename,
+				content=content,
+				dt=doctype,
+				dn=docname,
+				is_private=1,
+			)
+	finally:
+		_register_attachment_job_completion(
+			attachment_batch_id,
+			attachment_job_id,
+			attachment_job_count,
+			doctype,
+			docname,
 		)
 
 
@@ -484,6 +572,7 @@ def enqueue_nubefact_file_downloads(
 			identity.numero,
 		)
 
+	jobs: list[tuple[str, dict[str, Any]]] = []
 	json_payloads = {
 		"request": request_payload,
 		"response": (
@@ -492,14 +581,16 @@ def enqueue_nubefact_file_downloads(
 	}
 	for suffix, payload in json_payloads.items():
 		if payload is not None:
-			frappe.enqueue(
-				"nubefact.utils.attach_nubefact_json",
-				payload=payload,
-				filename=f"{base_name}-{suffix}.json",
-				doctype=doctype,
-				docname=docname,
-				queue="short",
-				enqueue_after_commit=True,
+			jobs.append(
+				(
+					"nubefact.utils.attach_nubefact_json",
+					{
+						"payload": payload,
+						"filename": f"{base_name}-{suffix}.json",
+						"doctype": doctype,
+						"docname": docname,
+					},
+				)
 			)
 
 	exact_artifact_names = doctype == "Nubefact Guia De Remision"
@@ -522,12 +613,7 @@ def enqueue_nubefact_file_downloads(
 			}
 			if exact_artifact_names:
 				job_args["exact_filename"] = True
-			frappe.enqueue(
-				"nubefact.utils.download_and_attach_file",
-				**job_args,
-				queue="short",
-				enqueue_after_commit=True,
-			)
+			jobs.append(("nubefact.utils.download_and_attach_file", job_args))
 		elif encoded_content:
 			job_args = {
 				"encoded_content": encoded_content,
@@ -537,12 +623,26 @@ def enqueue_nubefact_file_downloads(
 			}
 			if exact_artifact_names:
 				job_args["exact_filename"] = True
-			frappe.enqueue(
-				"nubefact.utils.attach_nubefact_base64_file",
-				**job_args,
-				queue="short",
-				enqueue_after_commit=True,
+			jobs.append(("nubefact.utils.attach_nubefact_base64_file", job_args))
+
+	if exact_artifact_names and jobs:
+		batch_id = frappe.generate_hash(length=16)
+		for index, (_method, job_args) in enumerate(jobs, start=1):
+			job_args.update(
+				{
+					"attachment_batch_id": batch_id,
+					"attachment_job_id": f"{index}:{job_args['filename']}",
+					"attachment_job_count": len(jobs),
+				}
 			)
+
+	for method, job_args in jobs:
+		frappe.enqueue(
+			method,
+			**job_args,
+			queue="short",
+			enqueue_after_commit=True,
+		)
 
 
 __all__ = [
