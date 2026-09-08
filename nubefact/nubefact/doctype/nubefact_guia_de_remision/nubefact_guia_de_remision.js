@@ -51,15 +51,34 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                     ? { aplica_gre_remitente: 1 }
                     : { aplica_gre_transportista: 1 },
         }));
-        register_catalog_picker(frm, {
+        register_catalog_autocomplete(frm, {
             fieldname: "transportista_placa_numero",
-            label: __("Seleccionar vehículo"),
-            trigger: "open_vehicle_catalog_dialog",
+            doctype: "Nubefact Vehiculo",
+            resolve_record_name: (_frm, value) => value.trim().toUpperCase(),
+            target_fields: {
+                transportista_placa_numero: "placa_numero",
+            },
         });
-        register_catalog_picker(frm, {
+        register_catalog_autocomplete(frm, {
             fieldname: "conductor_documento_numero",
-            label: __("Seleccionar conductor"),
-            trigger: "open_driver_catalog_dialog",
+            doctype: "Nubefact Conductor",
+            resolve_record_name: (currentForm, value) => {
+                const documentType = currentForm.doc.conductor_documento_tipo;
+                return documentType && value
+                    ? `${documentType}-${value.trim().toUpperCase()}`
+                    : null;
+            },
+            target_fields: {
+                conductor_documento_tipo: "documento_tipo",
+                conductor_documento_numero: "documento_numero",
+                conductor_denominacion: "denominacion",
+                conductor_nombre: "nombre",
+                conductor_apellidos: "apellidos",
+                conductor_numero_licencia: "numero_licencia",
+            },
+            fill_if_empty: {
+                transportista_placa_numero: "vehiculo",
+            },
         });
     },
     async nubefact_series(frm) {
@@ -92,8 +111,8 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
             frm.disable_form();
         }
 
-        add_catalog_picker_button(frm, "transportista_placa_numero");
-        add_catalog_picker_button(frm, "conductor_documento_numero");
+        setup_catalog_autocomplete(frm, "transportista_placa_numero");
+        setup_catalog_autocomplete(frm, "conductor_documento_numero");
 
         if (!frm.is_new()) {
             const watcher = window.nubefact.get_watcher(
@@ -178,34 +197,6 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 
         frm.add_custom_button(__("Ayuda"), () => {
             frm.trigger("open_help_dialog");
-        });
-    },
-    open_vehicle_catalog_dialog(frm) {
-        open_catalog_dialog(frm, {
-            doctype: "Nubefact Vehiculo",
-            selection_fieldname: "vehiculo",
-            title: __("Seleccionar vehículo"),
-            target_fields: {
-                transportista_placa_numero: "placa_numero",
-            },
-        });
-    },
-    open_driver_catalog_dialog(frm) {
-        open_catalog_dialog(frm, {
-            doctype: "Nubefact Conductor",
-            selection_fieldname: "conductor",
-            title: __("Seleccionar conductor"),
-            target_fields: {
-                conductor_documento_tipo: "documento_tipo",
-                conductor_documento_numero: "documento_numero",
-                conductor_denominacion: "denominacion",
-                conductor_nombre: "nombre",
-                conductor_apellidos: "apellidos",
-                conductor_numero_licencia: "numero_licencia",
-            },
-            fill_if_empty: {
-                transportista_placa_numero: "vehiculo",
-            },
         });
     },
     open_send_dialog(frm) {
@@ -482,92 +473,208 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
     },
 });
 
-function register_catalog_picker(frm, options) {
+function register_catalog_autocomplete(frm, options) {
     const control = frm.fields_dict[options.fieldname];
-    if (!control || control._nubefact_catalog_picker) return;
+    if (!control || control._nubefact_catalog_autocomplete) return;
 
-    control._nubefact_catalog_picker = options;
+    control._nubefact_catalog_autocomplete = {
+        options,
+        input: null,
+        awesomplete: null,
+        clear_button: null,
+        link_controls: null,
+        open_button: null,
+        results: [],
+    };
     const existingOnMake = control.df.on_make;
     control.df.on_make = (field) => {
         if (existingOnMake) existingOnMake(field);
-        add_catalog_picker_button(frm, options.fieldname);
+        setup_catalog_autocomplete(frm, options.fieldname);
     };
 
-    add_catalog_picker_button(frm, options.fieldname);
+    setup_catalog_autocomplete(frm, options.fieldname);
 }
 
-function add_catalog_picker_button(frm, fieldname) {
+function setup_catalog_autocomplete(frm, fieldname) {
     const control = frm.fields_dict[fieldname];
-    const options = control?._nubefact_catalog_picker;
-    if (!control?.$input || !options) return;
-
-    const $inputArea = control.$wrapper.find(".control-input");
-    let $button = $inputArea.find(".nubefact-catalog-picker");
-    if (!$button.length) {
-        $inputArea.addClass("flex align-center");
-        control.$input.css("flex", "1 1 auto");
-        $button = $(
-            `<button type="button" class="btn btn-default nubefact-catalog-picker"
-                title="${frappe.utils.escape_html(options.label)}"
-                aria-label="${frappe.utils.escape_html(options.label)}">
-                ${frappe.utils.icon("search", "sm")}
-            </button>`
-        )
-            .css({ marginLeft: "var(--margin-xs)", flex: "0 0 auto" })
-            .on("click", () => frm.trigger(options.trigger))
-            .appendTo($inputArea);
+    const state = control?._nubefact_catalog_autocomplete;
+    if (!control?.$input?.length || !control.input || !state) return;
+    if (state.input === control.input) {
+        toggle_catalog_link_actions(control);
+        return;
     }
 
-    $button.prop("disabled", !control.can_write());
+    state.input = control.input;
+    state.results = [];
+    state.awesomplete = new Awesomplete(control.input, {
+        tabSelect: true,
+        minChars: 0,
+        maxItems: 99,
+        autoFirst: true,
+        list: [],
+        replace() {},
+        data(item) {
+            return {
+                label: item.label || item.value,
+                value: item.value,
+            };
+        },
+        filter() {
+            return true;
+        },
+        item(item) {
+            const result =
+                state.results.find((candidate) => candidate.value === item.value) ?? item;
+            const label = frappe.utils.escape_html(result.label || result.value);
+            const description = result.description
+                ? `<br><span class="small">${frappe.utils.escape_html(result.description)}</span>`
+                : "";
+            return $(`<li role="option"><p><strong>${label}</strong>${description}</p></li>`)
+                .data("item.autocomplete", result)
+                .prop("aria-selected", "false")
+                .get(0);
+        },
+        sort() {
+            return 0;
+        },
+    });
+
+    const eventNamespace = ".nubefactCatalogAutocomplete";
+    const search = frappe.utils.debounce((term) => {
+        search_catalog_autocomplete(frm, control, term);
+    }, 300);
+    setup_catalog_link_actions(frm, control, fieldname, eventNamespace);
+    control.$input.off(eventNamespace);
+    control.$input.on(`input${eventNamespace}`, (event) => {
+        toggle_catalog_link_actions(control);
+        search(event.target.value || "");
+    });
+    control.$input.on(`focus${eventNamespace}`, () => {
+        toggle_catalog_link_actions(control);
+        if (!control.$input.val()) control.$input.trigger("input");
+    });
+    control.$input.on(`blur${eventNamespace}`, () => {
+        setTimeout(() => state.link_controls?.toggle(false), 250);
+    });
+    control.$input.on(`awesomplete-select${eventNamespace}`, (event) => {
+        const selectedName = event.originalEvent?.text?.value;
+        if (!selectedName) return;
+
+        event.preventDefault();
+        state.awesomplete.close();
+        return apply_catalog_selection(frm, state.options, selectedName).then(() => {
+            toggle_catalog_link_actions(control);
+        });
+    });
 }
 
-function open_catalog_dialog(frm, options) {
+function setup_catalog_link_actions(frm, control, fieldname, eventNamespace) {
+    const state = control._nubefact_catalog_autocomplete;
+    const $inputArea = control.$wrapper.find(".control-input");
+    state.link_controls = $('<span class="link-btn nubefact-catalog-actions"></span>')
+        .toggle(false)
+        .appendTo($inputArea);
+    state.clear_button = $(
+        `<a class="btn-clear" title="${__("Clear")}">
+            ${frappe.utils.icon("close", "xs", "es-icon")}
+        </a>`
+    )
+        .on("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!control.can_write()) return;
+
+            await frm.set_value(fieldname, null);
+            control.$input.focus().trigger("input");
+        })
+        .appendTo(state.link_controls);
+    state.open_button = $(
+        `<a class="btn-open" tabindex="-1" title="${__("Open Link")}">
+            ${frappe.utils.icon("arrow-right", "xs")}
+        </a>`
+    )
+        .on("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            await open_catalog_record(frm, state.options, control.$input.val());
+        })
+        .appendTo(state.link_controls);
+
+    $inputArea.off(eventNamespace);
+    $inputArea.on(`mouseenter${eventNamespace}`, () => toggle_catalog_link_actions(control));
+    $inputArea.on(`mouseleave${eventNamespace}`, () => {
+        if (!control.$input.is(":focus")) state.link_controls.toggle(false);
+    });
+}
+
+function toggle_catalog_link_actions(control) {
+    const state = control._nubefact_catalog_autocomplete;
+    state.link_controls?.toggle(Boolean(control.$input.val()) && control.can_write());
+}
+
+async function open_catalog_record(frm, options, value) {
+    const recordName = options.resolve_record_name(frm, value || "");
+    const { message } = recordName
+        ? await frappe.db.get_value(options.doctype, recordName, "name")
+        : { message: null };
+    if (!message?.name) {
+        frappe.msgprint({
+            title: __("Registro no encontrado"),
+            message: __("No existe un registro de {0} para la clave {1}.", [
+                __(options.doctype),
+                frappe.utils.escape_html(recordName || value || __("vacía")),
+            ]),
+            indicator: "orange",
+        });
+        return;
+    }
+
+    frappe.set_route("Form", options.doctype, recordName);
+}
+
+function search_catalog_autocomplete(frm, control, term) {
+    const state = control._nubefact_catalog_autocomplete;
+    const input = control.input;
+    frappe.call({
+        type: "POST",
+        method: "frappe.desk.search.search_link",
+        no_spinner: true,
+        args: {
+            txt: term,
+            doctype: state.options.doctype,
+            reference_doctype: frm.doctype,
+            page_length: frappe.boot.sysdefaults?.link_field_results_limit || 10,
+        },
+        callback: (response) => {
+            if (state.input !== input || control.$input.val() !== term) return;
+
+            state.results = response.message || [];
+            state.awesomplete.list = state.results;
+        },
+    });
+}
+
+async function apply_catalog_selection(frm, options, selectedName) {
     const fillIfEmpty = options.fill_if_empty ?? {};
     const sourceFields = [
         ...new Set([...Object.values(options.target_fields), ...Object.values(fillIfEmpty)]),
     ];
-    const dialog = new frappe.ui.Dialog({
-        title: options.title,
-        fields: [
-            {
-                fieldname: options.selection_fieldname,
-                fieldtype: "Link",
-                label: __(options.doctype),
-                options: options.doctype,
-                reqd: 1,
-            },
-        ],
-        primary_action_label: __("Seleccionar"),
-        primary_action: async (values) => {
-            const { message } = await frappe.db.get_value(
-                options.doctype,
-                values[options.selection_fieldname],
-                sourceFields
-            );
-            if (!message) {
-                frappe.msgprint(__("El registro seleccionado ya no existe."));
-                return;
-            }
+    const { message } = await frappe.db.get_value(options.doctype, selectedName, sourceFields);
+    if (!message) {
+        frappe.msgprint(__("El registro seleccionado ya no existe."));
+        return;
+    }
 
-            const targetValues = {};
-            for (const [targetField, sourceField] of Object.entries(options.target_fields)) {
-                targetValues[targetField] = message[sourceField] ?? null;
-            }
-            for (const [targetField, sourceField] of Object.entries(fillIfEmpty)) {
-                if (!frm.doc[targetField] && message[sourceField]) {
-                    targetValues[targetField] = message[sourceField];
-                }
-            }
-            await frm.set_value(targetValues);
-            dialog.hide();
-            frappe.show_alert({
-                message: __("Datos copiados desde {0}", [__(options.doctype)]),
-                indicator: "green",
-            });
-        },
-    });
-
-    dialog.show();
+    const targetValues = {};
+    for (const [targetField, sourceField] of Object.entries(options.target_fields)) {
+        targetValues[targetField] = message[sourceField] ?? null;
+    }
+    for (const [targetField, sourceField] of Object.entries(fillIfEmpty)) {
+        if (!frm.doc[targetField] && message[sourceField]) {
+            targetValues[targetField] = message[sourceField];
+        }
+    }
+    await frm.set_value(targetValues);
 }
 
 function format_error_message_banner(errorMessage) {
