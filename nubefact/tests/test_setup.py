@@ -6,8 +6,10 @@ from nubefact.master_data import MASTER_DATA
 from nubefact.setup import ROLES, setup
 
 WRITE_DOCTYPES = {
+	"Nubefact Conductor",
 	"Nubefact Facturacion",
 	"Nubefact Guia De Remision",
+	"Nubefact Vehiculo",
 }
 READ_ONLY_DOCTYPES = {
 	"Nubefact API Log",
@@ -40,6 +42,10 @@ CATALOG_LINK_FIELDS = {
 	"Nubefact Guia De Remision Conductor Secundario": {"documento_tipo": "Nubefact Tipo de Documento"},
 	"Nubefact Guia De Remision Documento Relacionado": {"tipo": "Nubefact Tipo de Documento Relacionado"},
 	"Nubefact Guia De Remision Item": {"unidad_de_medida": "Nubefact Unidad de Medida"},
+	"Nubefact Conductor": {
+		"documento_tipo": "Nubefact Tipo de Documento",
+		"vehiculo": "Nubefact Vehiculo",
+	},
 	"Nubefact Series": {"tipo_de_comprobante": "Nubefact Tipo de Comprobante"},
 }
 
@@ -123,9 +129,7 @@ class TestSetup(FrappeTestCase):
 		)
 		workspace = frappe.get_doc("Workspace", "Nubefact")
 		linked = {
-			link.link_to
-			for link in workspace.links
-			if link.type == "Link" and link.link_type == "DocType"
+			link.link_to for link in workspace.links if link.type == "Link" and link.link_type == "DocType"
 		}
 
 		self.assertEqual(linked, expected)

@@ -51,6 +51,16 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                     ? { aplica_gre_remitente: 1 }
                     : { aplica_gre_transportista: 1 },
         }));
+        register_catalog_picker(frm, {
+            fieldname: "transportista_placa_numero",
+            label: __("Seleccionar vehículo"),
+            trigger: "open_vehicle_catalog_dialog",
+        });
+        register_catalog_picker(frm, {
+            fieldname: "conductor_documento_numero",
+            label: __("Seleccionar conductor"),
+            trigger: "open_driver_catalog_dialog",
+        });
     },
     async nubefact_series(frm) {
         const requestedSeries = frm.doc.nubefact_series;
@@ -81,6 +91,9 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
         ) {
             frm.disable_form();
         }
+
+        add_catalog_picker_button(frm, "transportista_placa_numero");
+        add_catalog_picker_button(frm, "conductor_documento_numero");
 
         if (!frm.is_new()) {
             const watcher = window.nubefact.get_watcher(
@@ -165,6 +178,34 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 
         frm.add_custom_button(__("Ayuda"), () => {
             frm.trigger("open_help_dialog");
+        });
+    },
+    open_vehicle_catalog_dialog(frm) {
+        open_catalog_dialog(frm, {
+            doctype: "Nubefact Vehiculo",
+            selection_fieldname: "vehiculo",
+            title: __("Seleccionar vehículo"),
+            target_fields: {
+                transportista_placa_numero: "placa_numero",
+            },
+        });
+    },
+    open_driver_catalog_dialog(frm) {
+        open_catalog_dialog(frm, {
+            doctype: "Nubefact Conductor",
+            selection_fieldname: "conductor",
+            title: __("Seleccionar conductor"),
+            target_fields: {
+                conductor_documento_tipo: "documento_tipo",
+                conductor_documento_numero: "documento_numero",
+                conductor_denominacion: "denominacion",
+                conductor_nombre: "nombre",
+                conductor_apellidos: "apellidos",
+                conductor_numero_licencia: "numero_licencia",
+            },
+            fill_if_empty: {
+                transportista_placa_numero: "vehiculo",
+            },
         });
     },
     open_send_dialog(frm) {
@@ -440,6 +481,94 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
         dialog.show();
     },
 });
+
+function register_catalog_picker(frm, options) {
+    const control = frm.fields_dict[options.fieldname];
+    if (!control || control._nubefact_catalog_picker) return;
+
+    control._nubefact_catalog_picker = options;
+    const existingOnMake = control.df.on_make;
+    control.df.on_make = (field) => {
+        if (existingOnMake) existingOnMake(field);
+        add_catalog_picker_button(frm, options.fieldname);
+    };
+
+    add_catalog_picker_button(frm, options.fieldname);
+}
+
+function add_catalog_picker_button(frm, fieldname) {
+    const control = frm.fields_dict[fieldname];
+    const options = control?._nubefact_catalog_picker;
+    if (!control?.$input || !options) return;
+
+    const $inputArea = control.$wrapper.find(".control-input");
+    let $button = $inputArea.find(".nubefact-catalog-picker");
+    if (!$button.length) {
+        $inputArea.addClass("flex align-center");
+        control.$input.css("flex", "1 1 auto");
+        $button = $(
+            `<button type="button" class="btn btn-default nubefact-catalog-picker"
+                title="${frappe.utils.escape_html(options.label)}"
+                aria-label="${frappe.utils.escape_html(options.label)}">
+                ${frappe.utils.icon("search", "sm")}
+            </button>`
+        )
+            .css({ marginLeft: "var(--margin-xs)", flex: "0 0 auto" })
+            .on("click", () => frm.trigger(options.trigger))
+            .appendTo($inputArea);
+    }
+
+    $button.prop("disabled", !control.can_write());
+}
+
+function open_catalog_dialog(frm, options) {
+    const fillIfEmpty = options.fill_if_empty ?? {};
+    const sourceFields = [
+        ...new Set([...Object.values(options.target_fields), ...Object.values(fillIfEmpty)]),
+    ];
+    const dialog = new frappe.ui.Dialog({
+        title: options.title,
+        fields: [
+            {
+                fieldname: options.selection_fieldname,
+                fieldtype: "Link",
+                label: __(options.doctype),
+                options: options.doctype,
+                reqd: 1,
+            },
+        ],
+        primary_action_label: __("Seleccionar"),
+        primary_action: async (values) => {
+            const { message } = await frappe.db.get_value(
+                options.doctype,
+                values[options.selection_fieldname],
+                sourceFields
+            );
+            if (!message) {
+                frappe.msgprint(__("El registro seleccionado ya no existe."));
+                return;
+            }
+
+            const targetValues = {};
+            for (const [targetField, sourceField] of Object.entries(options.target_fields)) {
+                targetValues[targetField] = message[sourceField] ?? null;
+            }
+            for (const [targetField, sourceField] of Object.entries(fillIfEmpty)) {
+                if (!frm.doc[targetField] && message[sourceField]) {
+                    targetValues[targetField] = message[sourceField];
+                }
+            }
+            await frm.set_value(targetValues);
+            dialog.hide();
+            frappe.show_alert({
+                message: __("Datos copiados desde {0}", [__(options.doctype)]),
+                indicator: "green",
+            });
+        },
+    });
+
+    dialog.show();
+}
 
 function format_error_message_banner(errorMessage) {
     const sanitizedMessage = frappe.utils.escape_html((errorMessage || "").trim());
