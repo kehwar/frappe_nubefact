@@ -512,6 +512,64 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		"nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.collect_response_artifacts"
 	)
 	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.make_request")
+	def test_worker_normalizes_historical_export_catalog_codes(self, request, collect, dispatch):
+		from nubefact.nubefact.doctype.nubefact_guia_de_remision.test_nubefact_guia_de_remision_import_xml import (
+			DESPATCH_XML as COMPLETE_XML,
+		)
+
+		job, series = self.make_job(start=198, end=198)
+		xml = (
+			COMPLETE_XML.format(
+				series=series.serie,
+				packages="<cbc:TotalTransportHandlingUnitQuantity>2</cbc:TotalTransportHandlingUnitQuantity>",
+			)
+			.replace(f"{series.serie}-25", f"{series.serie}-00000198")
+			.replace("<cbc:HandlingCode>08</cbc:HandlingCode>", "<cbc:HandlingCode>09</cbc:HandlingCode>")
+			.replace(
+				"<cac:AdditionalDocumentReference><cbc:ID>F001-10</cbc:ID><cbc:DocumentTypeCode>01</cbc:DocumentTypeCode></cac:AdditionalDocumentReference>",
+				"<cac:AdditionalDocumentReference><cbc:ID>235-2025-40-88472</cbc:ID><cbc:DocumentTypeCode>50</cbc:DocumentTypeCode></cac:AdditionalDocumentReference>",
+			)
+			.replace('unitCode="NIU"', 'unitCode="CAJ"')
+			.replace(
+				"<cac:AdditionalItemProperty><cbc:Name>Numeración de la DAM o DS</cbc:Name><cbc:Value>123-1234-10-123456</cbc:Value></cac:AdditionalItemProperty>",
+				"<cac:AdditionalItemProperty><cbc:Name>Numero de declaracion aduanera (DAM)</cbc:Name><cbc:NameCode>7021</cbc:NameCode><cbc:Value>235-2025-40-88472</cbc:Value></cac:AdditionalItemProperty>",
+			)
+			.replace(
+				"<cac:AdditionalItemProperty><cbc:Name>Número de serie en la DAM o DS</cbc:Name><cbc:Value>1</cbc:Value></cac:AdditionalItemProperty>",
+				"<cac:AdditionalItemProperty><cbc:Name>Numero de serie en la DAM o DS</cbc:Name><cbc:NameCode>7023</cbc:NameCode><cbc:Value>1</cbc:Value></cac:AdditionalItemProperty>",
+			)
+			.encode()
+		)
+		request.return_value = {
+			"tipo_de_comprobante": 7,
+			"serie": series.serie,
+			"numero": 198,
+			"aceptada_por_sunat": True,
+			"sunat_responsecode": "0",
+		}
+		cdr = CDR_WITH_REFERENCE.replace(b"TTT1-00000001", f"{series.serie}-00000198".encode())
+		collect.return_value = InspectedArtifacts(
+			logical={"pdf": pdf_bytes(series.serie), "xml": xml, "cdr": cdr}
+		)
+		start_migration(job.name)
+		dispatch.reset_mock()
+
+		run_next_migration_number(job.name)
+
+		job.reload()
+		self.assertEqual(job.status, "Completed", msg=job.results[0].message)
+		gre = frappe.get_doc("Nubefact Guia De Remision", job.results[0].guia_de_remision)
+		self.assertEqual(gre.motivo_de_traslado, "09")
+		self.assertEqual(gre.documento_relacionado_codigo, "50")
+		self.assertFalse(gre.documento_relacionado)
+		self.assertEqual(gre.items[0].unidad_de_medida, "BX")
+		self.assertEqual(gre.items[0].codigo_dam, "1/235-2025-40-88472")
+
+	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job._dispatch_job")
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.collect_response_artifacts"
+	)
+	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job.make_request")
 	def test_warning_retry_recognizes_frappe_suffixed_artifact_names(self, request, collect, dispatch):
 		job, series = self.make_job(start=1, end=1)
 		start_migration(job.name)

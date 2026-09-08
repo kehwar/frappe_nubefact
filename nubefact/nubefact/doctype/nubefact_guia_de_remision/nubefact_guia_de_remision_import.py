@@ -160,8 +160,11 @@ def apply_import_payload_to_doc(doc: Document, payload: dict[str, Any]):
 
 	doc.set("items", [])
 	item_fields = {"unidad_de_medida", "codigo", "descripcion", "cantidad", "codigo_dam"}
+	item_unit_codes = _get_import_item_unit_codes(payload)
 	for row in payload.get("items") or []:
 		values = {field: row.get(field) for field in item_fields}
+		source_unit = cstr(row.get("unidad_de_medida")).strip()
+		values["unidad_de_medida"] = item_unit_codes.get(source_unit, source_unit)
 		values["custom"] = _serialize_row_extensions(row, item_fields)
 		doc.append("items", values)
 
@@ -191,6 +194,28 @@ def apply_import_payload_to_doc(doc: Document, payload: dict[str, Any]):
 		values = {field: row.get(field) for field in driver_fields}
 		values["custom"] = _serialize_row_extensions(row, driver_fields)
 		doc.append("conductores_secundarios", values)
+
+
+def _get_import_item_unit_codes(payload: dict[str, Any]) -> dict[str, str]:
+	if cstr(payload.get("motivo_de_traslado")).strip() not in {"08", "09"}:
+		return {}
+
+	source_codes = {
+		cstr(row.get("unidad_de_medida")).strip()
+		for row in payload.get("items") or []
+		if cstr(row.get("unidad_de_medida")).strip()
+	}
+	if not source_codes:
+		return {}
+
+	return {
+		cstr(row.codigo_importacion_exportacion).strip(): row.name
+		for row in frappe.get_all(
+			"Nubefact Unidad de Medida",
+			filters={"codigo_importacion_exportacion": ["in", sorted(source_codes)]},
+			fields=["name", "codigo_importacion_exportacion"],
+		)
+	}
 
 
 def parse_import_json_payload(text: str) -> dict[str, Any]:

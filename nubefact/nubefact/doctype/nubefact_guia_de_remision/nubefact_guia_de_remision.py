@@ -796,7 +796,8 @@ class NubefactGuiaDeRemision(Document):
 			if motive in {"08", "09"} and not dam_code:
 				frappe.throw(f"Ítems fila #{row.idx}: el código DAM o DS es obligatorio.")
 			if dam_code:
-				match = re.fullmatch(r"\d{1,4}/\d{3}-\d{4}-(\d{2})-\d{6}", dam_code)
+				final_digits = r"\d{5,6}" if historical_source else r"\d{6}"
+				match = re.fullmatch(rf"\d{{1,4}}/\d{{3}}-\d{{4}}-(\d{{2}})-{final_digits}", dam_code)
 				if not match or (expected_dam_marker and match.group(1) != expected_dam_marker):
 					frappe.throw(f"Ítems fila #{row.idx}: el código DAM o DS no tiene el formato esperado.")
 

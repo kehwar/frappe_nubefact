@@ -163,12 +163,12 @@ def parse_import_despatch_xml_payload(text: str) -> dict[str, Any]:
 			["Shipment", "ShipmentStage", "CarrierParty", "PartyLegalEntity", "CompanyID"],
 		),
 		"items": _parse_import_xml_items(root),
-		"documento_relacionado": _parse_import_xml_related_documents(root),
+		"documento_relacionado": _parse_import_xml_related_documents(root, transfer_reason),
 		"vehiculos_secundarios": _parse_import_xml_secondary_vehicles(root),
 	}
 	payload.update(_parse_import_xml_transport(root))
 	payload.update(_parse_import_xml_sunat_indicator(root))
-	payload.update(_parse_import_xml_customs_code(payload))
+	payload.update(_parse_import_xml_customs_code(root, payload))
 
 	if cstr(document_type) == "8":
 		payload["destinatario_documento_tipo"] = _node_scheme_id(recipient_id_node)
@@ -229,29 +229,38 @@ def _parse_import_xml_items(root: ET.Element) -> list[dict[str, Any]]:
 	return items
 
 
-def _parse_import_xml_customs_code(payload: dict[str, Any]) -> dict[str, str]:
+def _parse_import_xml_customs_code(root: ET.Element, payload: dict[str, Any]) -> dict[str, str]:
 	motive = cstr(payload.get("motivo_de_traslado"))
 	markers = {"08": {"10": "50", "18": "52"}, "09": {"40": "50", "48": "52"}}.get(motive)
 	if not markers:
 		return {}
+
+	for reference in _xml_findall(root, "AdditionalDocumentReference"):
+		document_type = _xml_get_nested_text(reference, ["DocumentTypeCode"])
+		if document_type in {"50", "52"}:
+			return {"documento_relacionado_codigo": document_type}
+
 	for item in payload.get("items") or []:
 		customs_number = cstr(item.get("codigo_dam") or "")
-		match = re.search(r"-(\d{2})-\d{6}$", customs_number)
+		match = re.search(r"-(\d{2})-\d{5,6}$", customs_number)
 		if match and match.group(1) in markers:
 			return {"documento_relacionado_codigo": markers[match.group(1)]}
 	return {}
 
 
-def _parse_import_xml_related_documents(root: ET.Element) -> list[dict[str, Any]]:
+def _parse_import_xml_related_documents(root: ET.Element, transfer_reason: str) -> list[dict[str, Any]]:
 	related_documents: list[dict[str, Any]] = []
 
 	for reference in _xml_findall(root, "AdditionalDocumentReference"):
+		document_type = _xml_get_nested_text(reference, ["DocumentTypeCode"])
+		if transfer_reason in {"08", "09"} and document_type in {"50", "52"}:
+			continue
 		full_number = _xml_get_nested_text(reference, ["ID"])
 		series, number = _split_series_number(full_number)
 
 		related_documents.append(
 			{
-				"tipo": _xml_get_nested_text(reference, ["DocumentTypeCode"]),
+				"tipo": document_type,
 				"serie": series,
 				"numero": number,
 			}
@@ -339,10 +348,16 @@ def _parse_item_dam_code(item_node: ET.Element | None) -> str:
 	series = ""
 	for prop in _xml_direct_children(item_node, "AdditionalItemProperty"):
 		name = _xml_get_nested_text(prop, ["Name"]).lower()
+		name_code = _xml_get_nested_text(prop, ["NameCode"])
 		value = _xml_get_nested_text(prop, ["Value"])
-		if "numeración de la dam" in name or "numeracion de la dam" in name:
+		if (
+			name_code == "7021"
+			or "numeración de la dam" in name
+			or "numeracion de la dam" in name
+			or "declaracion aduanera" in name
+		):
 			number = value
-		elif "serie en la dam" in name:
+		elif name_code == "7023" or "serie en la dam" in name:
 			series = value
 	if series and number:
 		return f"{series}/{number}"

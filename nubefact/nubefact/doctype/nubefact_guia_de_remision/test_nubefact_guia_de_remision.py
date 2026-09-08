@@ -260,6 +260,10 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		missing_dam = make_valid_gre(motivo_de_traslado="08", documento_relacionado_codigo="50")
 		invalid_docs.append(missing_dam)
 
+		short_dam = make_valid_gre(motivo_de_traslado="09", documento_relacionado_codigo="50")
+		short_dam.items[0].codigo_dam = "1/235-2025-40-88472"
+		invalid_docs.append(short_dam)
+
 		invalid_related = make_valid_gre()
 		invalid_related.append("documento_relacionado", {"tipo": "01", "serie": "F01", "numero": "001"})
 		invalid_docs.append(invalid_related)
