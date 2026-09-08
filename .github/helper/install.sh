@@ -7,8 +7,19 @@ pip install frappe-bench
 echo "::endgroup::"
 
 echo "::group::Init Bench"
-bench -v init frappe-bench --skip-assets --python "$(which python)" --frappe-path https://github.com/frappe/frappe --frappe-branch v15.103.3
-test "$(git -C frappe-bench/apps/frappe rev-parse HEAD)" = "7abafc4824ec8d71e9127df965e54913bb41a870"
+FRAPPE_URL=https://github.com/kehwar/frappe.git
+FRAPPE_REVISION=853bb604f079c79d628ba617f9d4b3b502b0a626
+FRAPPE_SOURCE_ROOT=$(mktemp -d)
+FRAPPE_SOURCE="$FRAPPE_SOURCE_ROOT/frappe"
+git init --initial-branch nubefact-pinned "$FRAPPE_SOURCE"
+git -C "$FRAPPE_SOURCE" remote add origin "$FRAPPE_URL"
+git -C "$FRAPPE_SOURCE" fetch --depth 1 origin "$FRAPPE_REVISION"
+git -C "$FRAPPE_SOURCE" checkout -B nubefact-pinned "$FRAPPE_REVISION"
+bench -v init frappe-bench --skip-assets --python "$(which python)" --frappe-path "$FRAPPE_SOURCE" --frappe-branch nubefact-pinned
+git -C frappe-bench/apps/frappe remote set-url upstream "$FRAPPE_URL"
+git -C frappe-bench/apps/frappe checkout --detach --force "$FRAPPE_REVISION"
+rm -rf "$FRAPPE_SOURCE_ROOT"
+test "$(git -C frappe-bench/apps/frappe rev-parse HEAD)" = "$FRAPPE_REVISION"
 cd ./frappe-bench || exit
 
 bench get-app --skip-assets --branch v15.103.1 https://github.com/frappe/erpnext.git

@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -85,20 +86,27 @@ def initialize_bench(framework: dict[str, Any]) -> None:
 		else:
 			path.unlink()
 
-	run(
-		"bench",
-		"init",
-		"--ignore-exist",
-		"--skip-assets",
-		"--skip-redis-config-generation",
-		"--python",
-		sys.executable,
-		"--frappe-path",
-		framework["url"],
-		"--frappe-branch",
-		framework["branch"],
-		BENCH_ROOT,
-	)
+	with tempfile.TemporaryDirectory(prefix="nubefact-frappe-") as temporary_directory:
+		framework_source = Path(temporary_directory) / "frappe"
+		pinned_branch = "nubefact-pinned"
+		run("git", "init", "--initial-branch", pinned_branch, framework_source)
+		run("git", "remote", "add", "origin", framework["url"], cwd=framework_source)
+		run("git", "fetch", "--depth", "1", "origin", framework["revision"], cwd=framework_source)
+		run("git", "checkout", "-B", pinned_branch, framework["revision"], cwd=framework_source)
+		run(
+			"bench",
+			"init",
+			"--ignore-exist",
+			"--skip-assets",
+			"--skip-redis-config-generation",
+			"--python",
+			sys.executable,
+			"--frappe-path",
+			framework_source,
+			"--frappe-branch",
+			pinned_branch,
+			BENCH_ROOT,
+		)
 	if not (BENCH_ROOT / "apps" / "frappe").is_dir():
 		raise RuntimeError(f"bench init did not create a valid Bench at {BENCH_ROOT}")
 
@@ -140,16 +148,6 @@ def pin_app_revisions(apps: list[dict[str, Any]]) -> None:
 		repository_path = BENCH_ROOT / "apps" / app["repository_directory"]
 		if not (repository_path / ".git").is_dir():
 			raise RuntimeError(f"No Git repository found at {repository_path}")
-		current = subprocess.run(
-			["git", "rev-parse", "HEAD"],
-			cwd=repository_path,
-			check=True,
-			capture_output=True,
-			text=True,
-		).stdout.strip()
-		if current == app["revision"]:
-			continue
-
 		remotes = subprocess.run(
 			["git", "remote"],
 			cwd=repository_path,
@@ -157,9 +155,36 @@ def pin_app_revisions(apps: list[dict[str, Any]]) -> None:
 			capture_output=True,
 			text=True,
 		).stdout.split()
-		remote = "upstream" if "upstream" in remotes else "origin"
-		run("git", "fetch", "--depth", "1", remote, app["revision"], cwd=repository_path)
+		if "upstream" in remotes:
+			remote = "upstream"
+		elif "origin" in remotes:
+			remote = "origin"
+		else:
+			remote = "upstream"
+			run("git", "remote", "add", remote, app["url"], cwd=repository_path)
+
+		remote_url = subprocess.run(
+			["git", "remote", "get-url", remote],
+			cwd=repository_path,
+			check=True,
+			capture_output=True,
+			text=True,
+		).stdout.strip()
+		if remote_url != app["url"]:
+			run("git", "remote", "set-url", remote, app["url"], cwd=repository_path)
+
+		current = subprocess.run(
+			["git", "rev-parse", "HEAD"],
+			cwd=repository_path,
+			check=True,
+			capture_output=True,
+			text=True,
+		).stdout.strip()
+		if current != app["revision"]:
+			run("git", "fetch", "--depth", "1", remote, app["revision"], cwd=repository_path)
+
 		run("git", "checkout", "--detach", "--force", app["revision"], cwd=repository_path)
+		run("git", "clean", "-fd", cwd=repository_path)
 		pinned = subprocess.run(
 			["git", "rev-parse", "HEAD"],
 			cwd=repository_path,

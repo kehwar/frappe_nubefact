@@ -9,7 +9,7 @@ Nubefact includes an app-local Dev Container adapted from the persistent Bench s
 - Yarn 1.22.22
 - MariaDB 10.6
 - Redis 7
-- Frappe 15.103.3 and ERPNext 15.103.1, matching production and pinned by commit in `.devcontainer/apps.json`
+- Frappe 15.103.3 from the `kehwar/frappe` custom branch and ERPNext 15.103.1, matching production and pinned by commit in `.devcontainer/apps.json`
 
 ## First start
 
