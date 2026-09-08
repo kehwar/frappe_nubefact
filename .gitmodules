@@ -1,0 +1,6 @@
+[submodule "references/frappe"]
+	path = references/frappe
+	url = https://github.com/kehwar/frappe.git
+[submodule "references/press"]
+	path = references/press
+	url = https://github.com/frappe/press.git
