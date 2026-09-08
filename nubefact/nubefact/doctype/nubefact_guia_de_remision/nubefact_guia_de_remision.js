@@ -99,7 +99,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
     },
     refresh(frm) {
         void reload_completed_attachment_batches(frm);
-        frm.set_intro(format_error_message_banner(frm.doc.error_message), "red");
+        render_artifact_shortcuts(frm);
 
         if (
             frm.doc.migrated_from_nubefact ||
@@ -723,6 +723,123 @@ async function reload_completed_attachment_batches(frm) {
     } finally {
         state.reloading.delete(key);
     }
+}
+
+function render_artifact_shortcuts(frm) {
+    const shortcuts = build_artifact_shortcut_links(frm);
+    const errorMessage = format_error_message_banner(frm.doc.error_message);
+    const content = [];
+
+    if (shortcuts) {
+        content.push(`<div class="nubefact-artifact-shortcuts">${shortcuts}</div>`);
+    }
+    if (errorMessage) {
+        content.push(`<div class="mt-2">${errorMessage}</div>`);
+    }
+
+    frm.set_intro(content.join(""), errorMessage ? "red" : "blue");
+}
+
+function build_artifact_shortcut_links(frm) {
+    const artifactDefinitions = [
+        { kind: "pdf", label: __("Ver PDF"), emoji: "📄", urlField: "enlace_del_pdf" },
+        {
+            kind: "xml",
+            label: __("Descargar XML"),
+            emoji: "📥",
+            urlField: "enlace_del_xml",
+        },
+        {
+            kind: "cdr",
+            label: __("CDR"),
+            emoji: "✅",
+            urlField: "enlace_del_cdr",
+        },
+    ];
+    const attachments = frm.get_docinfo()?.attachments || [];
+    const links = artifactDefinitions.flatMap((artifact) => {
+        const attachment = attachments.find((file) =>
+            attachment_matches_artifact(frm, file, artifact.kind)
+        );
+        const attachmentUrl = attachment ? get_attachment_url(frm, attachment) : null;
+        const url = is_safe_shortcut_url(attachmentUrl)
+            ? attachmentUrl
+            : frm.doc[artifact.urlField];
+        if (!is_safe_shortcut_url(url)) return [];
+
+        const escapedUrl = frappe.utils.escape_html(url);
+        const escapedLabel = frappe.utils.escape_html(artifact.label);
+        const downloadAttribute = artifact.kind === "pdf" ? "" : " download";
+        return [
+            `<a href="${escapedUrl}" target="_blank" rel="noopener noreferrer"${downloadAttribute}>${escapedLabel} ${artifact.emoji}</a>`,
+        ];
+    });
+
+    return links.join(' <span class="text-muted mx-2" aria-hidden="true">|</span> ');
+}
+
+function attachment_matches_artifact(frm, attachment, kind) {
+    const filename = get_attachment_filename(attachment);
+    const documentType = { 7: "09", 8: "31" }[frm.doc.tipo_de_comprobante];
+    const series = (frm.doc.serie || "").trim();
+    const number = Number.parseInt(frm.doc.numero, 10);
+    if (!filename || !documentType || !series || !Number.isInteger(number) || number < 1) {
+        return false;
+    }
+
+    const escapedSeries = escape_regular_expression(series);
+    const canonicalIdentity = `\\d{11}-${documentType}-${escapedSeries}-${String(number).padStart(
+        8,
+        "0"
+    )}`;
+    const unpaddedIdentity = `\\d{11}-${documentType}-${escapedSeries}-${number}`;
+    const legacyIdentity = `${escapedSeries}-${String(number).padStart(6, "0")}`;
+    const providerIdentity = `(?:${canonicalIdentity}|${unpaddedIdentity})`;
+    const anyIdentity = `(?:${providerIdentity}|${legacyIdentity})`;
+    const collisionSuffix = "(?:[0-9a-f]{6})*";
+    const patterns = {
+        pdf: new RegExp(
+            `^(?:${anyIdentity}${collisionSuffix}\\.pdf|${anyIdentity}-pdf-field${collisionSuffix}\\.zip)$`,
+            "i"
+        ),
+        xml: new RegExp(
+            `^(?:${anyIdentity}${collisionSuffix}\\.xml|${anyIdentity}-xml-field${collisionSuffix}\\.zip)$`,
+            "i"
+        ),
+        cdr: new RegExp(
+            `^(?:R-${providerIdentity}${collisionSuffix}\\.xml|${legacyIdentity}${collisionSuffix}\\.cdr|${anyIdentity}-cdr-field${collisionSuffix}\\.zip)$`,
+            "i"
+        ),
+    };
+
+    return patterns[kind].test(filename);
+}
+
+function get_attachment_filename(attachment) {
+    const filename = attachment.file_name || attachment.file_url?.split("/").pop() || "";
+    try {
+        return decodeURIComponent(filename);
+    } catch {
+        return filename;
+    }
+}
+
+function get_attachment_url(frm, attachment) {
+    if (frm.attachments?.get_file_url) {
+        return frm.attachments.get_file_url(attachment);
+    }
+    if (attachment.file_url) return encodeURI(attachment.file_url).replace(/#/g, "%23");
+
+    const folder = attachment.is_private ? "private/files" : "files";
+    return `/${folder}/${encodeURI(attachment.file_name).replace(/#/g, "%23")}`;
+}
+
+function is_safe_shortcut_url(url) {
+    return typeof url === "string" && /^(?:https?:)?\//i.test(url);
+}
+
+function escape_regular_expression(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function format_error_message_banner(errorMessage) {
