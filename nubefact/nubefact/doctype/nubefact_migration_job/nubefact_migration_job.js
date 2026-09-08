@@ -26,7 +26,7 @@ frappe.ui.form.on("Nubefact Migration Job", {
             frappe.user_roles.includes(role)
         );
         frm.dashboard.clear_headline();
-        frm.dashboard.add_progress(
+        frm.dashboard.show_progress(
             __("Migración GRE"),
             frm.doc.progress_percent || 0,
             `${frm.doc.processed_count || 0} / ${frm.doc.total_count || 0}`

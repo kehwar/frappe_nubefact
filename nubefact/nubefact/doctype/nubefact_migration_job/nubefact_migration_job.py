@@ -1746,10 +1746,14 @@ def _set_job_values(
 		values,
 		update_modified=update_modified,
 	)
+	current = None
 	if previous:
 		current = frappe.get_doc("Nubefact Migration Job", job_name)
 		current._doc_before_save = previous
 		current.save_version()
+	if update_modified:
+		current = current or frappe.get_doc("Nubefact Migration Job", job_name)
+		current.notify_update()
 
 
 def _lock_job(job_name: str) -> Document:

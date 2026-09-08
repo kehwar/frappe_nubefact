@@ -784,7 +784,7 @@ class NubefactGuiaDeRemision(Document):
 				)
 			if len(cstr(row.codigo).strip()) > 250:
 				frappe.throw(f"Ítems fila #{row.idx}: el código admite hasta 250 caracteres.")
-			if len(cstr(row.descripcion).strip()) > 250:
+			if not historical_source and len(cstr(row.descripcion).strip()) > 250:
 				frappe.throw(f"Ítems fila #{row.idx}: la descripción admite hasta 250 caracteres.")
 			self._validate_decimal_value(
 				row.cantidad,

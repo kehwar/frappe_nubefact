@@ -414,12 +414,17 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		)
 
 		job, series = self.make_job(start=199, end=199)
+		long_description = "DESCRIPCIÓN HISTÓRICA " + "X" * 250
 		xml = (
 			COMPLETE_XML.format(
 				series=series.serie,
 				packages="<cbc:TotalTransportHandlingUnitQuantity>3</cbc:TotalTransportHandlingUnitQuantity>",
 			)
 			.replace(f"{series.serie}-25", f"{series.serie}-00000199")
+			.replace(
+				"<cbc:Description>ITEM XML</cbc:Description>",
+				f"<cbc:Description>{long_description}</cbc:Description>",
+			)
 			.replace(
 				"<cbc:HandlingCode>08</cbc:HandlingCode>",
 				"<cbc:HandlingCode>13</cbc:HandlingCode>"
@@ -481,6 +486,7 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		self.assertEqual(gre.motivo_de_traslado_otros_descripcion, "SERVICIO TECNICO")
 		self.assertFalse(gre.fecha_de_entrega_al_transportista)
 		self.assertFalse(gre.transportista_placa_numero)
+		self.assertEqual(gre.items[0].descripcion, long_description)
 		self.assertEqual(gre.cadena_para_codigo_qr, qr_value)
 		files = frappe.get_all(
 			"File",
@@ -993,9 +999,22 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		start_migration(job.name)
 		dispatch.reset_mock()
 
-		run_next_migration_number(job.name)
+		with patch.object(frappe, "publish_realtime") as publish_realtime:
+			run_next_migration_number(job.name)
 
 		job.reload()
+		document_updates = [
+			call
+			for call in publish_realtime.call_args_list
+			if call.args
+			and call.args[0] == "doc_update"
+			and call.args[1].get("doctype") == job.doctype
+			and call.args[1].get("name") == job.name
+		]
+		self.assertTrue(document_updates, "Worker checkpoints must notify an open migration form.")
+		self.assertTrue(all(call.kwargs.get("after_commit") for call in document_updates))
+		self.assertTrue(all(call.kwargs.get("doctype") == job.doctype for call in document_updates))
+		self.assertTrue(all(call.kwargs.get("docname") == job.name for call in document_updates))
 		self.assertEqual(request.call_count, 1)
 		self.assertEqual(
 			job.processed_count,
