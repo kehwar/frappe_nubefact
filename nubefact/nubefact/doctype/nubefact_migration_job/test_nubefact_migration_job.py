@@ -247,6 +247,75 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 		for fieldname in ("serie", "requested_by"):
 			self.assertFalse(meta.get_field(fieldname).reqd)
 
+	def test_duplicate_copies_only_request_parameters(self):
+		request_values = {
+			"company": "Company A",
+			"local": "LOCAL-A",
+			"nubefact_series": "SERIES-A",
+			"tipo_de_comprobante": "7",
+			"serie": "TTT1",
+			"from_number": 1,
+			"to_number": 3,
+		}
+		source = frappe.get_doc(
+			{
+				"doctype": "Nubefact Migration Job",
+				**request_values,
+				"title": "TTT1 1-3",
+				"status": "Completed with Warnings",
+				"current_number": 3,
+				"current_phase": "Finalizada",
+				"progress_percent": 100,
+				"total_count": 3,
+				"processed_count": 3,
+				"created_count": 1,
+				"existing_count": 1,
+				"not_found_count": 1,
+				"warning_count": 1,
+				"failed_count": 1,
+				"requested_by": "Administrator",
+				"started_at": "2026-09-06 10:00:00",
+				"completed_at": "2026-09-06 10:05:00",
+				"last_error": "runtime error",
+				"background_job_id": "queue-job",
+				"worker_token": "worker-token",
+				"lease_expires_at": "2026-09-06 10:20:00",
+				"next_enqueue_pending": 1,
+				"cancel_requested": 1,
+				"results": [{"number": 1, "status": "Warning", "message": "runtime result"}],
+			}
+		)
+
+		duplicate = frappe.copy_doc(source, ignore_no_copy=False)
+
+		for fieldname, value in request_values.items():
+			self.assertEqual(duplicate.get(fieldname), value)
+		for fieldname in (
+			"title",
+			"status",
+			"current_number",
+			"current_phase",
+			"progress_percent",
+			"total_count",
+			"processed_count",
+			"created_count",
+			"existing_count",
+			"not_found_count",
+			"warning_count",
+			"failed_count",
+			"requested_by",
+			"started_at",
+			"completed_at",
+			"last_error",
+			"background_job_id",
+			"worker_token",
+			"lease_expires_at",
+			"next_enqueue_pending",
+			"cancel_requested",
+			"results",
+		):
+			self.assertFalse(duplicate.get(fieldname), fieldname)
+
 	def make_job(self, *, start=1, end=2):
 		company = (
 			frappe.defaults.get_user_default("Company") or frappe.get_all("Company", pluck="name", limit=1)[0]
