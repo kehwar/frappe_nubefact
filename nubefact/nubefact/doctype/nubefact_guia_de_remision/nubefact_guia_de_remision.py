@@ -649,9 +649,10 @@ class NubefactGuiaDeRemision(Document):
 					"La descripción es obligatoria cuando el motivo de traslado es Otros.",
 				)
 				description = cstr(self.motivo_de_traslado_otros_descripcion).strip()
-				if len(description) > 70 or not re.fullmatch(r"[^\W_]+(?: [^\W_]+)*", description):
+				if len(description) > 70 or not re.fullmatch(r"[^\W_]+(?:(?: ?/ ?| )[^\W_]+)*", description):
 					frappe.throw(
-						"La descripción de Otros debe ser alfanumérica, con espacios simples y hasta 70 caracteres."
+						"La descripción de Otros debe usar caracteres alfanuméricos, barras diagonales, "
+						"espacios simples y hasta 70 caracteres."
 					)
 			if motive in {"08", "09"}:
 				require_fields(

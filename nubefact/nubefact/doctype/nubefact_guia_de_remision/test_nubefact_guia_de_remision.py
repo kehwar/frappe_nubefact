@@ -225,6 +225,19 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 				with self.assertRaises(frappe.ValidationError):
 					make_valid_gre(**overrides).insert()
 
+	def test_other_transfer_reason_description_allows_forward_slash(self):
+		doc = make_valid_gre(
+			motivo_de_traslado="13",
+			motivo_de_traslado_otros_descripcion="CONSUMO / DEMO",
+		)
+
+		doc._validate_document_rules()
+
+		self.assertEqual(
+			doc._build_generate_payload()["motivo_de_traslado_otros_descripcion"],
+			"CONSUMO / DEMO",
+		)
+
 	def test_save_enforces_conditional_requirements_and_catalogs(self):
 		invalid_values = [
 			{"motivo_de_traslado": "19"},
