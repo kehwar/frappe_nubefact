@@ -28,12 +28,13 @@ The operation is asynchronous, observable, retryable, and idempotent.
 6. Skip numbers that do not exist in NubeFact and skip compatible GREs that already exist locally.
 7. Reconcile the selected series counter so an imported number can never be reissued by this app.
 8. Make interruption, retry, and repeated overlapping requests safe.
+9. Proactively discover locally unrepresented folios below each GRE Remitente series' next number and start migration jobs for them.
 
 ## 3. Non-goals
 
 - The migration must never call `generar_guia` and must never issue a new GRE.
 - It does not import GRE Transportista (type `8`) or `Nubefact Facturacion` documents. Transportista support may be specified separately in a later version.
-- It does not discover series or number ranges automatically.
+- It does not discover series from the NubeFact portal; automatic range discovery is limited to locally configured GRE Remitente series and their next-number counters.
 - It does not scrape the NubeFact portal.
 - It does not infer a later SUNAT cancellation. The documented `consultar_guia` response has no cancellation field, and GRE cancellation is performed directly in SUNAT. A migrated document therefore reflects the status returned by NubeFact; historical cancellation reconciliation remains manual.
 - It does not overwrite the business data of an existing local GRE.
@@ -193,7 +194,16 @@ This is an implementation/audit child DocType, not a separately navigable busine
 
 Rows are added as numbers are attempted; the job does not need to pre-create 1,000 rows.
 
-### 6.3 Related model changes
+### 6.3 Automatic missing-folio discovery
+
+An hourly scheduler inspects every locally configured GRE Remitente series. For folios below the series' next number, a folio is represented when either:
+
+- a local `Nubefact Guia De Remision` has the same Company, type, series, and number; or
+- a `Nubefact Migration Job Item` for that `Nubefact Series` has that number, regardless of its terminal result.
+
+When no migration is active for the series, the scheduler creates and starts one job for the earliest contiguous unrepresented range, capped at 1,000 folios. This covers both a series configured with a later initial number and gaps caused by portal issuance. The series row is locked while discovering and creating the job so concurrent scheduler runs cannot create duplicate active work. Later hourly runs continue with any remaining gaps.
+
+### 6.4 Related model changes
 
 1. Add optional, read-only, immutable Check `migrated_from_nubefact` and Link `migration_job` to `Nubefact Guia De Remision`.
 2. Add hidden unique Data `issued_identity_hash` to `Nubefact Guia De Remision`. It is a SHA-256 of canonical Company + type + Series + Number and is populated only when an identity is claimed by normal allocation or migration; unnumbered/manual drafts keep it null. A patch backfills claimed issued rows and must stop with an actionable report if duplicates already exist.

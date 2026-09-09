@@ -32,7 +32,9 @@ from nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_artifac
 )
 from nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job import (
 	OwnershipLost,
+	_find_missing_guia_range,
 	_lock_owned_job,
+	_schedule_missing_guia_migration,
 	_validate_online_route,
 	build_consultar_guia_payload,
 	cancel_migration,
@@ -358,6 +360,67 @@ class TestMigrationManagerAndWorker(FrappeTestCase):
 			}
 		).insert()
 		return job, series
+
+	def represent_guia_number(self, series, number):
+		return frappe.get_doc(
+			{
+				"doctype": "Nubefact Guia De Remision",
+				"company": series.company,
+				"local": series.local,
+				"nubefact_series": series.name,
+				"tipo_de_comprobante": "7",
+				"serie": series.serie,
+				"numero": number,
+				"skip_field_validation": 1,
+			}
+		).insert()
+
+	def represent_migration_number(self, job, number):
+		return frappe.get_doc(
+			{
+				"doctype": "Nubefact Migration Job Item",
+				"parent": job.name,
+				"parenttype": job.doctype,
+				"parentfield": "results",
+				"number": number,
+				"status": "Not Found",
+			}
+		).insert(ignore_permissions=True)
+
+	def test_missing_range_excludes_guias_and_migration_job_lines(self):
+		job, series = self.make_job(start=3, end=3)
+		frappe.db.set_value(series.doctype, series.name, "numero", 6, update_modified=False)
+		series.reload()
+		self.represent_guia_number(series, 1)
+		self.represent_guia_number(series, 2)
+		self.represent_migration_number(job, 3)
+		self.represent_guia_number(series, 4)
+
+		self.assertEqual(_find_missing_guia_range(series), (5, 5))
+
+	def test_missing_range_is_limited_to_migration_job_capacity(self):
+		_job, series = self.make_job(start=1, end=1)
+		frappe.db.set_value(series.doctype, series.name, "numero", 1502, update_modified=False)
+		series.reload()
+
+		self.assertEqual(_find_missing_guia_range(series), (1, 1000))
+
+	@patch("nubefact.nubefact.doctype.nubefact_migration_job.nubefact_migration_job._dispatch_job")
+	def test_scheduler_starts_a_job_for_the_earliest_missing_range(self, dispatch):
+		audit_job, series = self.make_job(start=4, end=4)
+		frappe.db.set_value(series.doctype, series.name, "numero", 6, update_modified=False)
+		series.reload()
+		for number in (1, 2, 3):
+			self.represent_guia_number(series, number)
+		self.represent_migration_number(audit_job, 4)
+
+		job_name = _schedule_missing_guia_migration(series.name)
+
+		job = frappe.get_doc("Nubefact Migration Job", job_name)
+		self.assertEqual((job.from_number, job.to_number), (5, 5))
+		self.assertEqual(job.status, "Queued")
+		self.assertEqual(job.requested_by, "Administrator")
+		dispatch.assert_called_once_with(job.name)
 
 	def test_start_requires_an_eleven_digit_company_ruc(self):
 		job, _series = self.make_job()

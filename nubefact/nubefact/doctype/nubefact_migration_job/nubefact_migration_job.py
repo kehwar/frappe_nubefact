@@ -307,6 +307,10 @@ def create_and_start_migration(
 @frappe.whitelist(methods=["POST"])
 def start_migration(job_name: str) -> None:
 	_require_manager()
+	_start_migration(job_name, requested_by=frappe.session.user)
+
+
+def _start_migration(job_name: str, *, requested_by: str) -> None:
 	job = _lock_job(job_name)
 	if job.status in ACTIVE_STATUSES or job.status in {"Completed", "Completed with Warnings"}:
 		return
@@ -322,7 +326,7 @@ def start_migration(job_name: str) -> None:
 		"title": f"{cstr(job.serie).strip().upper()} {cint(job.from_number)}-{cint(job.to_number)}",
 		"total_count": cint(job.to_number) - cint(job.from_number) + 1,
 		"status": "Queued",
-		"requested_by": frappe.session.user,
+		"requested_by": requested_by,
 		"started_at": job.started_at or now,
 		"completed_at": None,
 		"last_error": "",
@@ -449,6 +453,148 @@ def run_next_migration_number(job_name: str) -> None:
 	except Exception as exc:
 		frappe.db.rollback()
 		_safe_fail_item_or_job(job_name, token, item_name, exc)
+
+
+def schedule_missing_guia_migrations() -> list[str]:
+	"""Create one migration job per GRE series for its earliest unrepresented folios."""
+
+	created: list[str] = []
+	series_names = frappe.get_all(
+		"Nubefact Series",
+		filters={"tipo_de_comprobante": "7"},
+		pluck="name",
+		order_by="name asc",
+		limit_page_length=0,
+	)
+	# Start each per-series transaction with a fresh repeatable-read snapshot.
+	# The series row lock then serializes concurrent scheduler scans.
+	frappe.db.commit()
+	for series_name in series_names:
+		try:
+			job_name = _schedule_missing_guia_migration(series_name)
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(
+				title=f"Nubefact Migration Job: detección automática fallida ({series_name})",
+				message=frappe.get_traceback(),
+			)
+			continue
+		if job_name:
+			created.append(job_name)
+	return created
+
+
+def _schedule_missing_guia_migration(series_name: str) -> str | None:
+	"""Atomically discover and start the earliest missing range for one series."""
+
+	_lock_series(series_name)
+	series = frappe.get_doc("Nubefact Series", series_name)
+	if cstr(series.tipo_de_comprobante) != "7" or frappe.db.exists(
+		"Nubefact Migration Job",
+		{
+			"nubefact_series": series.name,
+			"status": ["in", sorted(ACTIVE_STATUSES)],
+		},
+	):
+		frappe.db.commit()
+		return None
+
+	missing_range = _find_missing_guia_range(series)
+	if not missing_range:
+		frappe.db.commit()
+		return None
+
+	from_number, to_number = missing_range
+	job = frappe.get_doc(
+		{
+			"doctype": "Nubefact Migration Job",
+			"company": series.company,
+			"local": series.local,
+			"nubefact_series": series.name,
+			"from_number": from_number,
+			"to_number": to_number,
+		}
+	).insert(ignore_permissions=True)
+	_start_migration(job.name, requested_by="Administrator")
+	return job.name
+
+
+def _find_missing_guia_range(series: Document) -> tuple[int, int] | None:
+	"""Return the earliest contiguous, migration-sized gap below the next folio."""
+
+	last_candidate = cint(series.numero) - 1
+	if last_candidate < 1:
+		return None
+
+	params = {
+		"company": series.company,
+		"series": cstr(series.serie).strip().upper(),
+		"series_name": series.name,
+		"last_candidate": last_candidate,
+	}
+	rows = frappe.db.sql(
+		"""
+		WITH represented AS (
+			SELECT gre.`numero` AS folio
+			FROM `tabNubefact Guia De Remision` gre
+			WHERE gre.`company` = %(company)s
+				AND gre.`tipo_de_comprobante` = '7'
+				AND gre.`serie` = %(series)s
+				AND gre.`numero` BETWEEN 1 AND %(last_candidate)s
+			UNION
+			SELECT item.`number` AS folio
+			FROM `tabNubefact Migration Job Item` item
+			INNER JOIN `tabNubefact Migration Job` job ON job.`name` = item.`parent`
+			WHERE job.`nubefact_series` = %(series_name)s
+				AND item.`number` BETWEEN 1 AND %(last_candidate)s
+		), candidates AS (
+			SELECT 1 AS folio
+			UNION
+			SELECT represented.`folio` + 1 AS folio
+			FROM represented
+			WHERE represented.`folio` < %(last_candidate)s
+		)
+		SELECT MIN(candidates.`folio`) AS folio
+		FROM candidates
+		LEFT JOIN represented ON represented.`folio` = candidates.`folio`
+		WHERE represented.`folio` IS NULL
+			AND candidates.`folio` <= %(last_candidate)s
+		""",
+		params,
+		as_dict=True,
+	)
+	from_number = cint(rows[0].folio) if rows else 0
+	if not from_number:
+		return None
+
+	next_rows = frappe.db.sql(
+		"""
+		SELECT MIN(represented.`folio`) AS folio
+		FROM (
+			SELECT gre.`numero` AS folio
+			FROM `tabNubefact Guia De Remision` gre
+			WHERE gre.`company` = %(company)s
+				AND gre.`tipo_de_comprobante` = '7'
+				AND gre.`serie` = %(series)s
+				AND gre.`numero` > %(from_number)s
+				AND gre.`numero` <= %(last_candidate)s
+			UNION
+			SELECT item.`number` AS folio
+			FROM `tabNubefact Migration Job Item` item
+			INNER JOIN `tabNubefact Migration Job` job ON job.`name` = item.`parent`
+			WHERE job.`nubefact_series` = %(series_name)s
+				AND item.`number` > %(from_number)s
+				AND item.`number` <= %(last_candidate)s
+		) represented
+		""",
+		{**params, "from_number": from_number},
+		as_dict=True,
+	)
+	next_represented = cint(next_rows[0].folio) if next_rows else 0
+	to_number = min(last_candidate, from_number + MAX_RANGE - 1)
+	if next_represented:
+		to_number = min(to_number, next_represented - 1)
+	return from_number, to_number
 
 
 def recover_stale_migration_jobs() -> None:
