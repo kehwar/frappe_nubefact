@@ -129,7 +129,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                 !frm.doc.migrated_from_nubefact &&
                 ["Borrador", "Error"].includes(frm.doc.status || "Borrador")
             ) {
-                frm.add_custom_button(__("Enviar a Nubefact"), () => {
+                frm.add_custom_button(__("Enviar a Nubefact / SUNAT"), () => {
                     frm.trigger("open_send_dialog");
                 });
             }
