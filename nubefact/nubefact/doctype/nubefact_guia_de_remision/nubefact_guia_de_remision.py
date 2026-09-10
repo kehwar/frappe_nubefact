@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -172,6 +173,7 @@ class NubefactGuiaDeRemision(Document):
 
 	def validate(self):
 		self._validate_migration_fields()
+		self._validate_internal_state_fields()
 		self._validate_manual_void_updates()
 		if self._is_historical_import():
 			self._validate_historical_import()
@@ -210,6 +212,17 @@ class NubefactGuiaDeRemision(Document):
 			for fieldname in ("migration_job", "issued_identity_hash")
 		):
 			frappe.throw("La procedencia y la identidad emitida de la GRE son inmutables.")
+
+	def _validate_internal_state_fields(self):
+		previous_value = (
+			frappe.db.get_value(self.doctype, self.name, "duplicate_scan_can_continue")
+			if not self.is_new()
+			else 0
+		)
+		if cint(previous_value) != cint(self.duplicate_scan_can_continue):
+			frappe.throw(
+				"El estado interno de emisión de la GRE solo puede ser administrado por el servidor."
+			)
 
 	def _validate_historical_import(self):
 		if cstr(self.tipo_de_comprobante) != "7":
@@ -1007,15 +1020,26 @@ def enviar_a_nubefact(name: str):
 		frappe.throw("Solo se pueden enviar guías en estado Borrador o Error.")
 
 	number_was_unassigned = not cint(doc.numero)
+	reserved_attempt_error_code = _get_latest_reserved_attempt_error_code(doc)
+	continue_duplicate_scan = bool(
+		(
+			cint(doc.duplicate_scan_can_continue)
+			and reserved_attempt_error_code == NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE
+		)
+		or _has_exhausted_duplicate_scan_history(doc)
+	)
 	doc._action = "save"
 	doc.run_before_save_methods()
 	retry_after_terminal_rejection = cint(
 		doc.numero_asignado_automaticamente
 	) and _has_recorded_terminal_sunat_rejection(doc)
+	allow_duplicate_skipping = bool(
+		number_was_unassigned or retry_after_terminal_rejection or continue_duplicate_scan
+	)
 	make_gre_artifact_names(doc.company, doc.tipo_de_comprobante, doc.serie, doc.numero or 1)
 	allocate_document_number(doc, mark_as_issuing=True)
 	issuance_modified = frappe.db.get_value(doc.doctype, doc.name, "modified")
-	if retry_after_terminal_rejection:
+	if retry_after_terminal_rejection or continue_duplicate_scan:
 		attempted_number = cint(doc.numero)
 		payload = doc._build_generate_payload()
 		if _request_identity_matches_document(doc, payload, attempted_number):
@@ -1024,12 +1048,35 @@ def enviar_a_nubefact(name: str):
 				expected_number=attempted_number,
 				expected_modified=issuance_modified,
 			)
+			cleared_values = dict(_CLEARED_RESPONSE_VALUES)
+			doc.update(cleared_values)
+			frappe.db.set_value(
+				doc.doctype,
+				doc.name,
+				cleared_values,
+				update_modified=False,
+			)
+
+	request_payload = doc._build_generate_payload()
+	duplicate_scan_can_continue = bool(
+		allow_duplicate_skipping
+		and _request_identity_matches_document(doc, request_payload, cint(doc.numero))
+	)
+	doc.duplicate_scan_can_continue = cint(duplicate_scan_can_continue)
+	frappe.db.set_value(
+		doc.doctype,
+		doc.name,
+		"duplicate_scan_can_continue",
+		cint(duplicate_scan_can_continue),
+		update_modified=False,
+	)
 
 	# Persist the reservation before the external request. A timeout can hide
 	# a successful issue, so an assigned number must never be reused.
 	frappe.db.commit()
 
 	duplicate_numbers_skipped = 0
+	request_identity_matches_document = False
 	try:
 		while True:
 			attempted_number = cint(doc.numero)
@@ -1044,10 +1091,19 @@ def enviar_a_nubefact(name: str):
 					clear_previous=True,
 					expected_issuance_modified=issuance_modified,
 				)
+				doc.duplicate_scan_can_continue = 0
+				frappe.db.set_value(
+					doc.doctype,
+					doc.name,
+					"duplicate_scan_can_continue",
+					0,
+					update_modified=False,
+				)
+				frappe.db.commit()
 				break
 			except NubefactAPIError as exc:
 				can_skip_duplicate = (
-					(number_was_unassigned or retry_after_terminal_rejection)
+					allow_duplicate_skipping
 					and request_identity_matches_document
 					and exc.error_code == NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE
 					and duplicate_numbers_skipped < MAX_DUPLICATE_NUMBER_SKIPS
@@ -1061,9 +1117,16 @@ def enviar_a_nubefact(name: str):
 					expected_number=attempted_number,
 					expected_modified=issuance_modified,
 				)
+				issuance_modified = _renew_document_issuance_lease(doc)
 				frappe.db.commit()
 				duplicate_numbers_skipped += 1
 	except Exception as exc:
+		duplicate_scan_can_continue = bool(
+			isinstance(exc, NubefactAPIError)
+			and allow_duplicate_skipping
+			and request_identity_matches_document
+			and exc.error_code == NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE
+		)
 		frappe.db.rollback()
 		error_message = cstr(exc)
 		values = {
@@ -1071,6 +1134,7 @@ def enviar_a_nubefact(name: str):
 			"aceptada_por_sunat": 0,
 			"last_sunat_check": now_datetime(),
 			"error_message": error_message,
+			"duplicate_scan_can_continue": cint(duplicate_scan_can_continue),
 		}
 
 	if values and values.get("status") == "Error":
@@ -1085,6 +1149,19 @@ def enviar_a_nubefact(name: str):
 	return values
 
 
+def _renew_document_issuance_lease(doc: NubefactGuiaDeRemision) -> Any:
+	modified = now_datetime()
+	frappe.db.set_value(
+		doc.doctype,
+		doc.name,
+		{"modified": modified, "modified_by": frappe.session.user},
+		update_modified=False,
+	)
+	doc.modified = frappe.db.get_value(doc.doctype, doc.name, "modified")
+	doc.modified_by = frappe.session.user
+	return doc.modified
+
+
 def _request_identity_matches_document(
 	doc: NubefactGuiaDeRemision, payload: dict[str, Any], attempted_number: int
 ) -> bool:
@@ -1094,6 +1171,67 @@ def _request_identity_matches_document(
 		and cstr(payload.get("serie")).strip() == cstr(doc.serie).strip()
 		and cint(payload.get("numero")) == attempted_number
 	)
+
+
+def _get_generate_attempt_history(doc: NubefactGuiaDeRemision) -> list[dict[str, Any]]:
+	return frappe.get_all(
+		"Nubefact API Log",
+		filters={
+			"referencia_guia_de_remision": doc.name,
+			"operacion": "generar_guia",
+		},
+		fields=["error_code", "request_payload"],
+		order_by="request_timestamp asc",
+		limit_page_length=0,
+	)
+
+
+def _get_matching_attempt_number(doc: NubefactGuiaDeRemision, request_payload: Any) -> int | None:
+	try:
+		payload = json.loads(cstr(request_payload))
+	except (TypeError, ValueError):
+		return None
+	attempted_number = cint(payload.get("numero")) if isinstance(payload, dict) else 0
+	if not isinstance(payload, dict) or not _request_identity_matches_document(
+		doc, payload, attempted_number
+	):
+		return None
+	return attempted_number
+
+
+def _get_latest_reserved_attempt_error_code(doc: NubefactGuiaDeRemision) -> str | None:
+	latest_matching_attempt = None
+	for row in _get_generate_attempt_history(doc):
+		if _get_matching_attempt_number(doc, row.request_payload) == cint(doc.numero):
+			latest_matching_attempt = row
+	if latest_matching_attempt is None:
+		return None
+	return cstr(latest_matching_attempt.error_code)
+
+
+def _has_exhausted_duplicate_scan_history(doc: NubefactGuiaDeRemision) -> bool:
+	"""Recover continuation state for GREs that predate the durable marker."""
+
+	consecutive_numbers: list[int] = []
+	for row in _get_generate_attempt_history(doc):
+		if cstr(row.error_code) != NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE:
+			consecutive_numbers = []
+			continue
+		number = _get_matching_attempt_number(doc, row.request_payload)
+		if not number:
+			consecutive_numbers = []
+			continue
+
+		if consecutive_numbers and number == consecutive_numbers[-1]:
+			continue
+		if not consecutive_numbers or number > consecutive_numbers[-1]:
+			consecutive_numbers.append(number)
+		else:
+			consecutive_numbers = [number]
+		if len(consecutive_numbers) > MAX_DUPLICATE_NUMBER_SKIPS and number == cint(doc.numero):
+			return True
+
+	return False
 
 
 def _has_recorded_terminal_sunat_rejection(doc: NubefactGuiaDeRemision) -> bool:

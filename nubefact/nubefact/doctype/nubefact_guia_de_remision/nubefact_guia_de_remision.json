@@ -18,6 +18,7 @@
   "serie",
   "numero",
   "numero_asignado_automaticamente",
+  "duplicate_scan_can_continue",
   "migrated_from_nubefact",
   "migration_job",
   "issued_identity_hash",
@@ -207,6 +208,15 @@
    "fieldtype": "Check",
    "hidden": 1,
    "label": "Número Asignado Automáticamente",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "duplicate_scan_can_continue",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Puede Continuar Búsqueda de Duplicados",
    "no_copy": 1,
    "read_only": 1
   },

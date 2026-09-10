@@ -134,14 +134,19 @@ class TestSetup(FrappeTestCase):
 
 		self.assertEqual(linked, expected)
 
-	def test_managers_have_write_access_to_all_nubefact_doctypes(self):
+	def test_managers_have_expected_access_to_nubefact_doctypes(self):
 		for doctype in WRITE_DOCTYPES | READ_ONLY_DOCTYPES:
 			for role in ("System Manager", "Nubefact Manager"):
 				permission = self._get_permission(doctype, role)
 				self.assertTrue(permission.read)
-				self.assertTrue(permission.write)
-				self.assertTrue(permission.create)
-				self.assertTrue(permission.delete)
+				if doctype == "Nubefact API Log":
+					self.assertFalse(permission.write)
+					self.assertFalse(permission.create)
+					self.assertFalse(permission.delete)
+				else:
+					self.assertTrue(permission.write)
+					self.assertTrue(permission.create)
+					self.assertTrue(permission.delete)
 
 	def test_accounts_manager_has_no_nubefact_permissions(self):
 		permissions = frappe.get_all(

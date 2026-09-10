@@ -28,18 +28,13 @@ class NubefactAPILog(Document):
 		self.name = append_number_if_name_exists("Nubefact API Log", timestamp.strftime("%Y%m%d-%H%M%S-%f"))
 
 	def validate(self):
-		previous = self.get_doc_before_save()
-		if not previous and not self.is_new():
-			previous = frappe.db.get_value(self.doctype, self.name, ["migration_job"], as_dict=True)
-		if previous and previous.migration_job:
-			frappe.throw("Los registros API de migración son inmutables y se conservan para auditoría.")
-		if self.migration_job and not self.flags.get("migration_controlled_write"):
-			frappe.throw("Los registros API de migración sólo pueden ser creados por el servidor.")
+		if not self.is_new():
+			frappe.throw("Los registros API son inmutables y se conservan para auditoría.")
+		if not self.flags.get("api_log_controlled_write"):
+			frappe.throw("Los registros API sólo pueden ser creados por el servidor.")
 
 	def on_trash(self):
-		migration_job = self.migration_job or frappe.db.get_value(self.doctype, self.name, "migration_job")
-		if migration_job:
-			frappe.throw("Los registros API de migración no se pueden eliminar; consérvelos para auditoría.")
+		frappe.throw("Los registros API no se pueden eliminar; consérvelos para auditoría.")
 
 
 def create_api_log(
@@ -87,7 +82,7 @@ def create_api_log(
 		doc["owner"] = user
 
 	log = frappe.get_doc(doc)
-	log.flags.migration_controlled_write = True
+	log.flags.api_log_controlled_write = True
 	log.insert(ignore_permissions=True)
 	frappe.db.commit()
 	return log.name

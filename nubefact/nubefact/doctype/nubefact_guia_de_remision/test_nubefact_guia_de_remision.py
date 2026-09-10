@@ -29,6 +29,10 @@ from nubefact.patches.retitle_guia_de_remision_documents import execute as retit
 from nubefact.utils import _mark_attachment_job_complete, download_and_attach_file
 
 
+class SimulatedHardInterruption(BaseException):
+	pass
+
+
 def make_valid_gre(**overrides):
 	latest_local = frappe.get_all(
 		"Nubefact Local",
@@ -1444,6 +1448,227 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 11)
 		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 12)
 		enqueue_files.assert_not_called()
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_retry_after_bounded_duplicate_scan_continues_with_next_number(self, post, enqueue_files):
+		local = self.make_local()
+		series = self.make_series(local)
+		make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=2,
+		).insert()
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+
+		def respond_for_number(*args, **kwargs):
+			number = kwargs["json"]["numero"]
+			if number <= 12:
+				return self.make_http_response(
+					{
+						"codigo": 23,
+						"errors": "Este documento ya existe en NubeFact",
+					}
+				)
+			return self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 13,
+					"aceptada_por_sunat": True,
+				}
+			)
+
+		post.side_effect = respond_for_number
+
+		first_result = enviar_a_nubefact(doc.name)
+		self.assertEqual(first_result["status"], "Error")
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "duplicate_scan_can_continue"), 1)
+
+		# Simulate an affected GRE created before the continuation marker existed.
+		frappe.db.set_value(doc.doctype, doc.name, "duplicate_scan_can_continue", 0)
+		second_result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(second_result["status"], "Aceptada")
+		self.assertEqual(
+			[call.kwargs["json"]["numero"] for call in post.call_args_list],
+			[1, *range(3, 14)],
+		)
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 13)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 14)
+		enqueue_files.assert_called_once()
+
+	def test_duplicate_scan_marker_is_server_managed(self):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+
+		doc.duplicate_scan_can_continue = 1
+		with self.assertRaisesRegex(frappe.ValidationError, "solo puede ser administrado por el servidor"):
+			doc.save()
+
+	def test_interruption_without_api_log_does_not_skip_an_ambiguous_number(self):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+
+		with patch(
+			"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision._request_extract_and_save_response",
+			side_effect=SimulatedHardInterruption,
+		) as request_response:
+			with self.assertRaises(SimulatedHardInterruption):
+				enviar_a_nubefact(doc.name)
+			request_response.assert_called_once()
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "duplicate_scan_can_continue"), 1)
+		frappe.db.set_value(doc.doctype, doc.name, "status", "Error")
+
+		with patch("nubefact.utils.nubefact.requests.post") as post:
+			post.return_value = self.make_http_response(
+				{
+					"codigo": 23,
+					"errors": "Este documento ya existe en NubeFact",
+				}
+			)
+			result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(result["status"], "Error")
+		self.assertEqual(post.call_count, 1)
+		self.assertEqual(post.call_args.kwargs["json"]["numero"], 1)
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 1)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 2)
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "duplicate_scan_can_continue"), 0)
+
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_interruption_after_duplicate_log_resumes_with_next_number(self, post):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+		post.side_effect = [
+			self.make_http_response(
+				{
+					"codigo": 23,
+					"errors": "Este documento ya existe en NubeFact",
+				}
+			),
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 2,
+					"aceptada_por_sunat": True,
+				}
+			),
+		]
+
+		with patch(
+			"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.advance_document_number_after_nubefact_duplicate",
+			side_effect=SimulatedHardInterruption,
+		):
+			with self.assertRaises(SimulatedHardInterruption):
+				enviar_a_nubefact(doc.name)
+		frappe.db.set_value(doc.doctype, doc.name, "status", "Error")
+
+		result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(result["status"], "Aceptada")
+		self.assertEqual([call.kwargs["json"]["numero"] for call in post.call_args_list], [1, 2])
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 2)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 3)
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_timeout_after_terminal_rejection_keeps_the_replacement_number(self, post, enqueue_files):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+		).insert()
+		post.side_effect = [
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 1,
+					"aceptada_por_sunat": False,
+				}
+			),
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 1,
+					"aceptada_por_sunat": False,
+					"sunat_responsecode": "3366",
+					"sunat_description": "Rechazada por SUNAT",
+				}
+			),
+			requests.Timeout("timeout"),
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 2,
+					"aceptada_por_sunat": True,
+				}
+			),
+		]
+
+		enviar_a_nubefact(doc.name)
+		refrescar_estado_sunat(doc.name)
+		timed_out_result = enviar_a_nubefact(doc.name)
+		final_result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(timed_out_result["status"], "Error")
+		self.assertEqual(final_result["status"], "Aceptada")
+		self.assertEqual(
+			[
+				(call.kwargs["json"]["operacion"], int(call.kwargs["json"]["numero"]))
+				for call in post.call_args_list
+			],
+			[
+				("generar_guia", 1),
+				("consultar_guia", 1),
+				("generar_guia", 2),
+				("generar_guia", 2),
+			],
+		)
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 2)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 3)
+		self.assertEqual(enqueue_files.call_count, 3)
 
 	@patch(
 		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
