@@ -143,6 +143,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Estado",
    "no_copy": 1,
    "options": "Borrador\nEnviando\nPendiente de Aceptacion\nAceptada\nAnulación Solicitada\nAnulada\nError",
@@ -151,6 +152,8 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Compañía",
    "options": "Company"
   },
@@ -172,7 +175,6 @@
    "default": "7",
    "fieldname": "tipo_de_comprobante",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Tipo de Comprobante",
    "options": "Nubefact Tipo de Comprobante"
   },
@@ -187,6 +189,7 @@
    "fieldname": "serie",
    "fieldtype": "Data",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Serie",
    "read_only": 1
   },
@@ -194,7 +197,6 @@
    "description": "Se asigna automáticamente al emitir el documento en NubeFact.",
    "fieldname": "numero",
    "fieldtype": "Int",
-   "in_list_view": 1,
    "label": "Número",
    "no_copy": 1,
    "read_only": 1
@@ -241,7 +243,6 @@
    "default": "Today",
    "fieldname": "fecha_de_emision",
    "fieldtype": "Date",
-   "in_list_view": 1,
    "label": "Fecha de Emisión"
   },
   {
@@ -277,6 +278,8 @@
   {
    "fieldname": "cliente_denominacion",
    "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Razón Social de Cliente"
   },
   {
@@ -644,6 +647,7 @@
   {
    "fieldname": "observaciones",
    "fieldtype": "Text",
+   "in_standard_filter": 1,
    "label": "Observaciones"
   },
   {
