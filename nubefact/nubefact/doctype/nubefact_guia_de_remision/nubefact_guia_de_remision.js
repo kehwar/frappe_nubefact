@@ -134,7 +134,11 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                 });
             }
 
-            if (!["Anulación Solicitada", "Anulada"].includes(frm.doc.status)) {
+            if (
+                !["Borrador", "Anulación Solicitada", "Anulada"].includes(
+                    frm.doc.status || "Borrador"
+                )
+            ) {
                 frm.add_custom_button(__("Refrescar estado SUNAT"), async () => {
                     await watcher.refresh_now_and_continue();
 
@@ -203,11 +207,11 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
         });
     },
     open_send_dialog(frm) {
-        frappe.confirm(__("¿Confirmas enviar esta Guía de Remisión a Nubefact?"), async () => {
-            if (frm.is_dirty()) {
-                await frm.save();
-            }
+        if (frm.is_dirty()) {
+            frappe.throw(__("Guarde los cambios antes de enviar la Guía de Remisión a Nubefact."));
+        }
 
+        frappe.confirm(__("¿Confirmas enviar esta Guía de Remisión a Nubefact?"), async () => {
             const { message } = await frappe.call({
                 method: "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enviar_a_nubefact",
                 args: {
