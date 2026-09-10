@@ -154,11 +154,21 @@ class NubefactGuiaDeRemision(Document):
 		self.name = series_prefix + getseries(f"NubefactGuiaDeRemision::{series_prefix}", 6)
 
 	def before_validate(self):
+		self._trim_string_fields()
 		validate_document_is_not_being_issued(self)
 		if not self.status:
 			self.status = "Borrador"
 
 		self._set_inferred_values()
+
+	def _trim_string_fields(self):
+		"""Strip boundary whitespace from every string field, including child rows."""
+
+		for document in (self, *self.get_all_children()):
+			for field in document.meta.fields:
+				value = document.get(field.fieldname)
+				if isinstance(value, str):
+					document.set(field.fieldname, value.strip())
 
 	def validate(self):
 		self._validate_migration_fields()
@@ -999,23 +1009,33 @@ def enviar_a_nubefact(name: str):
 	number_was_unassigned = not cint(doc.numero)
 	doc._action = "save"
 	doc.run_before_save_methods()
+	retry_after_terminal_rejection = cint(
+		doc.numero_asignado_automaticamente
+	) and _has_recorded_terminal_sunat_rejection(doc)
 	make_gre_artifact_names(doc.company, doc.tipo_de_comprobante, doc.serie, doc.numero or 1)
 	allocate_document_number(doc, mark_as_issuing=True)
+	issuance_modified = frappe.db.get_value(doc.doctype, doc.name, "modified")
+	if retry_after_terminal_rejection:
+		attempted_number = cint(doc.numero)
+		payload = doc._build_generate_payload()
+		if _request_identity_matches_document(doc, payload, attempted_number):
+			advance_document_number_after_nubefact_duplicate(
+				doc,
+				expected_number=attempted_number,
+				expected_modified=issuance_modified,
+			)
+
 	# Persist the reservation before the external request. A timeout can hide
 	# a successful issue, so an assigned number must never be reused.
 	frappe.db.commit()
-	issuance_modified = frappe.db.get_value(doc.doctype, doc.name, "modified")
 
 	duplicate_numbers_skipped = 0
 	try:
 		while True:
 			attempted_number = cint(doc.numero)
 			payload = doc._build_generate_payload()
-			request_identity_matches_document = (
-				payload.get("operacion") == "generar_guia"
-				and cstr(payload.get("tipo_de_comprobante")) == cstr(cint(doc.tipo_de_comprobante))
-				and cstr(payload.get("serie")).strip() == cstr(doc.serie).strip()
-				and cint(payload.get("numero")) == attempted_number
+			request_identity_matches_document = _request_identity_matches_document(
+				doc, payload, attempted_number
 			)
 			try:
 				values = _request_extract_and_save_response(
@@ -1027,7 +1047,7 @@ def enviar_a_nubefact(name: str):
 				break
 			except NubefactAPIError as exc:
 				can_skip_duplicate = (
-					number_was_unassigned
+					(number_was_unassigned or retry_after_terminal_rejection)
 					and request_identity_matches_document
 					and exc.error_code == NUBEFACT_DUPLICATE_DOCUMENT_ERROR_CODE
 					and duplicate_numbers_skipped < MAX_DUPLICATE_NUMBER_SKIPS
@@ -1063,6 +1083,27 @@ def enviar_a_nubefact(name: str):
 			frappe.db.commit()
 
 	return values
+
+
+def _request_identity_matches_document(
+	doc: NubefactGuiaDeRemision, payload: dict[str, Any], attempted_number: int
+) -> bool:
+	return (
+		payload.get("operacion") == "generar_guia"
+		and cstr(payload.get("tipo_de_comprobante")) == cstr(cint(doc.tipo_de_comprobante))
+		and cstr(payload.get("serie")).strip() == cstr(doc.serie).strip()
+		and cint(payload.get("numero")) == attempted_number
+	)
+
+
+def _has_recorded_terminal_sunat_rejection(doc: NubefactGuiaDeRemision) -> bool:
+	"""Return whether the reserved identity is known to be unusable after SUNAT rejection."""
+
+	if cint(doc.aceptada_por_sunat):
+		return False
+	response_code = cstr(doc.sunat_responsecode or "").strip()
+	soap_error = cstr(doc.sunat_soap_error or "").strip()
+	return bool(soap_error or (response_code and response_code != "0"))
 
 
 @frappe.whitelist(methods=["POST"])

@@ -195,6 +195,28 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 				with self.assertRaises(frappe.ValidationError):
 					make_valid_gre(**{fieldname: None}).insert()
 
+	def test_save_trims_header_and_child_string_fields(self):
+		doc = make_valid_gre(
+			motivo_de_traslado="04",
+			cliente_denominacion="  CLIENTE DE PRUEBA  ",
+			punto_de_partida_codigo_establecimiento_sunat=" 0002 ",
+			punto_de_llegada_codigo_establecimiento_sunat=" 0000 ",
+		)
+		doc.items[0].codigo = " ITEM-1 "
+		doc.items[0].descripcion = " ITEM DE PRUEBA "
+
+		doc.insert()
+
+		self.assertEqual(doc.cliente_denominacion, "CLIENTE DE PRUEBA")
+		self.assertEqual(doc.punto_de_partida_codigo_establecimiento_sunat, "0002")
+		self.assertEqual(doc.punto_de_llegada_codigo_establecimiento_sunat, "0000")
+		self.assertEqual(doc.items[0].codigo, "ITEM-1")
+		self.assertEqual(doc.items[0].descripcion, "ITEM DE PRUEBA")
+		self.assertEqual(
+			doc._build_generate_payload()["punto_de_partida_codigo_establecimiento_sunat"],
+			"0002",
+		)
+
 	def test_save_rejects_invalid_header_formats_and_ranges(self):
 		invalid_values = [
 			{"serie": "F001"},
@@ -1212,6 +1234,80 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			"23",
 		)
 		enqueue_files.assert_called_once()
+
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
+	)
+	@patch("nubefact.utils.nubefact.requests.post")
+	def test_retry_after_terminal_sunat_rejection_uses_a_new_number(self, post, enqueue_files):
+		local = self.make_local()
+		series = self.make_series(local)
+		doc = make_valid_gre(
+			company=local.company,
+			local=local.name,
+			nubefact_series=series.name,
+			serie=series.serie,
+			numero=None,
+			motivo_de_traslado="04",
+			punto_de_partida_codigo_establecimiento_sunat=" 0002 ",
+			punto_de_llegada_codigo_establecimiento_sunat="0000",
+		).insert()
+		post.side_effect = [
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 1,
+					"aceptada_por_sunat": False,
+				}
+			),
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 1,
+					"aceptada_por_sunat": False,
+					"sunat_responsecode": "3366",
+					"sunat_description": "Código de establecimiento no declarado",
+				}
+			),
+			self.make_http_response(
+				{
+					"tipo_de_comprobante": 7,
+					"serie": series.serie,
+					"numero": 2,
+					"aceptada_por_sunat": True,
+				}
+			),
+		]
+
+		first_result = enviar_a_nubefact(doc.name)
+		self.assertEqual(first_result["status"], "Pendiente de Aceptacion")
+		rejected_result = refrescar_estado_sunat(doc.name)
+		self.assertEqual(rejected_result["status"], "Error")
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 1)
+
+		second_result = enviar_a_nubefact(doc.name)
+
+		self.assertEqual(second_result["status"], "Aceptada")
+		self.assertEqual(
+			[
+				(call.kwargs["json"]["operacion"], int(call.kwargs["json"]["numero"]))
+				for call in post.call_args_list
+			],
+			[
+				("generar_guia", 1),
+				("consultar_guia", 1),
+				("generar_guia", 2),
+			],
+		)
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "numero"), 2)
+		self.assertEqual(frappe.db.get_value(series.doctype, series.name, "numero"), 3)
+		self.assertEqual(
+			frappe.db.count("Nubefact API Log", {"referencia_guia_de_remision": doc.name}),
+			3,
+		)
+		self.assertEqual(enqueue_files.call_count, 3)
 
 	@patch(
 		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.enqueue_nubefact_file_downloads"
