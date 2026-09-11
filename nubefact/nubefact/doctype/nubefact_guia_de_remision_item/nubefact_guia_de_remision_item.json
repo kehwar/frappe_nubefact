@@ -5,15 +5,16 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "unidad_de_medida",
   "codigo",
   "descripcion",
   "cantidad",
+  "unidad_de_medida",
   "codigo_dam",
-    "custom"
+  "custom"
  ],
  "fields": [
   {
+   "columns": 1,
    "fieldname": "unidad_de_medida",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -21,18 +22,21 @@
    "options": "Nubefact Unidad de Medida"
   },
   {
+   "columns": 1,
    "fieldname": "codigo",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Código"
   },
   {
+   "columns": 3,
    "fieldname": "descripcion",
    "fieldtype": "Text",
    "in_list_view": 1,
    "label": "Descripción"
   },
   {
+   "columns": 1,
    "fieldname": "cantidad",
    "fieldtype": "Float",
    "in_list_view": 1,
