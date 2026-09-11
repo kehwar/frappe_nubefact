@@ -82,6 +82,30 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                 transportista_placa_numero: "vehiculo",
             },
         });
+        register_catalog_autocomplete(frm, {
+            fieldname: "punto_de_partida_codigo_establecimiento_sunat",
+            doctype: "Nubefact Local",
+            search_filters: get_establishment_search_filters,
+            record_filters: get_establishment_record_filters,
+            selection_filters: get_establishment_selection_filters,
+            target_fields: {
+                punto_de_partida_codigo_establecimiento_sunat: "codigo_sunat",
+                punto_de_partida_ubigeo: "ubigeo",
+                punto_de_partida_direccion: "direccion",
+            },
+        });
+        register_catalog_autocomplete(frm, {
+            fieldname: "punto_de_llegada_codigo_establecimiento_sunat",
+            doctype: "Nubefact Local",
+            search_filters: get_establishment_search_filters,
+            record_filters: get_establishment_record_filters,
+            selection_filters: get_establishment_selection_filters,
+            target_fields: {
+                punto_de_llegada_codigo_establecimiento_sunat: "codigo_sunat",
+                punto_de_llegada_ubigeo: "ubigeo",
+                punto_de_llegada_direccion: "direccion",
+            },
+        });
     },
     async nubefact_series(frm) {
         const requestedSeries = frm.doc.nubefact_series;
@@ -116,6 +140,8 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
 
         setup_catalog_autocomplete(frm, "transportista_placa_numero");
         setup_catalog_autocomplete(frm, "conductor_documento_numero");
+        setup_catalog_autocomplete(frm, "punto_de_partida_codigo_establecimiento_sunat");
+        setup_catalog_autocomplete(frm, "punto_de_llegada_codigo_establecimiento_sunat");
 
         if (!frm.is_new()) {
             const watcher = window.nubefact.get_watcher(
@@ -486,12 +512,18 @@ function register_catalog_autocomplete(frm, options) {
 
     control._nubefact_catalog_autocomplete = {
         options,
+        frm,
         input: null,
         awesomplete: null,
         clear_button: null,
         link_controls: null,
         open_button: null,
         results: [],
+        search_context: null,
+        selected_record: null,
+        selection_request: 0,
+        open_request: 0,
+        read_only_open_button: null,
     };
     const existingOnMake = control.df.on_make;
     control.df.on_make = (field) => {
@@ -505,7 +537,10 @@ function register_catalog_autocomplete(frm, options) {
 function setup_catalog_autocomplete(frm, fieldname) {
     const control = frm.fields_dict[fieldname];
     const state = control?._nubefact_catalog_autocomplete;
-    if (!control?.$input?.length || !control.input || !state) return;
+    if (!control || !state) return;
+
+    setup_catalog_read_only_action(frm, control, fieldname);
+    if (!control.$input?.length || !control.input) return;
     if (state.input === control.input) {
         toggle_catalog_link_actions(control);
         return;
@@ -553,6 +588,11 @@ function setup_catalog_autocomplete(frm, fieldname) {
     setup_catalog_link_actions(frm, control, fieldname, eventNamespace);
     control.$input.off(eventNamespace);
     control.$input.on(`input${eventNamespace}`, (event) => {
+        state.open_request += 1;
+        state.selection_request += 1;
+        if (!catalog_selection_matches(frm, state, event.target.value || "")) {
+            state.selected_record = null;
+        }
         toggle_catalog_link_actions(control);
         search(event.target.value || "");
     });
@@ -569,7 +609,7 @@ function setup_catalog_autocomplete(frm, fieldname) {
 
         event.preventDefault();
         state.awesomplete.close();
-        return apply_catalog_selection(frm, state.options, selectedName).then(() => {
+        return apply_catalog_selection(frm, control, selectedName).then(() => {
             toggle_catalog_link_actions(control);
         });
     });
@@ -603,7 +643,7 @@ function setup_catalog_link_actions(frm, control, fieldname, eventNamespace) {
         .on("click", async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            await open_catalog_record(frm, state.options, control.$input.val());
+            await open_catalog_record(frm, control, control.$input.val());
         })
         .appendTo(state.link_controls);
 
@@ -614,34 +654,112 @@ function setup_catalog_link_actions(frm, control, fieldname, eventNamespace) {
     });
 }
 
-function toggle_catalog_link_actions(control) {
+function setup_catalog_read_only_action(frm, control, fieldname) {
     const state = control._nubefact_catalog_autocomplete;
-    state.link_controls?.toggle(Boolean(control.$input.val()) && control.can_write());
+    state.read_only_open_button?.remove();
+    state.read_only_open_button = $(
+        `<a class="btn-open nubefact-catalog-read-only-open ml-2" tabindex="-1" title="${__(
+            "Open Link"
+        )}">
+            ${frappe.utils.icon("arrow-right", "xs")}
+        </a>`
+    )
+        .toggle(Boolean(frm.doc[fieldname]) && !control.can_write())
+        .on("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            await open_catalog_record(frm, control, frm.doc[fieldname] || "");
+        })
+        .appendTo(control.$wrapper.find(".control-value"));
 }
 
-async function open_catalog_record(frm, options, value) {
-    const recordName = options.resolve_record_name(frm, value || "");
-    const { message } = recordName
-        ? await frappe.db.get_value(options.doctype, recordName, "name")
-        : { message: null };
-    if (!message?.name) {
+function toggle_catalog_link_actions(control) {
+    const state = control._nubefact_catalog_autocomplete;
+    const canWrite = control.can_write();
+    const value = canWrite ? control.$input?.val() : state.frm.doc[state.options.fieldname];
+    const hasValue = Boolean(value);
+    state.link_controls?.toggle(hasValue && canWrite);
+    state.clear_button?.toggle(hasValue && canWrite);
+    state.open_button?.toggle(hasValue && canWrite);
+    state.read_only_open_button?.toggle(hasValue && !canWrite);
+}
+
+async function open_catalog_record(frm, control, value) {
+    const state = control._nubefact_catalog_autocomplete;
+    const options = state.options;
+    const requestId = ++state.open_request;
+    const rawValue = value || "";
+    const requestContext = get_catalog_open_context(frm, control, rawValue);
+    let lookupKey = rawValue;
+    let recordNames = [];
+
+    if (catalog_selection_matches(frm, state, rawValue)) {
+        recordNames = [state.selected_record.name];
+    } else if (options.record_filters) {
+        const filters = options.record_filters(frm, rawValue);
+        const filterContext = JSON.stringify(filters);
+        const records = rawValue.trim()
+            ? await frappe.db.get_list(options.doctype, {
+                  fields: ["name"],
+                  filters,
+                  limit: 2,
+              })
+            : [];
+        if (JSON.stringify(options.record_filters(frm, rawValue)) !== filterContext) return;
+        recordNames = records.map((record) => record.name);
+    } else {
+        const recordName = await options.resolve_record_name(frm, rawValue);
+        lookupKey = recordName || rawValue;
+        const { message } = recordName
+            ? await frappe.db.get_value(options.doctype, recordName, "name")
+            : { message: null };
+        if (message?.name) recordNames = [message.name];
+    }
+
+    if (
+        requestId !== state.open_request ||
+        get_catalog_open_context(frm, control, rawValue) !== requestContext
+    ) {
+        return;
+    }
+
+    if (recordNames.length > 1) {
+        frappe.msgprint({
+            title: __("Más de un registro encontrado"),
+            message: __(
+                "Más de un registro de {0} coincide con la clave {1}. Seleccione el registro desde las sugerencias.",
+                [__(options.doctype), frappe.utils.escape_html(lookupKey || __("vacía"))]
+            ),
+            indicator: "orange",
+        });
+        return;
+    }
+    if (!recordNames.length) {
         frappe.msgprint({
             title: __("Registro no encontrado"),
             message: __("No existe un registro de {0} para la clave {1}.", [
                 __(options.doctype),
-                frappe.utils.escape_html(recordName || value || __("vacía")),
+                frappe.utils.escape_html(lookupKey || __("vacía")),
             ]),
             indicator: "orange",
         });
         return;
     }
 
-    frappe.set_route("Form", options.doctype, recordName);
+    frappe.set_route("Form", options.doctype, recordNames[0]);
 }
 
 function search_catalog_autocomplete(frm, control, term) {
     const state = control._nubefact_catalog_autocomplete;
     const input = control.input;
+    const filters = state.options.search_filters ? state.options.search_filters(frm) : undefined;
+    const searchContext = JSON.stringify(filters || null);
+    if (state.search_context !== searchContext) {
+        state.search_context = searchContext;
+        state.results = [];
+        state.awesomplete.list = [];
+    }
+
     frappe.call({
         type: "POST",
         method: "frappe.desk.search.search_link",
@@ -651,9 +769,19 @@ function search_catalog_autocomplete(frm, control, term) {
             doctype: state.options.doctype,
             reference_doctype: frm.doctype,
             page_length: frappe.boot.sysdefaults?.link_field_results_limit || 10,
+            ...(filters ? { filters } : {}),
         },
         callback: (response) => {
-            if (state.input !== input || control.$input.val() !== term) return;
+            const currentFilters = state.options.search_filters
+                ? state.options.search_filters(frm)
+                : undefined;
+            if (
+                state.input !== input ||
+                control.$input.val() !== term ||
+                JSON.stringify(currentFilters || null) !== searchContext
+            ) {
+                return;
+            }
 
             state.results = response.message || [];
             state.awesomplete.list = state.results;
@@ -661,12 +789,87 @@ function search_catalog_autocomplete(frm, control, term) {
     });
 }
 
-async function apply_catalog_selection(frm, options, selectedName) {
+function get_establishment_search_filters(frm) {
+    return {
+        company: frm.doc.company || "",
+        codigo_sunat: ["is", "set"],
+    };
+}
+
+function get_establishment_record_filters(frm, value) {
+    return {
+        codigo_sunat: value.trim(),
+        company: frm.doc.company || "",
+    };
+}
+
+function get_establishment_selection_filters(frm, selectedName) {
+    return {
+        name: selectedName,
+        company: frm.doc.company || "",
+    };
+}
+
+function get_catalog_document_context(frm) {
+    return JSON.stringify({
+        docname: frm.docname || "",
+        name: frm.doc?.name || "",
+    });
+}
+
+function get_catalog_open_context(frm, control, value) {
+    const options = control._nubefact_catalog_autocomplete.options;
+    const currentValue = control.can_write()
+        ? control.$input?.val() || ""
+        : frm.doc[options.fieldname] || "";
+    const identity = options.record_filters
+        ? options.record_filters(frm, value)
+        : options.resolve_record_name(frm, value);
+    return JSON.stringify({
+        document: get_catalog_document_context(frm),
+        identity,
+        value: currentValue,
+    });
+}
+
+function get_catalog_selection_context(frm, options, value) {
+    return JSON.stringify({
+        document: get_catalog_document_context(frm),
+        filters: options.record_filters(frm, value),
+    });
+}
+
+function catalog_selection_matches(frm, state, value) {
+    const selected = state.selected_record;
+    if (!state.options.record_filters || !selected || selected.key !== value) return false;
+
+    return selected.context === get_catalog_selection_context(frm, state.options, value);
+}
+
+async function apply_catalog_selection(frm, control, selectedName) {
+    const state = control._nubefact_catalog_autocomplete;
+    const options = state.options;
+    const requestId = ++state.selection_request;
+    const documentContext = get_catalog_document_context(frm);
     const fillIfEmpty = options.fill_if_empty ?? {};
     const sourceFields = [
         ...new Set([...Object.values(options.target_fields), ...Object.values(fillIfEmpty)]),
     ];
-    const { message } = await frappe.db.get_value(options.doctype, selectedName, sourceFields);
+    const selectionFilters = options.selection_filters
+        ? options.selection_filters(frm, selectedName)
+        : selectedName;
+    const selectionContext = JSON.stringify(selectionFilters);
+    const { message } = await frappe.db.get_value(options.doctype, selectionFilters, sourceFields);
+    const currentSelectionFilters = options.selection_filters
+        ? options.selection_filters(frm, selectedName)
+        : selectedName;
+    if (
+        requestId !== state.selection_request ||
+        get_catalog_document_context(frm) !== documentContext ||
+        JSON.stringify(currentSelectionFilters) !== selectionContext
+    ) {
+        return;
+    }
     if (!message) {
         frappe.msgprint(__("El registro seleccionado ya no existe."));
         return;
@@ -682,6 +885,17 @@ async function apply_catalog_selection(frm, options, selectedName) {
         }
     }
     await frm.set_value(targetValues);
+
+    if (options.record_filters) {
+        const selectedKey = targetValues[options.fieldname] || "";
+        state.selected_record = {
+            name: selectedName,
+            key: selectedKey,
+            context: get_catalog_selection_context(frm, options, selectedKey),
+        };
+    } else {
+        state.selected_record = null;
+    }
 }
 
 function setup_attachment_completion_listener() {
