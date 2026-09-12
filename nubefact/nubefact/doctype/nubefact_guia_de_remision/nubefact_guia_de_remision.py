@@ -78,6 +78,7 @@ from nubefact.utils import (
 )
 
 HISTORICAL_IMPORT_CAPABILITY = object()
+_MANUAL_VOID_CAPABILITY = object()
 
 _MANUAL_VOID_STATUSES = {"Anulación Solicitada", "Anulada"}
 _MANUAL_VOID_AUDIT_FIELDS = (
@@ -179,7 +180,7 @@ class NubefactGuiaDeRemision(Document):
 			self._validate_historical_import()
 		elif not cint(getattr(self, "skip_field_validation", 0)):
 			self._validate_required_fields()
-			self._validate_document_rules()
+			self._validate_document_rules(validate_issue_window=not self._is_trusted_manual_void_transition())
 
 	def _is_historical_import(self) -> bool:
 		return self.flags.get("nubefact_historical_import") is HISTORICAL_IMPORT_CAPABILITY
@@ -248,8 +249,14 @@ class NubefactGuiaDeRemision(Document):
 		if migrated:
 			frappe.throw("Las GRE migradas no se pueden eliminar; consérvelas para auditoría.")
 
+	def _is_trusted_manual_void_transition(self) -> bool:
+		return self.flags.get("manual_void_capability") is _MANUAL_VOID_CAPABILITY
+
 	def _validate_manual_void_updates(self):
 		"""Require the audited RPC actions for every manual-void state change."""
+
+		if self._is_trusted_manual_void_transition():
+			return
 
 		previous = self.get_doc_before_save()
 		if previous:
@@ -1357,11 +1364,14 @@ def marcar_como_anulada(name: str) -> dict[str, Any]:
 
 
 def _persist_manual_void_transition(doc: NubefactGuiaDeRemision, values: dict[str, Any]) -> None:
-	"""Persist one state transition and retain it in the Version audit trail."""
+	"""Persist one trusted state transition through the standard document lifecycle."""
 
-	doc.db_set(values, update_modified=True)
-	doc.save_version()
-	frappe.db.commit()
+	doc.flags.manual_void_capability = _MANUAL_VOID_CAPABILITY
+	try:
+		doc.update(values)
+		doc.save(ignore_version=False)
+	finally:
+		doc.flags.pop("manual_void_capability", None)
 
 
 def _has_nubefact_manager_role() -> bool:

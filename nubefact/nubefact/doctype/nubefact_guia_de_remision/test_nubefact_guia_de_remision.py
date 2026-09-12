@@ -1017,6 +1017,63 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertTrue(persisted.fecha_de_solicitud_de_anulacion)
 		self.assertFalse(persisted.anulado)
 
+	def test_old_accepted_gre_can_request_void_through_the_save_lifecycle(self):
+		doc = make_valid_gre().insert()
+		doc.db_set(
+			{
+				"status": "Aceptada",
+				"fecha_de_emision": add_days(nowdate(), -2),
+			}
+		)
+
+		solicitar_anulacion(doc.name, "Datos incorrectos")
+
+		self.assertEqual(doc.db_get("status"), "Anulación Solicitada")
+
+	def test_requesting_void_runs_assignment_rules(self):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+		rule_name = "Test GRE Void Assignment"
+		frappe.delete_doc_if_exists("Assignment Rule", rule_name)
+		frappe.get_doc(
+			{
+				"doctype": "Assignment Rule",
+				"name": rule_name,
+				"document_type": doc.doctype,
+				"priority": 999,
+				"assign_condition": 'status == "Anulación Solicitada"',
+				"close_condition": 'status != "Anulación Solicitada"',
+				"rule": "Round Robin",
+				"assignment_days": [
+					{"day": day}
+					for day in (
+						"Monday",
+						"Tuesday",
+						"Wednesday",
+						"Thursday",
+						"Friday",
+						"Saturday",
+						"Sunday",
+					)
+				],
+				"users": [{"user": "Administrator"}],
+			}
+		).insert()
+
+		solicitar_anulacion(doc.name, "Datos incorrectos")
+
+		assignment = frappe.db.get_value(
+			"ToDo",
+			{
+				"reference_type": doc.doctype,
+				"reference_name": doc.name,
+				"assignment_rule": rule_name,
+				"status": "Open",
+			},
+			"allocated_to",
+		)
+		self.assertEqual(assignment, "Administrator")
+
 	@patch(
 		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision._has_nubefact_manager_role"
 	)
