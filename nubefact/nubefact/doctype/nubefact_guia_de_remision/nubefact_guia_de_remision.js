@@ -327,25 +327,58 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
         dialog.show();
     },
     confirm_manual_void(frm) {
-        frappe.confirm(
-            __(
-                "¿Confirmas que esta GRE ya fue anulada en el portal SUNAT? Esta acción no consulta ni modifica SUNAT."
-            ),
-            async () => {
+        let selectedFileName = null;
+        let dialog;
+
+        dialog = new frappe.ui.Dialog({
+            title: __("Marcar GRE como anulada"),
+            fields: [
+                {
+                    fieldtype: "HTML",
+                    options: __(
+                        "¿Confirmas que esta GRE ya fue anulada en el portal SUNAT? Esta acción no consulta ni modifica SUNAT."
+                    ),
+                },
+                {
+                    fieldname: "archivo",
+                    fieldtype: "Attach",
+                    label: __("Constancia de anulación (opcional)"),
+                    options: {
+                        allow_multiple: false,
+                        on_success: async (file) => {
+                            selectedFileName = file.name;
+                            await dialog.get_field("archivo").on_upload_complete(file);
+                        },
+                    },
+                    onchange: () => {
+                        if (!dialog.get_value("archivo")) {
+                            selectedFileName = null;
+                        }
+                    },
+                },
+            ],
+            primary_action_label: __("Marcar como Anulada"),
+            primary_action: async () => {
                 await frappe.call({
                     method: "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.marcar_como_anulada",
-                    args: { name: frm.doc.name },
+                    args: {
+                        name: frm.doc.name,
+                        archivo: selectedFileName,
+                    },
                     freeze: true,
                     freeze_message: __("Marcando GRE como anulada..."),
                 });
 
+                dialog.hide();
                 await frm.reload_doc();
                 frappe.show_alert({
                     message: __("GRE marcada como anulada"),
                     indicator: "green",
                 });
-            }
-        );
+            },
+        });
+
+        dialog.show();
     },
     open_help_dialog(frm) {
         const requiredFields = [

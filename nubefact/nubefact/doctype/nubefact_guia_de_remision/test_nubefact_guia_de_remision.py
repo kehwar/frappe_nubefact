@@ -1096,6 +1096,30 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertEqual(persisted.anulado_por, frappe.session.user)
 		self.assertTrue(persisted.fecha_de_anulacion)
 
+	@patch(
+		"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision._has_nubefact_manager_role",
+		return_value=True,
+	)
+	def test_manager_can_attach_an_optional_file_when_marking_a_gre_as_voided(self, _has_manager_role):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+		solicitar_anulacion(doc.name, "Duplicada")
+		file_doc = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": f"constancia-anulacion-{random_string(8)}.txt",
+				"content": b"Constancia de anulacion SUNAT",
+				"is_private": 1,
+			}
+		).insert(ignore_permissions=True)
+
+		marcar_como_anulada(doc.name, file_doc.name)
+
+		file_doc.reload()
+		self.assertEqual(file_doc.attached_to_doctype, doc.doctype)
+		self.assertEqual(file_doc.attached_to_name, doc.name)
+		self.assertEqual(frappe.db.get_value(doc.doctype, doc.name, "status"), "Anulada")
+
 	def test_a_nubefact_user_can_request_but_cannot_resolve_a_void_request(self):
 		doc = make_valid_gre().insert()
 		doc.db_set("status", "Aceptada")

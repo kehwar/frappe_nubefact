@@ -1333,7 +1333,7 @@ def cancelar_solicitud_de_anulacion(name: str, motivo: str) -> dict[str, Any]:
 
 
 @frappe.whitelist(methods=["POST"])
-def marcar_como_anulada(name: str) -> dict[str, Any]:
+def marcar_como_anulada(name: str, archivo: str | None = None) -> dict[str, Any]:
 	"""Let a manager confirm that a requested GRE was voided in the SUNAT portal."""
 
 	if not _has_nubefact_manager_role():
@@ -1353,6 +1353,7 @@ def marcar_como_anulada(name: str) -> dict[str, Any]:
 	if doc.status != "Anulación Solicitada":
 		frappe.throw("Solo una GRE con anulación solicitada puede marcarse como anulada.")
 
+	file_doc = _prepare_manual_void_attachment(doc, archivo)
 	values = {
 		"status": "Anulada",
 		"anulado": 1,
@@ -1360,7 +1361,30 @@ def marcar_como_anulada(name: str) -> dict[str, Any]:
 		"anulado_por": frappe.session.user,
 	}
 	_persist_manual_void_transition(doc, values)
+	if file_doc:
+		file_doc.save()
+		file_doc.create_attachment_record()
 	return values
+
+
+def _prepare_manual_void_attachment(doc: NubefactGuiaDeRemision, archivo: str | None) -> Document | None:
+	"""Validate and stage an uploaded file for attachment after the void transition."""
+
+	archivo = cstr(archivo or "").strip()
+	if not archivo:
+		return None
+
+	file_doc = frappe.get_doc("File", archivo)
+	file_doc.check_permission("write")
+	if file_doc.is_folder:
+		frappe.throw("El archivo seleccionado no es válido.")
+	if file_doc.attached_to_doctype or file_doc.attached_to_name:
+		frappe.throw("El archivo seleccionado ya está adjunto a otro documento.")
+
+	file_doc.attached_to_doctype = doc.doctype
+	file_doc.attached_to_name = doc.name
+	file_doc.validate_attachment_limit()
+	return file_doc
 
 
 def _persist_manual_void_transition(doc: NubefactGuiaDeRemision, values: dict[str, Any]) -> None:
