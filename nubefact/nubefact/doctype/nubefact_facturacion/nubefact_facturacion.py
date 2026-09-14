@@ -38,6 +38,7 @@ from nubefact.utils import (
     NubefactAPIError,
     apply_raw_payload_overrides,
     enqueue_nubefact_file_downloads,
+    get_documents_requiring_sunat_poll,
     make_request,
     omit_empty_values,
     require_child_fields,
@@ -612,15 +613,12 @@ def void_in_nubefact(name: str, reason: str):
 
 
 def poll_pending_invoices():
-    pending_names = frappe.get_all(
+    document_names = get_documents_requiring_sunat_poll(
         "Nubefact Facturacion",
-        filters={"status": "Pendiente de Aceptación", "aceptada_por_sunat": 0},
-        pluck="name",
-        limit=20,
-        order_by="modified asc",
+        "Pendiente de Aceptación",
     )
 
-    for name in pending_names:
+    for name in document_names:
         try:
             doc = frappe.get_doc("Nubefact Facturacion", name)
             _refresh_sunat_status_doc(doc)

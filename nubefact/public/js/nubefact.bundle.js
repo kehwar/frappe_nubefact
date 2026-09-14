@@ -14,7 +14,7 @@ class NubefactWatcher {
 
     on_refresh() {
         this.clear_poll();
-        if (!this.is_pending_response()) {
+        if (!this.needs_sunat_refresh()) {
             this.initialized = false;
         }
     }
@@ -26,12 +26,17 @@ class NubefactWatcher {
         }
     }
 
-    is_pending_response() {
+    needs_sunat_refresh() {
         const status = this.frm.doc.status || this.frm.doc.estado_del_comprobante;
-        return (
-            !this.frm.doc.enlace_del_pdf &&
-            ["Pendiente de Aceptacion", "Pendiente de Aceptación"].includes(status)
-        );
+        const is_pending = ["Pendiente de Aceptacion", "Pendiente de Aceptación"].includes(status);
+        const is_accepted = status === "Aceptada";
+        const has_all_artifact_links = [
+            "enlace_del_pdf",
+            "enlace_del_xml",
+            "enlace_del_cdr",
+        ].every((fieldname) => Boolean(this.frm.doc[fieldname]));
+
+        return is_pending || (is_accepted && !has_all_artifact_links);
     }
 
     can_poll() {
@@ -48,7 +53,7 @@ class NubefactWatcher {
             return false;
         }
 
-        return this.is_pending_response() && !this.frm.is_dirty();
+        return this.needs_sunat_refresh() && !this.frm.is_dirty();
     }
 
     async call_api(options = {}) {

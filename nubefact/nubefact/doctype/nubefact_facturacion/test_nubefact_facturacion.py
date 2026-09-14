@@ -22,6 +22,7 @@ from nubefact.utils import (
 	attach_nubefact_json,
 	download_and_attach_file,
 	enqueue_nubefact_file_downloads,
+	get_documents_requiring_sunat_poll,
 )
 
 
@@ -259,6 +260,30 @@ class TestNubefactFacturacion(FrappeTestCase):
 		document.cliente_tipo_de_documento = "6"
 		with self.assertRaises(frappe.ValidationError):
 			document._validate_document_identity()
+
+	@patch("nubefact.utils.frappe.get_all")
+	def test_sunat_poll_includes_pending_and_accepted_documents_missing_artifacts(self, get_all):
+		get_all.return_value = ["CPE-000001"]
+
+		result = get_documents_requiring_sunat_poll(
+			"Nubefact Facturacion",
+			"Pendiente de Aceptación",
+		)
+
+		self.assertEqual(result, ["CPE-000001"])
+		get_all.assert_called_once_with(
+			"Nubefact Facturacion",
+			filters={"status": ["in", ["Pendiente de Aceptación", "Aceptada"]]},
+			or_filters=[
+				["status", "=", "Pendiente de Aceptación"],
+				["enlace_del_pdf", "is", "not set"],
+				["enlace_del_xml", "is", "not set"],
+				["enlace_del_cdr", "is", "not set"],
+			],
+			pluck="name",
+			limit=20,
+			order_by="modified asc",
+		)
 
 	def test_response_identity_must_match_allocated_number(self):
 		document = frappe.new_doc("Nubefact Facturacion")

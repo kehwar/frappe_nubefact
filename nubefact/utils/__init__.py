@@ -32,6 +32,11 @@ NUBEFACT_BASE64_FIELDS = (
 	"xml_zip_base64",
 	"cdr_zip_base64",
 )
+NUBEFACT_ARTIFACT_LINK_FIELDS = (
+	"enlace_del_pdf",
+	"enlace_del_xml",
+	"enlace_del_cdr",
+)
 
 _API_LOG_REFERENCE_FIELDS = {
 	"Nubefact Facturacion": "reference_invoice",
@@ -88,6 +93,26 @@ def _mark_attachment_job_complete(
 def without_nubefact_base64_fields(payload: dict[str, Any]) -> dict[str, Any]:
 	"""Return a shallow copy without NubeFact's encoded document artifacts."""
 	return {key: value for key, value in payload.items() if key not in NUBEFACT_BASE64_FIELDS}
+
+
+def get_documents_requiring_sunat_poll(
+	doctype: str,
+	pending_status: str,
+	*,
+	limit: int = 20,
+) -> list[str]:
+	"""Return pending documents and accepted documents missing an artifact link."""
+	return frappe.get_all(
+		doctype,
+		filters={"status": ["in", [pending_status, "Aceptada"]]},
+		or_filters=[
+			["status", "=", pending_status],
+			*[[fieldname, "is", "not set"] for fieldname in NUBEFACT_ARTIFACT_LINK_FIELDS],
+		],
+		pluck="name",
+		limit=limit,
+		order_by="modified asc",
+	)
 
 
 def to_nubefact_date(value: str) -> str:
