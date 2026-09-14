@@ -8,3 +8,4 @@ nubefact.patches.backfill_gre_issued_identity_hash
 nubefact.patches.backfill_nubefact_series_titles
 nubefact.patches.add_migration_job_item_number_unique
 nubefact.patches.retitle_guia_de_remision_documents
+nubefact.patches.backfill_nubefact_vehiculo_titles

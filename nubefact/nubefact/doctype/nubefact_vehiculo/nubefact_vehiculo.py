@@ -13,7 +13,7 @@ from frappe.utils import cstr
 class NubefactVehiculo(Document):
 	def before_validate(self):
 		self.placa_numero = cstr(self.placa_numero).strip().upper()
-		self.title = cstr(self.title).strip() or None
+		self.title = cstr(self.title).strip() or self.placa_numero
 
 	def autoname(self):
 		self.before_validate()
