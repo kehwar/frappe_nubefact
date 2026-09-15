@@ -16,7 +16,7 @@ import requests
 from filelock import FileLock, Timeout
 from frappe import throw
 from frappe.model.document import Document
-from frappe.utils import cstr, getdate
+from frappe.utils import add_to_date, cstr, getdate, now_datetime
 from frappe.utils.file_manager import save_file
 
 from nubefact.nubefact.doctype.nubefact_series.nubefact_series import make_gre_artifact_names
@@ -44,6 +44,7 @@ _API_LOG_REFERENCE_FIELDS = {
 }
 _ATTACHMENT_BATCH_EVENT = "nubefact_attachments_ready"
 _ATTACHMENT_BATCH_TTL_SECONDS = 60 * 60
+_AUTOMATIC_SUNAT_POLL_HOURS = 24
 
 
 def _register_attachment_job_completion(
@@ -101,10 +102,13 @@ def get_documents_requiring_sunat_poll(
 	*,
 	limit: int = 20,
 ) -> list[str]:
-	"""Return pending documents and accepted documents missing an artifact link."""
+	"""Return recent pending documents and accepted documents missing an artifact link."""
 	return frappe.get_all(
 		doctype,
-		filters={"status": ["in", [pending_status, "Aceptada"]]},
+		filters={
+			"status": ["in", [pending_status, "Aceptada"]],
+			"creation": [">", add_to_date(now_datetime(), hours=-_AUTOMATIC_SUNAT_POLL_HOURS)],
+		},
 		or_filters=[
 			["status", "=", pending_status],
 			*[[fieldname, "is", "not set"] for fieldname in NUBEFACT_ARTIFACT_LINK_FIELDS],

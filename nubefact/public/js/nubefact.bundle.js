@@ -1,6 +1,8 @@
 /* global nubefact */
 frappe.provide("nubefact");
 
+const AUTOMATIC_POLL_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 class NubefactWatcher {
     constructor(frm, api_method, options = {}) {
         this.frm = frm;
@@ -27,6 +29,10 @@ class NubefactWatcher {
     }
 
     needs_sunat_refresh() {
+        if (!this.is_within_automatic_poll_window()) {
+            return false;
+        }
+
         const status = this.frm.doc.status || this.frm.doc.estado_del_comprobante;
         const is_pending = ["Pendiente de Aceptacion", "Pendiente de Aceptación"].includes(status);
         const is_accepted = status === "Aceptada";
@@ -37,6 +43,29 @@ class NubefactWatcher {
         ].every((fieldname) => Boolean(this.frm.doc[fieldname]));
 
         return is_pending || (is_accepted && !has_all_artifact_links);
+    }
+
+    is_within_automatic_poll_window() {
+        const creation = this.frm.doc.creation;
+        if (!creation) {
+            return false;
+        }
+
+        const creation_time = this.parse_system_datetime(creation);
+        const current_time = this.parse_system_datetime(frappe.datetime.system_datetime());
+        return (
+            Number.isFinite(creation_time) &&
+            Number.isFinite(current_time) &&
+            current_time - creation_time < AUTOMATIC_POLL_WINDOW_MS
+        );
+    }
+
+    parse_system_datetime(value) {
+        const normalized = value
+            .replace(" ", "T")
+            .replace(/(\.\d{3})\d+$/, "$1")
+            .concat(/[zZ]|[+-]\d{2}:?\d{2}$/.test(value) ? "" : "Z");
+        return Date.parse(normalized);
     }
 
     can_poll() {

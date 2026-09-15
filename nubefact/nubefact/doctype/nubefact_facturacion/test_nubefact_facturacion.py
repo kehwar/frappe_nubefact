@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import base64
 import json
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 import frappe
@@ -261,8 +262,11 @@ class TestNubefactFacturacion(FrappeTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			document._validate_document_identity()
 
+	@patch("nubefact.utils.now_datetime", return_value=datetime(2026, 9, 14, 12))
 	@patch("nubefact.utils.frappe.get_all")
-	def test_sunat_poll_includes_pending_and_accepted_documents_missing_artifacts(self, get_all):
+	def test_sunat_poll_includes_pending_and_accepted_documents_missing_artifacts(
+		self, get_all, _now_datetime
+	):
 		get_all.return_value = ["CPE-000001"]
 
 		result = get_documents_requiring_sunat_poll(
@@ -273,7 +277,10 @@ class TestNubefactFacturacion(FrappeTestCase):
 		self.assertEqual(result, ["CPE-000001"])
 		get_all.assert_called_once_with(
 			"Nubefact Facturacion",
-			filters={"status": ["in", ["Pendiente de Aceptación", "Aceptada"]]},
+			filters={
+				"status": ["in", ["Pendiente de Aceptación", "Aceptada"]],
+				"creation": [">", datetime(2026, 9, 13, 12)],
+			},
 			or_filters=[
 				["status", "=", "Pendiente de Aceptación"],
 				["enlace_del_pdf", "is", "not set"],
