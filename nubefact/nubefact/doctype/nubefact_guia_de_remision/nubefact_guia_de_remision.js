@@ -83,6 +83,21 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
             },
         });
         register_catalog_autocomplete(frm, {
+            fieldname: "transportista_documento_numero",
+            doctype: "Nubefact Transportista",
+            resolve_record_name: (currentForm, value) => {
+                const documentType = currentForm.doc.transportista_documento_tipo;
+                return documentType && value
+                    ? `${documentType}-${value.trim().toUpperCase()}`
+                    : null;
+            },
+            target_fields: {
+                transportista_documento_tipo: "documento_tipo",
+                transportista_documento_numero: "documento_numero",
+                transportista_denominacion: "denominacion",
+            },
+        });
+        register_catalog_autocomplete(frm, {
             fieldname: "punto_de_partida_codigo_establecimiento_sunat",
             doctype: "Nubefact Local",
             search_filters: get_establishment_search_filters,
@@ -138,6 +153,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
             frm.disable_form();
         }
 
+        setup_catalog_autocomplete(frm, "transportista_documento_numero");
         setup_catalog_autocomplete(frm, "transportista_placa_numero");
         setup_catalog_autocomplete(frm, "conductor_documento_numero");
         setup_catalog_autocomplete(frm, "punto_de_partida_codigo_establecimiento_sunat");

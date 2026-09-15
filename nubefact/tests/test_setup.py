@@ -9,6 +9,7 @@ WRITE_DOCTYPES = {
 	"Nubefact Conductor",
 	"Nubefact Facturacion",
 	"Nubefact Guia De Remision",
+	"Nubefact Transportista",
 	"Nubefact Vehiculo",
 }
 READ_ONLY_DOCTYPES = {
@@ -46,6 +47,7 @@ CATALOG_LINK_FIELDS = {
 		"documento_tipo": "Nubefact Tipo de Documento",
 		"vehiculo": "Nubefact Vehiculo",
 	},
+	"Nubefact Transportista": {"documento_tipo": "Nubefact Tipo de Documento"},
 	"Nubefact Series": {"tipo_de_comprobante": "Nubefact Tipo de Comprobante"},
 }
 

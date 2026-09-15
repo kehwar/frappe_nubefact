@@ -162,12 +162,14 @@ function makeForm(initialValues = {}) {
     const doc = { ...initialValues };
     const vehicle = makeControl();
     const driver = makeControl();
+    const carrier = makeControl();
     const originEstablishment = makeControl();
     const destinationEstablishment = makeControl();
     const controlsByFieldname = {
         conductor_documento_numero: driver,
         punto_de_llegada_codigo_establecimiento_sunat: destinationEstablishment,
         punto_de_partida_codigo_establecimiento_sunat: originEstablishment,
+        transportista_documento_numero: carrier,
         transportista_placa_numero: vehicle,
     };
     const frm = {
@@ -194,7 +196,7 @@ function makeForm(initialValues = {}) {
         },
     };
     return {
-        controls: { destinationEstablishment, driver, originEstablishment, vehicle },
+        controls: { carrier, destinationEstablishment, driver, originEstablishment, vehicle },
         frm,
         getAssignedValues: () => ({ ...assignedValues }),
     };
@@ -219,7 +221,7 @@ test("existing GRE Data inputs are enhanced with catalog autocomplete", () => {
 
     loaded.handlers.setup(frm);
 
-    assert.equal(loaded.autocompleteInstances.length, 4);
+    assert.equal(loaded.autocompleteInstances.length, 5);
     assert.equal(controls.vehicle.control.df.fieldtype, undefined);
     assert.equal(controls.vehicle.inputArea.children.length, 1);
     assert.equal(controls.vehicle.displayArea.children.length, 1);
@@ -374,6 +376,71 @@ test("the arrow reports when a free-form value has no catalog record", async () 
         "No existe un registro de Nubefact Vehiculo para la clave FREE123."
     );
     assert.equal(message.indicator, "orange");
+});
+
+test("selecting a carrier suggestion copies every transportista field", async () => {
+    let request;
+    const loaded = loadFormScript({
+        call() {},
+        getValue: async (doctype, name, fields) => {
+            request = { doctype, fields: Array.from(fields), name };
+            return {
+                message: {
+                    documento_tipo: "6",
+                    documento_numero: "20600695771",
+                    denominacion: "NUBEFACT SA",
+                },
+            };
+        },
+    });
+    const { controls, frm, getAssignedValues } = makeForm();
+    loaded.handlers.setup(frm);
+
+    await autocompleteSelectHandler(controls.carrier)({
+        preventDefault() {},
+        originalEvent: { text: { value: "6-20600695771" } },
+    });
+
+    assert.deepEqual(request, {
+        doctype: "Nubefact Transportista",
+        fields: ["documento_tipo", "documento_numero", "denominacion"],
+        name: "6-20600695771",
+    });
+    assert.deepEqual(getAssignedValues(), {
+        transportista_documento_tipo: "6",
+        transportista_documento_numero: "20600695771",
+        transportista_denominacion: "NUBEFACT SA",
+    });
+});
+
+test("the arrow resolves a carrier key and routes to its catalog record", async () => {
+    let existenceRequest;
+    let route;
+    const loaded = loadFormScript({
+        call() {},
+        getValue: async (doctype, name, fieldname) => {
+            existenceRequest = { doctype, fieldname, name };
+            return { message: { name } };
+        },
+        setRoute: (...parts) => {
+            route = parts;
+        },
+    });
+    const { controls, frm } = makeForm({ transportista_documento_tipo: "6" });
+    controls.carrier.input.value = "20600695771";
+    loaded.handlers.setup(frm);
+
+    await controls.carrier.control._nubefact_catalog_autocomplete.open_button.handlers.click({
+        preventDefault() {},
+        stopPropagation() {},
+    });
+
+    assert.deepEqual(existenceRequest, {
+        doctype: "Nubefact Transportista",
+        fieldname: "name",
+        name: "6-20600695771",
+    });
+    assert.deepEqual(route, ["Form", "Nubefact Transportista", "6-20600695771"]);
 });
 
 test("selecting a driver suggestion copies every conductor field and an empty plate", async () => {
@@ -642,7 +709,11 @@ test("an establishment search response is ignored after the company changes", ()
         message: [{ value: "Almacén Lima-ACME", label: "Almacén Lima" }],
     });
 
-    assert.equal(loaded.autocompleteInstances[2].list.length, 0);
+    assert.equal(
+        controls.originEstablishment.control._nubefact_catalog_autocomplete.awesomplete.list
+            .length,
+        0
+    );
 });
 
 test("catalog shortcuts remain available while clear controls are read-only", () => {
