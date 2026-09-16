@@ -197,7 +197,11 @@ class NubefactGuiaDeRemision(Document):
 				["migrated_from_nubefact", "migration_job", "issued_identity_hash"],
 				as_dict=True,
 			)
-		if previous and cint(previous.migrated_from_nubefact) and not self._is_historical_import():
+		if (
+			previous
+			and cint(previous.migrated_from_nubefact)
+			and not self._is_trusted_manual_void_transition()
+		):
 			frappe.throw("Las GRE migradas son inmutables y se conservan para auditoría.")
 		if not previous:
 			if (

@@ -1030,6 +1030,21 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 
 		self.assertEqual(doc.db_get("status"), "Anulación Solicitada")
 
+	def test_migrated_accepted_gre_can_request_void_for_manual_reconciliation(self):
+		doc = make_valid_gre().insert()
+		doc.db_set(
+			{
+				"status": "Aceptada",
+				"migrated_from_nubefact": 1,
+			}
+		)
+
+		solicitar_anulacion(doc.name, "Anulada manualmente en SUNAT")
+
+		persisted = frappe.get_doc(doc.doctype, doc.name)
+		self.assertEqual(persisted.status, "Anulación Solicitada")
+		self.assertEqual(persisted.motivo_de_anulacion, "Anulada manualmente en SUNAT")
+
 	def test_requesting_void_runs_assignment_rules(self):
 		doc = make_valid_gre().insert()
 		doc.db_set("status", "Aceptada")
