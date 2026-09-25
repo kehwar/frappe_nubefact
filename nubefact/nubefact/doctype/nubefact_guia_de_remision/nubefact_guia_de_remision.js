@@ -279,10 +279,17 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
             title: __("Solicitar anulación de GRE"),
             fields: [
                 {
+                    fieldname: "momento_de_anulacion",
+                    fieldtype: "Select",
+                    label: __("Momento de anulación"),
+                    options:
+                        "\nAntes de iniciar el traslado\nDurante el traslado, por cambio de destinatario",
+                    reqd: 1,
+                },
+                {
                     fieldname: "motivo",
                     fieldtype: "Small Text",
-                    label: __("Motivo de anulación"),
-                    reqd: 1,
+                    label: __("Motivo adicional (opcional)"),
                 },
             ],
             primary_action_label: __("Solicitar Anulación"),
@@ -291,6 +298,7 @@ frappe.ui.form.on("Nubefact Guia De Remision", {
                     method: "nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision.solicitar_anulacion",
                     args: {
                         name: frm.doc.name,
+                        momento_de_anulacion: values.momento_de_anulacion,
                         motivo: values.motivo,
                     },
                     freeze: true,

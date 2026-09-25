@@ -25,6 +25,7 @@ from nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remisi
 	refrescar_estado_sunat,
 	solicitar_anulacion,
 )
+from nubefact.patches.backfill_gre_void_timing import execute as backfill_gre_void_timing
 from nubefact.patches.retitle_guia_de_remision_documents import execute as retitle_existing_gres
 from nubefact.utils import _mark_attachment_job_complete, download_and_attach_file
 
@@ -997,17 +998,17 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			},
 		)
 
-	def test_manual_voiding_lifecycle_requires_an_accepted_gre_and_a_reason(self):
+	def test_manual_voiding_lifecycle_requires_an_accepted_gre_and_limits_details(self):
 		doc = make_valid_gre().insert()
 
 		with self.assertRaisesRegex(frappe.ValidationError, "estado Aceptada"):
-			solicitar_anulacion(doc.name, "Datos incorrectos")
+			solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Datos incorrectos")
 
 		doc.db_set("status", "Aceptada")
-		with self.assertRaisesRegex(frappe.ValidationError, "motivo de anulación"):
-			solicitar_anulacion(doc.name, "   ")
+		with self.assertRaisesRegex(frappe.ValidationError, "motivo adicional"):
+			solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "x" * 501)
 
-		values = solicitar_anulacion(doc.name, "Datos incorrectos")
+		values = solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Datos incorrectos")
 		persisted = frappe.get_doc(doc.doctype, doc.name)
 
 		self.assertEqual(values["status"], "Anulación Solicitada")
@@ -1016,6 +1017,36 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertEqual(persisted.anulacion_solicitada_por, frappe.session.user)
 		self.assertTrue(persisted.fecha_de_solicitud_de_anulacion)
 		self.assertFalse(persisted.anulado)
+
+	def test_void_request_requires_a_valid_timing_but_not_an_additional_reason(self):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+
+		for timing in (None, "", "  ", "Durante el traslado", "No corresponde"):
+			with self.subTest(timing=timing):
+				with self.assertRaisesRegex(frappe.ValidationError, "momento de anulación"):
+					solicitar_anulacion(doc.name, timing, "Detalle")
+
+		values = solicitar_anulacion(doc.name, "Durante el traslado, por cambio de destinatario", "  ")
+		persisted = frappe.get_doc(doc.doctype, doc.name)
+		self.assertEqual(values["momento_de_anulacion"], "Durante el traslado, por cambio de destinatario")
+		self.assertEqual(persisted.momento_de_anulacion, "Durante el traslado, por cambio de destinatario")
+		self.assertFalse(persisted.motivo_de_anulacion)
+
+	def test_void_request_replaces_timing_and_additional_reason_after_reversal(self):
+		doc = make_valid_gre().insert()
+		doc.db_set("status", "Aceptada")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Primer detalle")
+		with patch(
+			"nubefact.nubefact.doctype.nubefact_guia_de_remision.nubefact_guia_de_remision._has_nubefact_manager_role",
+			return_value=True,
+		):
+			cancelar_solicitud_de_anulacion(doc.name, "No corresponde")
+		solicitar_anulacion(doc.name, "Durante el traslado, por cambio de destinatario")
+
+		persisted = frappe.get_doc(doc.doctype, doc.name)
+		self.assertEqual(persisted.momento_de_anulacion, "Durante el traslado, por cambio de destinatario")
+		self.assertFalse(persisted.motivo_de_anulacion)
 
 	def test_old_accepted_gre_can_request_void_through_the_save_lifecycle(self):
 		doc = make_valid_gre().insert()
@@ -1026,7 +1057,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			}
 		)
 
-		solicitar_anulacion(doc.name, "Datos incorrectos")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Datos incorrectos")
 
 		self.assertEqual(doc.db_get("status"), "Anulación Solicitada")
 
@@ -1039,7 +1070,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			}
 		)
 
-		solicitar_anulacion(doc.name, "Anulada manualmente en SUNAT")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Anulada manualmente en SUNAT")
 
 		persisted = frappe.get_doc(doc.doctype, doc.name)
 		self.assertEqual(persisted.status, "Anulación Solicitada")
@@ -1075,7 +1106,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 			}
 		).insert()
 
-		solicitar_anulacion(doc.name, "Datos incorrectos")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Datos incorrectos")
 
 		assignment = frappe.db.get_value(
 			"ToDo",
@@ -1095,7 +1126,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 	def test_only_a_manager_can_mark_a_requested_gre_as_voided(self, has_manager_role):
 		doc = make_valid_gre().insert()
 		doc.db_set("status", "Aceptada")
-		solicitar_anulacion(doc.name, "Duplicada")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Duplicada")
 
 		has_manager_role.return_value = False
 		with self.assertRaises(frappe.PermissionError):
@@ -1118,7 +1149,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 	def test_manager_can_attach_an_optional_file_when_marking_a_gre_as_voided(self, _has_manager_role):
 		doc = make_valid_gre().insert()
 		doc.db_set("status", "Aceptada")
-		solicitar_anulacion(doc.name, "Duplicada")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Duplicada")
 		file_doc = frappe.get_doc(
 			{
 				"doctype": "File",
@@ -1151,7 +1182,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 
 		frappe.set_user(user_email)
 		try:
-			solicitar_anulacion(doc.name, "Duplicada")
+			solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Duplicada")
 			with self.assertRaises(frappe.PermissionError):
 				marcar_como_anulada(doc.name)
 			with self.assertRaises(frappe.PermissionError):
@@ -1165,7 +1196,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 	def test_only_a_manager_can_cancel_a_void_request_with_a_reason(self, has_manager_role):
 		doc = make_valid_gre().insert()
 		doc.db_set("status", "Aceptada")
-		solicitar_anulacion(doc.name, "Duplicada")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Duplicada")
 
 		has_manager_role.return_value = False
 		with self.assertRaises(frappe.PermissionError):
@@ -1197,9 +1228,9 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		doc.db_set("status", "Aceptada")
 		initial_versions = frappe.db.count("Version", {"ref_doctype": doc.doctype, "docname": doc.name})
 
-		solicitar_anulacion(doc.name, "Primera solicitud")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Primera solicitud")
 		cancelar_solicitud_de_anulacion(doc.name, "Solicitud incorrecta")
-		solicitar_anulacion(doc.name, "Segunda solicitud")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Segunda solicitud")
 		marcar_como_anulada(doc.name)
 
 		self.assertEqual(
@@ -1217,8 +1248,9 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		with self.assertRaisesRegex(frappe.ValidationError, "acciones de anulación"):
 			forged.save()
 
-		solicitar_anulacion(doc.name, "Duplicada")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Duplicada")
 		for fieldname, value in (
+			("momento_de_anulacion", "Durante el traslado, por cambio de destinatario"),
 			("motivo_de_anulacion", "Motivo alterado"),
 			("motivo_de_reversion_de_anulacion", "Reversión falsificada"),
 		):
@@ -1232,7 +1264,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		doc = make_valid_gre().insert()
 		doc.db_set("status", "Aceptada")
 		stale_doc = frappe.get_doc(doc.doctype, doc.name)
-		solicitar_anulacion(doc.name, "Duplicada")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Duplicada")
 
 		with self.assertRaisesRegex(frappe.ValidationError, "anulación se gestiona manualmente"):
 			refrescar_estado_sunat(doc.name)
@@ -1257,7 +1289,7 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		doc.db_set({"status": "Aceptada", "aceptada_por_sunat": 1})
 		stale_doc = frappe.get_doc(doc.doctype, doc.name)
 
-		solicitar_anulacion(doc.name, "Duplicada")
+		solicitar_anulacion(doc.name, "Antes de iniciar el traslado", "Duplicada")
 		cancelar_solicitud_de_anulacion(doc.name, "La guía sí es válida")
 
 		with self.assertRaisesRegex(frappe.ValidationError, "cambió mientras se consultaba"):
@@ -1271,13 +1303,51 @@ class TestNubefactGuiaDeRemision(FrappeTestCase):
 		self.assertEqual(persisted.status, "Aceptada")
 		self.assertTrue(persisted.aceptada_por_sunat)
 
+	def test_void_timing_migration_backfills_only_old_requests_without_erasing_details(self):
+		requested = make_valid_gre().insert()
+		pending_without_date = make_valid_gre().insert()
+		reversed_request = make_valid_gre().insert()
+		already_classified = make_valid_gre().insert()
+		untouched = make_valid_gre().insert()
+		for doc in (requested, reversed_request, already_classified):
+			doc.db_set(
+				{
+					"fecha_de_solicitud_de_anulacion": "2026-01-01 12:00:00",
+					"motivo_de_anulacion": "Motivo original",
+				}
+			)
+		requested.db_set("status", "Anulada")
+		pending_without_date.db_set("status", "Anulación Solicitada")
+		reversed_request.db_set("status", "Aceptada")
+		already_classified.db_set("momento_de_anulacion", "Durante el traslado, por cambio de destinatario")
+
+		backfill_gre_void_timing()
+		backfill_gre_void_timing()
+
+		for doc in (requested, pending_without_date, reversed_request):
+			doc.reload()
+			self.assertEqual(doc.momento_de_anulacion, "Antes de iniciar el traslado")
+		for doc in (requested, reversed_request):
+			self.assertEqual(doc.motivo_de_anulacion, "Motivo original")
+		already_classified.reload()
+		self.assertEqual(
+			already_classified.momento_de_anulacion, "Durante el traslado, por cambio de destinatario"
+		)
+		untouched.reload()
+		self.assertFalse(untouched.momento_de_anulacion)
+
 	def test_gre_metadata_includes_manual_voiding_states_and_audit_fields(self):
 		meta = frappe.get_meta("Nubefact Guia De Remision")
 		status_options = set(meta.get_field("status").options.splitlines())
 
 		self.assertIn("Anulación Solicitada", status_options)
 		self.assertIn("Anulada", status_options)
+		self.assertEqual(
+			meta.get_field("momento_de_anulacion").options.splitlines(),
+			["", "Antes de iniciar el traslado", "Durante el traslado, por cambio de destinatario"],
+		)
 		for fieldname in (
+			"momento_de_anulacion",
 			"motivo_de_anulacion",
 			"fecha_de_solicitud_de_anulacion",
 			"anulacion_solicitada_por",

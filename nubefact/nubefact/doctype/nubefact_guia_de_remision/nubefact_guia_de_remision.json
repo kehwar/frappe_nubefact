@@ -109,6 +109,7 @@
   "anulado",
   "fecha_de_solicitud_de_anulacion",
   "anulacion_solicitada_por",
+  "momento_de_anulacion",
   "motivo_de_anulacion",
   "motivo_de_reversion_de_anulacion",
   "fecha_de_reversion_de_anulacion",
@@ -819,9 +820,17 @@
    "read_only": 1
   },
   {
+   "fieldname": "momento_de_anulacion",
+   "fieldtype": "Select",
+   "label": "Momento de anulación",
+   "no_copy": 1,
+   "options": "\nAntes de iniciar el traslado\nDurante el traslado, por cambio de destinatario",
+   "read_only": 1
+  },
+  {
    "fieldname": "motivo_de_anulacion",
    "fieldtype": "Small Text",
-   "label": "Motivo de Anulación",
+   "label": "Motivo adicional de anulación",
    "no_copy": 1,
    "read_only": 1
   },

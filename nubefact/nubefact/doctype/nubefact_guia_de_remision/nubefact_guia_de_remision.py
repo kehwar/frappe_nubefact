@@ -86,6 +86,7 @@ _MANUAL_VOID_AUDIT_FIELDS = (
 	"anulado",
 	"fecha_de_solicitud_de_anulacion",
 	"anulacion_solicitada_por",
+	"momento_de_anulacion",
 	"motivo_de_anulacion",
 	"motivo_de_reversion_de_anulacion",
 	"fecha_de_reversion_de_anulacion",
@@ -1264,7 +1265,9 @@ def refrescar_estado_sunat(name: str):
 
 
 @frappe.whitelist(methods=["POST"])
-def solicitar_anulacion(name: str, motivo: str) -> dict[str, Any]:
+def solicitar_anulacion(
+	name: str, momento_de_anulacion: str | None = None, motivo: str | None = None
+) -> dict[str, Any]:
 	"""Record a user's request to void an accepted GRE manually in SUNAT."""
 
 	doc = frappe.get_doc("Nubefact Guia De Remision", name)
@@ -1278,14 +1281,20 @@ def solicitar_anulacion(name: str, motivo: str) -> dict[str, Any]:
 	if doc.status != "Aceptada":
 		frappe.throw("Solo se puede solicitar la anulación de una GRE en estado Aceptada.")
 
+	momento_de_anulacion = cstr(momento_de_anulacion or "").strip()
+	if momento_de_anulacion not in {
+		"Antes de iniciar el traslado",
+		"Durante el traslado, por cambio de destinatario",
+	}:
+		frappe.throw("Seleccione un momento de anulación válido.")
+
 	motivo = cstr(motivo or "").strip()
-	if not motivo:
-		frappe.throw("Se requiere un motivo de anulación.")
 	if len(motivo) > 500:
-		frappe.throw("El motivo de anulación admite hasta 500 caracteres.")
+		frappe.throw("El motivo adicional admite hasta 500 caracteres.")
 
 	values = {
 		"status": "Anulación Solicitada",
+		"momento_de_anulacion": momento_de_anulacion,
 		"motivo_de_anulacion": motivo,
 		"fecha_de_solicitud_de_anulacion": now_datetime(),
 		"anulacion_solicitada_por": frappe.session.user,
