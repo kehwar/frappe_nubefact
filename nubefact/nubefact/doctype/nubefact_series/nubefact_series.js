@@ -2,11 +2,11 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Nubefact Series", {
-	setup(frm) {
-		frm.set_query("local", () => ({
-			filters: {
-				company: frm.doc.company,
-			},
-		}));
-	},
+    setup(frm) {
+        frm.set_query("local", () => ({
+            filters: {
+                company: frm.doc.company,
+            },
+        }));
+    },
 });

@@ -5,9 +5,9 @@ from frappe.model.document import Document
 
 
 class NubefactFacturacionGuiaRelacionada(Document):
-    """Guías de remisión relacionadas al comprobante.
+	"""Guías de remisión relacionadas al comprobante.
 
-    Referencia CPE API: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
-    """
+	Referencia CPE API: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
+	"""
 
-    pass
+	pass

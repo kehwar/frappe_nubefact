@@ -5,9 +5,9 @@ from frappe.model.document import Document
 
 
 class NubefactGuiaDeRemisionItem(Document):
-    """Ítems (productos/bienes) transportados en la guía de remisión.
+	"""Ítems (productos/bienes) transportados en la guía de remisión.
 
-    Referencia GRE API: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
-    """
+	Referencia GRE API: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
+	"""
 
-    pass
+	pass

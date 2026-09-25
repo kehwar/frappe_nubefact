@@ -12,29 +12,29 @@ Ruta: references/nubefact-docs/NUBEFACT DOC API JSON V1.md
 """
 
 REQUIRED_FIELDS = [
-    "tipo_de_comprobante",
-    "serie",
-    "fecha_de_emision",
-    "cliente_tipo_de_documento",
-    "cliente_numero_de_documento",
-    "cliente_denominacion",
-    "cliente_direccion",
-    "moneda",
-    "porcentaje_de_igv",
-    "total_igv",
-    "total",
+	"tipo_de_comprobante",
+	"serie",
+	"fecha_de_emision",
+	"cliente_tipo_de_documento",
+	"cliente_numero_de_documento",
+	"cliente_denominacion",
+	"cliente_direccion",
+	"moneda",
+	"porcentaje_de_igv",
+	"total_igv",
+	"total",
 ]
 
 ITEM_REQUIRED_FIELDS = [
-    "unidad_de_medida",
-    "descripcion",
-    "cantidad",
-    "valor_unitario",
-    "precio_unitario",
-    "subtotal",
-    "tipo_de_igv",
-    "igv",
-    "total",
+	"unidad_de_medida",
+	"descripcion",
+	"cantidad",
+	"valor_unitario",
+	"precio_unitario",
+	"subtotal",
+	"tipo_de_igv",
+	"igv",
+	"total",
 ]
 
 DELIVERY_REFERENCE_REQUIRED_FIELDS = ["guia_tipo", "guia_serie_numero"]
@@ -42,9 +42,9 @@ DELIVERY_REFERENCE_REQUIRED_FIELDS = ["guia_tipo", "guia_serie_numero"]
 PAYMENT_INSTALLMENT_REQUIRED_FIELDS = ["cuota", "fecha_de_pago", "importe"]
 
 NOTE_REFERENCE_REQUIRED_FIELDS = [
-    "documento_que_se_modifica_tipo",
-    "documento_que_se_modifica_serie",
-    "documento_que_se_modifica_numero",
+	"documento_que_se_modifica_tipo",
+	"documento_que_se_modifica_serie",
+	"documento_que_se_modifica_numero",
 ]
 
 CREDIT_NOTE_REQUIRED_FIELDS = ["tipo_de_nota_de_credito"]
